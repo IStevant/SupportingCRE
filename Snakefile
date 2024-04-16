@@ -3,10 +3,6 @@ rule all:
 		"graphs/RNA_corr_pca_all_samples.png",
 		"graphs/RNA_corr_pca.png"
 
-rule uppdate_renv:
-	script:
-		"scripts/00.update_renv.R"
-
 
 rule get_RNA_matrices:
 	input:
