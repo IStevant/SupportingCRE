@@ -1,0 +1,6 @@
+Building DAG of jobs...
+MissingInputException in rule RNA_corr_PCA_all in file /work/user/istevant/project/SupportingCRE/Snakefile, line 23:
+Missing input files for rule RNA_corr_PCA_all:
+    output: graphs/RNA_corr_pca_all_samples.pdf, graphs/RNA_corr_pca_all_samples.png
+    affected files:
+        spearman

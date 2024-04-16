@@ -1,0 +1,39 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job                 count
+----------------  -------
+all                     1
+get_RNA_matrices        1
+total                   2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Apr 16 18:36:51 2024]
+localrule get_RNA_matrices:
+    input: data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv, data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv
+    output: processed_data/RNA_TMP_all_samples.csv, processed_data/RNA_TMP.csv, processed_data/RNA_raw_counts.csv, processed_data/RNA_samplesheet.csv
+    jobid: 1
+    reason: Missing output files: processed_data/RNA_samplesheet.csv
+    resources: tmpdir=/tmp
+
+[Tue Apr 16 18:36:53 2024]
+Finished job 1.
+1 of 2 steps (50%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Apr 16 18:36:53 2024]
+localrule all:
+    input: processed_data/RNA_samplesheet.csv
+    jobid: 0
+    reason: Input files updated by another job: processed_data/RNA_samplesheet.csv
+    resources: tmpdir=/tmp
+
+[Tue Apr 16 18:36:53 2024]
+Finished job 0.
+2 of 2 steps (100%) done
+Complete log: .snakemake/log/2024-04-16T183651.336444.snakemake.log

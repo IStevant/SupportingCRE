@@ -1,3 +1,5 @@
+options(repos = c(CRAN = "https://mirror.ibcp.fr/pub/CRAN/"))
+
 if(!require(fs)) {
 	install.packages("fs")
 }

@@ -1,0 +1,35 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 2
+Rules claiming more threads will be scaled down.
+Job stats:
+job                 count
+----------------  -------
+get_RNA_matrices        1
+total                   1
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Apr 16 18:16:29 2024]
+localrule get_RNA_matrices:
+    input: data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv, data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv
+    output: processed_data/RNA_TMP_all_samples.csv, processed_data/RNA_TMP.csv, processed_data/RNA_raw_counts.csv, processed_data/RNA_samplesheet.csv
+    jobid: 0
+    reason: Missing output files: processed_data/RNA_TMP.csv, processed_data/RNA_samplesheet.csv, processed_data/RNA_raw_counts.csv, processed_data/RNA_TMP_all_samples.csv
+    resources: tmpdir=/tmp
+
+RuleException:
+CalledProcessError in file /work/user/istevant/project/SupportingCRE/RNA_analysis.skmk, line 11:
+Command 'set -euo pipefail;  Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpy3gd4nya.01.RNA_clean_matrices.R' returned non-zero exit status 1.
+[Tue Apr 16 18:16:32 2024]
+Error in rule get_RNA_matrices:
+    jobid: 0
+    input: data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv, data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv
+    output: processed_data/RNA_TMP_all_samples.csv, processed_data/RNA_TMP.csv, processed_data/RNA_raw_counts.csv, processed_data/RNA_samplesheet.csv
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2024-04-16T181629.246479.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.
