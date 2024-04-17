@@ -10,7 +10,9 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_sex_DEG_volcano.png",
 	"results/RNA_sex_DEG_double_heatmap_clustering.csv",
 	"results/RNA_DEG_stage_XX.csv",
-	"results/RNA_DEG_stage_XY.csv"
+	"results/RNA_DEG_stage_XY.csv",
+	"graphs/RNA_XX_DEG_stage_heatmap.png",
+	"graphs/RNA_XY_DEG_stage_heatmap.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -169,7 +171,7 @@ rule RNA_Plot_heatmap_GO_XX:
 		clusters=config["RNA_XX_stage_DEG_clusters"]
 	output:
 		GO="results/RNA_XX_GO_DEG_stage.csv",
-		clusters="results/RNA_XX_DEG_stage_heatmap_clusters.csv"
+		clusters="results/RNA_XX_DEG_stage_heatmap_clusters.csv",
 		pdf="graphs/RNA_XX_DEG_stage_heatmap.pdf",
 		png="graphs/RNA_XX_DEG_stage_heatmap.png"
 	script:
@@ -186,7 +188,7 @@ rule RNA_Plot_heatmap_GO_XY:
 		clusters=config["RNA_XY_stage_DEG_clusters"]
 	output:
 		GO="results/RNA_XY_GO_DEG_stage.csv",
-		clusters="results/RNA_XY_DEG_stage_heatmap_clusters.csv"
+		clusters="results/RNA_XY_DEG_stage_heatmap_clusters.csv",
 		pdf="graphs/RNA_XY_DEG_stage_heatmap.pdf",
 		png="graphs/RNA_XY_DEG_stage_heatmap.png"
 	script:
