@@ -8,7 +8,9 @@ rule_all_input_list = [
 	"processed_data/RNA_all_SexDEGs.Robj",
 	"graphs/PNG/RNA_sex_DEG_histograms.png",
 	"graphs/PNG/RNA_sex_DEG_volcano.png",
-	"results/RNA_sex_DEG_double_heatmap_clustering.csv"
+	"results/RNA_sex_DEG_double_heatmap_clustering.csv",
+	"results/RNA_DEG_stage_XX.csv",
+	"results/RNA_DEG_stage_XY.csv"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -125,3 +127,33 @@ rule RNA_Plot_sex_DEG_double_heatmap:
 		# TFs="results/RNA_sex_DEG_double_heatmap_TFs.csv"
 	script:
 		"scripts/07.RNA_sex_DEG_double_heatmap.R"
+
+
+rule RNA_Get_XX_dynamic_DEGs:
+	input:
+		counts="processed_data/RNA_raw_counts.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv",
+	params:
+		adjpval=config["RNA_adjpval"],
+		log2FC=config["RNA_log2FC"],
+		sex="XX"
+	output:
+		csv="results/RNA_DEG_stage_XX.csv",
+		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XX.Robj"
+	script:
+		"scripts/08.RNA_stage_DEG.R"
+
+
+rule RNA_Get_XY_dynamic_DEGs:
+	input:
+		counts="processed_data/RNA_raw_counts.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv",
+	params:
+		adjpval=config["RNA_adjpval"],
+		log2FC=config["RNA_log2FC"],
+		sex="XY"
+	output:
+		csv="results/RNA_DEG_stage_XY.csv",
+		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XY.Robj"
+	script:
+		"scripts/08.RNA_stage_DEG.R"
