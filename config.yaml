@@ -11,6 +11,8 @@ RNA_corr_met: "spearman"
 RNA_adjpval: 0.01
 RNA_log2FC: 0.5
 
+RNA_sex_double_heatmap_clusters: 8
+
 
 
 ATAC_count: "data/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"

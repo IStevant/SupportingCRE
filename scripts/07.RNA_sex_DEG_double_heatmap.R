@@ -273,17 +273,24 @@ samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
 stages <- unique(samplesheet$stages)
 names(conditions_color) <- sort(unique(samplesheet$conditions))
 
+clusters <- snakemake@params[['clusters']]
+
 ###########################################
 #                                         #
 #             Double heatmap              #
 #                                         #
 ###########################################
 
-de_feature <- unique(unlist(lapply(sex_DEG, rownames)))
-sex_DEG_heatmap <- plot_double_heatmap(norm_counts, de_feature, conditions_color, 8, "../results/240306_sex_DEG_clustering_15.csv")
+de_feature <- unique(unlist(lapply(sig_DEGs, rownames)))
+sex_DEG_heatmap <- plot_double_heatmap(
+	norm_counts, 
+	de_feature, 
+	conditions_color, 
+	8, 
+	"../results/240306_sex_DEG_clustering_15.csv"
+)
 
-plot_grid(sex_DEG_heatmap)
-
+# plot_grid(sex_DEG_heatmap)
 
 save_plot(
 	"../graphs/240306_sex_DEG_heatmap.pdf", 
