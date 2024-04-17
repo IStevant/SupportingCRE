@@ -100,8 +100,8 @@ rule Plot_sex_DEG_volcano:
 		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
 		samplesheet="processed_data/RNA_samplesheet.csv"
 	params:
-		adjpval=[0.01],
-		log2FC=[0.5]
+		adjpval=config["RNA_adjpval"],
+		log2FC=config["RNA_log2FC"]
 	output:
 		pdf="graphs/PDF/RNA_sex_DEG_volcano.pdf",
 		png="graphs/PNG/RNA_sex_DEG_volcano.png"
