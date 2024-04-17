@@ -172,8 +172,8 @@ rule RNA_Plot_heatmap_GO_XX:
 	output:
 		GO="results/RNA_XX_GO_DEG_stage.csv",
 		clusters="results/RNA_XX_DEG_stage_heatmap_clusters.csv",
-		pdf="graphs/RNA_XX_DEG_stage_heatmap.pdf",
-		png="graphs/RNA_XX_DEG_stage_heatmap.png"
+		pdf="graphs/PDF/RNA_XX_DEG_stage_heatmap.pdf",
+		png="graphs/PNG/RNA_XX_DEG_stage_heatmap.png"
 	script:
 		"scripts/09.RNA_stage_DEG_heatmap.R"
 
@@ -189,7 +189,7 @@ rule RNA_Plot_heatmap_GO_XY:
 	output:
 		GO="results/RNA_XY_GO_DEG_stage.csv",
 		clusters="results/RNA_XY_DEG_stage_heatmap_clusters.csv",
-		pdf="graphs/RNA_XY_DEG_stage_heatmap.pdf",
-		png="graphs/RNA_XY_DEG_stage_heatmap.png"
+		pdf="graphs/PDF/RNA_XY_DEG_stage_heatmap.pdf",
+		png="graphs/PNG/RNA_XY_DEG_stage_heatmap.png"
 	script:
 		"scripts/09.RNA_stage_DEG_heatmap.R"
