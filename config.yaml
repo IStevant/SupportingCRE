@@ -1,5 +1,5 @@
-RNA_counts: "data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
-RNA_TPM: "data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
+RNA_counts: "data/RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
+RNA_TPM: "data/RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
 
 RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
 
@@ -10,3 +10,12 @@ RNA_corr_met: "spearman"
 
 RNA_adjpval: 0.01
 RNA_log2FC: 0.5
+
+
+
+ATAC_count: "data/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
+
+ATAC_minReads: 5
+
+ATAC_adjpval: 0.01
+ATAC_log2FC: 0.75

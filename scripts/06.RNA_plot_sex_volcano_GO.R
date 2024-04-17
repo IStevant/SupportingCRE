@@ -20,6 +20,7 @@ suppressPackageStartupMessages({
 	library('foreach')
 	library('clusterProfiler')
 	library('org.Mm.eg.db')
+	library("cowplot")
 })
 
 doParallel::registerDoParallel(cores=4)
