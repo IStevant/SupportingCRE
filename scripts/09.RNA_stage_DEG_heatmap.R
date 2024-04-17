@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 	library("gtable")
 	library("grid")
 	library("ggplot2")
-	library("ClusterProfiler")
+	library('clusterProfiler')
 })
 
 ###########################################
@@ -102,8 +102,8 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		legend_gp = gpar(fill = cluster_colors)
 	)
 
-	TF_list <- read.csv("../data/mouse_transcription_factors.txt", header=FALSE)
-	gonad_pheno_genes <- read.csv("../data/genes_gonad_asociated_pheno_MGI.txt", header=FALSE)
+	TF_list <- read.csv("data/mouse_transcription_factors.txt", header=FALSE)
+	gonad_pheno_genes <- read.csv("data/genes_gonad_asociated_pheno_MGI.txt", header=FALSE)
 
 	TF_list <- as.vector(TF_list[,1])
 	total_TFs <- unlist(lapply(TF_list, function(TF) which(rownames(matrix) %in% TF)))
@@ -241,6 +241,59 @@ go_plot <- function(go_res, nb_terms=5){
 }
 
 
+###############################################
+# Fix complexeheatmap gene annotation
+
+panel_fix <- function(p = NULL, grob = NULL,
+						width = NULL, height = NULL, margin = 1, units = "cm",
+						filename = NULL) {
+	if (is.null(p) & is.null(grob)) {
+			stop("'p' or 'grob' must be provided with at least one.")
+	}
+	if (is.null(width) & is.null(height)) {
+			stop("'width' or 'height' must be provided with at least one.")
+	}
+	if (is.null(grob)) {
+			grob <- ggplotGrob(p)
+	}
+
+	panels <- grep("panel", grob[["layout"]][["name"]])
+	panel_index_h <- sort(unique(grob[["layout"]][["t"]][panels]))
+	panel_index_w <- sort(unique(grob[["layout"]][["l"]][panels]))
+	nw <- length(panel_index_w)
+	nh <- length(panel_index_h)
+	raw_w <- as.numeric(grob[["widths"]][panel_index_w])
+	raw_h <- as.numeric(grob[["heights"]][panel_index_h])
+	raw_aspect <- raw_h / raw_w
+	if (is.null(width)) {
+			width <- height / raw_aspect
+	}
+	if (is.null(height)) {
+			height <- width * raw_aspect
+	}
+	if (!length(width) %in% c(1, length(raw_aspect)) | !length(height) %in% c(1, length(raw_aspect))) {
+			stop("The length of 'width' and 'height' must be 1 or the length of panels.")
+	}
+	if (length(width) == 1) {
+			width <- rep(width, nw)
+	}
+	if (length(height) == 1) {
+			height <- rep(height, nh)
+	}
+	grob[["widths"]][panel_index_w] <- unit(width, units = units)
+	grob[["heights"]][panel_index_h] <- unit(height, units = units)
+	grob <- gtable_add_padding(grob, unit(margin, units = units))
+	plot_width <- convertWidth(sum(grob[["widths"]]), unitTo = units, valueOnly = TRUE)
+	plot_height <- convertHeight(sum(grob[["heights"]]), unitTo = units, valueOnly = TRUE)
+
+	if (!is.null(filename)) {
+			ggsave(filename = filename, plot = grob, units = units, width = plot_width, height = plot_height)
+	}
+	attr(grob, "size") <- list(units = units, width = plot_width, height = plot_height)
+	return(grob)
+}
+
+
 #################################################################################################################################
 
 ###########################################
@@ -250,7 +303,7 @@ go_plot <- function(go_res, nb_terms=5){
 ###########################################
 
 norm_counts <- read.csv(file=snakemake@input[['norm_counts']], row.names=1)
-load(snakemake@input[['sig_DEG']])
+load(snakemake@input[['sig_DEGs']])
 samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
 
 sex <- snakemake@params[['sex']]
