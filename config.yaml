@@ -13,6 +13,8 @@ RNA_log2FC: 0.5
 
 RNA_sex_double_heatmap_clusters: 8
 
+RNA_XX_stage_DEG_clusters: 6
+RNA_XY_stage_DEG_clusters: 6
 
 
 ATAC_count: "data/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"

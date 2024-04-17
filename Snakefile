@@ -132,13 +132,13 @@ rule RNA_Plot_sex_DEG_double_heatmap:
 rule RNA_Get_XX_dynamic_DEGs:
 	input:
 		counts="processed_data/RNA_raw_counts.csv",
-		samplesheet="processed_data/RNA_samplesheet.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv"
 	params:
 		adjpval=config["RNA_adjpval"],
 		log2FC=config["RNA_log2FC"],
 		sex="XX"
 	output:
-		csv="results/RNA_DEG_stage_XX.csv",
+		csv="results/RNA_XX_DEG_stage.csv",
 		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XX.Robj"
 	script:
 		"scripts/08.RNA_stage_DEG.R"
@@ -147,13 +147,47 @@ rule RNA_Get_XX_dynamic_DEGs:
 rule RNA_Get_XY_dynamic_DEGs:
 	input:
 		counts="processed_data/RNA_raw_counts.csv",
-		samplesheet="processed_data/RNA_samplesheet.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv"
 	params:
 		adjpval=config["RNA_adjpval"],
 		log2FC=config["RNA_log2FC"],
 		sex="XY"
 	output:
-		csv="results/RNA_DEG_stage_XY.csv",
+		csv="results/RNA_XY_DEG_stage.csv",
 		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XY.Robj"
 	script:
 		"scripts/08.RNA_stage_DEG.R"
+
+
+rule RNA_Plot_heatmap_GO_XX:
+	input:
+		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XX.Robj",
+		norm_counts="processed_data/RNA_norm_counts.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv"
+	params:
+		sex="XX",
+		clusters=config["RNA_XX_stage_DEG_clusters"]
+	output:
+		GO="results/RNA_XX_GO_DEG_stage.csv",
+		clusters="results/RNA_XX_DEG_stage_heatmap_clusters.csv"
+		pdf="graphs/RNA_XX_DEG_stage_heatmap.pdf",
+		png="graphs/RNA_XX_DEG_stage_heatmap.png"
+	script:
+		"scripts/09.RNA_stage_DEG_heatmap.R"
+
+
+rule RNA_Plot_heatmap_GO_XY:
+	input:
+		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XY.Robj",
+		norm_counts="processed_data/RNA_norm_counts.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv"
+	params:
+		sex="XY",
+		clusters=config["RNA_XY_stage_DEG_clusters"]
+	output:
+		GO="results/RNA_XY_GO_DEG_stage.csv",
+		clusters="results/RNA_XY_DEG_stage_heatmap_clusters.csv"
+		pdf="graphs/RNA_XY_DEG_stage_heatmap.pdf",
+		png="graphs/RNA_XY_DEG_stage_heatmap.png"
+	script:
+		"scripts/09.RNA_stage_DEG_heatmap.R"
