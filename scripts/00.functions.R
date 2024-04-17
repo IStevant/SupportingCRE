@@ -801,7 +801,7 @@ go_plot <- function(go_res, nb_terms=5){
 }
 
 get_sex_DEG_per_stage <- function(dds, stage, p.adj, log2FC){
-	res <- results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
+	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
 
 	de_res <- as.data.frame(res)
 	res <- mutate(
@@ -815,10 +815,7 @@ get_sex_DEG_per_stage <- function(dds, stage, p.adj, log2FC){
 	sig.DE <- subset(res, padj < p.adj)
 	sig.DE <- subset(sig.DE, abs(log2FoldChange) > log2FC)
 
-	write.csv(sig.DE, paste0("../results/240306_DE_sex_", stage, ".csv"))
-
 	return(sig.DE)
-
 }
 
 

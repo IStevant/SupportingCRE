@@ -58,6 +58,9 @@ rule Get_Sex_DEGs:
 	input:
 		counts="processed_data/RNA_raw_counts.csv",
 		samplesheet="processed_data/RNA_samplesheet.csv",
+	params:
+		adjpval=[0.01],
+		log2FC=[0.5]
 	output:
 		Robj="processed_data/RNA_SexDEGs.Robj"
 	script:
