@@ -18,7 +18,7 @@ rule all:
 		rule_all_input_list
 
 
-rule RNA::Get_RNA_matrices:
+rule RNA-Get_RNA_matrices:
 	input:
 		counts=config["RNA_counts"],
 		tpm=config["RNA_TPM"]
@@ -35,7 +35,7 @@ rule RNA::Get_RNA_matrices:
 		"scripts/01.RNA_clean_matrices.R"
 
 
-rule RNA::corr_PCA_all:
+rule RNA-corr_PCA_all:
 	input:
 		tpm="processed_data/RNA_TMP_all_samples.csv"
 	params:
@@ -47,7 +47,7 @@ rule RNA::corr_PCA_all:
 		"scripts/02.RNA_corr_pca.R"
 
 
-rule RNA::corr_PCA:
+rule RNA-corr_PCA:
 	input:
 		tpm="processed_data/RNA_TMP.csv"
 	params:
@@ -59,7 +59,7 @@ rule RNA::corr_PCA:
 		"scripts/02.RNA_corr_pca.R"
 
 
-rule RNA::Plot_marker_genes:
+rule RNA-Plot_marker_genes:
 	input:
 		tpm="processed_data/RNA_TMP.csv"
 
@@ -70,7 +70,7 @@ rule RNA::Plot_marker_genes:
 		"scripts/03.RNA_plot_marker_genes.R"
 
 
-rule RNA::Get_sex_DEGs:
+rule RNA-Get_sex_DEGs:
 	input:
 		counts="processed_data/RNA_raw_counts.csv",
 		samplesheet="processed_data/RNA_samplesheet.csv",
@@ -84,7 +84,7 @@ rule RNA::Get_sex_DEGs:
 		"scripts/04.RNA_sex_DEG.R"
 
 
-rule RNA::Plot_sex_DEG_histogram:
+rule RNA-Plot_sex_DEG_histogram:
 	input:
 		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj",
 		samplesheet="processed_data/RNA_samplesheet.csv"
@@ -95,7 +95,7 @@ rule RNA::Plot_sex_DEG_histogram:
 		"scripts/05.RNA_plot_sex_DEG_hist.R"
 
 
-rule RNA::Plot_sex_DEG_volcano_GO:
+rule RNA-Plot_sex_DEG_volcano_GO:
 	input:
 		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
 		samplesheet="processed_data/RNA_samplesheet.csv"
@@ -109,7 +109,7 @@ rule RNA::Plot_sex_DEG_volcano_GO:
 		"scripts/06.RNA_plot_sex_volcano_GO.R"
 
 
-rule RNA::Plot_sex_DEG_double_heatmap:
+rule RNA-Plot_sex_DEG_double_heatmap:
 	input:
 		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj",
 		samplesheet="processed_data/RNA_samplesheet.csv"
