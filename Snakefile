@@ -1,20 +1,27 @@
 configfile: "config.yaml"
 
+rule_all_input_list = [
+	"processed_data/RNA_raw_counts.csv",
+	"graphs/PNG/RNA_corr_pca_all_samples.png",
+	"graphs/PNG/RNA_corr_pca.png"
+	# "graphs/PNG/RNA_marker_genes.png",
+	# "processed_data/RNA_all_SexDEGs.Robj",
+	# "graphs/PNG/RNA_sex_DEG_histograms.png"
+	# "graphs/PNG/RNA_sex_DEG_volcano.png"
+]
+
+if len(config["RNA_outliers"])<1:
+    rule_all_input_list.remove("graphs/PNG/RNA_corr_pca_all_samples.png")
+
 rule all:
 	input:
-		"processed_data/RNA_raw_counts.csv"
-		# "graphs/PNG/RNA_corr_pca_all_samples.png",
-		# "graphs/PNG/RNA_corr_pca.png",
-		# "graphs/PNG/RNA_marker_genes.png",
-		# "processed_data/RNA_all_SexDEGs.Robj",
-		# "graphs/PNG/RNA_sex_DEG_histograms.png"
-		# "graphs/PNG/RNA_sex_DEG_volcano.png"
+		rule_all_input_list
 
 
 rule get_RNA_matrices:
 	input:
-		counts="data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv",
-		tpm="data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
+		counts=config["RNA_counts"],
+		tpm=config["RNA_TPM"]
 	params:
 		minReads=config["RNA_minReads"],
 		minTPM=config["RNA_minTPM"],

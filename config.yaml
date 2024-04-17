@@ -1,6 +1,12 @@
+RNA_counts: "data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
+RNA_TPM: "data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
+
+RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
+
 RNA_minReads: 15
 RNA_minTPM: 2
-RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
+
+RNA_corr_met: "spearman"
 
 RNA_adjpval: 0.01
 RNA_log2FC: 0.5
