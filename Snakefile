@@ -1,10 +1,13 @@
+configfile: "config.yaml"
+
 rule all:
 	input:
-		"graphs/PNG/RNA_corr_pca_all_samples.png",
-		"graphs/PNG/RNA_corr_pca.png",
-		"graphs/PNG/RNA_marker_genes.png",
-		"processed_data/RNA_all_SexDEGs.Robj",
-		"graphs/PNG/RNA_sex_DEG_histograms.png"
+		"processed_data/RNA_raw_counts.csv"
+		# "graphs/PNG/RNA_corr_pca_all_samples.png",
+		# "graphs/PNG/RNA_corr_pca.png",
+		# "graphs/PNG/RNA_marker_genes.png",
+		# "processed_data/RNA_all_SexDEGs.Robj",
+		# "graphs/PNG/RNA_sex_DEG_histograms.png"
 		# "graphs/PNG/RNA_sex_DEG_volcano.png"
 
 
@@ -12,6 +15,10 @@ rule get_RNA_matrices:
 	input:
 		counts="data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv",
 		tpm="data/XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
+	params:
+		minReads=config["RNA_minReads"],
+		minTPM=config["RNA_minTPM"],
+		RNA_outliers=config["RNA_outliers"]
 	output:
 		tpm_all="processed_data/RNA_TMP_all_samples.csv",
 		tpm="processed_data/RNA_TMP.csv",
@@ -61,8 +68,8 @@ rule Get_sex_DEGs:
 		counts="processed_data/RNA_raw_counts.csv",
 		samplesheet="processed_data/RNA_samplesheet.csv",
 	params:
-		adjpval=[0.01],
-		log2FC=[0.5]
+		adjpval=config["RNA_adjpval"],
+		log2FC=config["RNA_log2FC"]
 	output:
 		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
 		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj"

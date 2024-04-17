@@ -83,6 +83,11 @@ filter_low_counts <- function(row, col_names, minExp) {
 count_file <- snakemake@input[['counts']]
 TPM_file <- snakemake@input[['tpm']]
 
+minReads <- snakemake@params[['minReads']]
+minTPM <- snakemake@params[['TPM']]
+
+outlierSamples <- snakemake@params[['RNA_outliers']]
+
 ###########################################
 #                                         #
 #              Get matrices               #
@@ -105,27 +110,30 @@ TPM <- get_gene_matrix(
 #                                         #
 ###########################################
 
-# Remove gene expression if max value < 5 TPM
+# Remove gene expression if max value < x TPM
 TPM <- run_filter_low_counts(TPM, 2)
 kept_genes <- rownames(TPM[rowSums(TPM)>0,])
 
-# Remove gene expression if max value < 10 reads
+# Remove gene expression if max value < x reads
 raw_counts <- run_filter_low_counts(raw_counts, 15)
 
 # Remove genes with low TPM from the count matrix
 raw_counts <- raw_counts[rownames(raw_counts) %in% kept_genes,]
 
+
 ###########################################
 #                                         #
-#        Remove XX E11.5 replicate        #
+#          Remove outlier samples         #
 #                                         #
 ###########################################
 
-TPM_all <- TPM
-
-# Exclude XX E11.5 rep2 sample
-raw_counts <- raw_counts[, !colnames(raw_counts) %in% "E11.5_XX_enh8.mcherry_rep2"]
-TPM <- TPM[, !colnames(TPM) %in% "E11.5_XX_enh8.mcherry_rep2"]
+if(length(outlierSamples)>0){
+	# Keep the full TPM matrix
+	TPM_all <- TPM
+	# Exclude the outliers
+	raw_counts <- raw_counts[, !colnames(raw_counts) %in% outlierSamples]
+	TPM <- TPM[, !colnames(TPM) %in% outlierSamples]
+}
 
 ###########################################
 #                                         #
@@ -158,8 +166,9 @@ samplesheet <- data.frame(
 #               Save files                #
 #                                         #
 ###########################################
-
-write.csv(TPM_all, snakemake@output[['tpm_all']])
+if(length(outlierSamples)>0){
+	write.csv(TPM_all, snakemake@output[['tpm_all']])
+}
 write.csv(TPM, snakemake@output[['tpm']])
 write.csv(raw_counts, snakemake@output[['counts']])
 write.csv(samplesheet, snakemake@output[['samplesheet']])

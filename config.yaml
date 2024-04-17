@@ -1,0 +1,6 @@
+RNA_minReads: 15
+RNA_minTPM: 2
+RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
+
+RNA_adjpval: 0.01
+RNA_log2FC: 0.5
