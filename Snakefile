@@ -3,8 +3,8 @@ configfile: "config.yaml"
 rule_all_input_list = [
 	"processed_data/RNA_raw_counts.csv",
 	"graphs/PNG/RNA_corr_pca_all_samples.png",
-	"graphs/PNG/RNA_corr_pca.png"
-	# "graphs/PNG/RNA_marker_genes.png",
+	"graphs/PNG/RNA_corr_pca.png",
+	"graphs/PNG/RNA_marker_genes.png"
 	# "processed_data/RNA_all_SexDEGs.Robj",
 	# "graphs/PNG/RNA_sex_DEG_histograms.png"
 	# "graphs/PNG/RNA_sex_DEG_volcano.png"
@@ -39,7 +39,7 @@ rule RNA_corr_PCA_all:
 	input:
 		tpm="processed_data/RNA_TMP_all_samples.csv"
 	params:
-		corr_method="spearman"
+		corr_method=config["RNA_corr_met"]
 	output:
 		pdf="graphs/PDF/RNA_corr_pca_all_samples.pdf",
 		png="graphs/PNG/RNA_corr_pca_all_samples.png"

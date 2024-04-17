@@ -5,10 +5,13 @@ source("scripts/00.color_palettes.R")
 #               Libraries                 #
 #                                         #
 ###########################################
-library("cowplot")
-library("grid")
-library("viridis")
-library("ggplot2")
+
+suppressPackageStartupMessages({
+	library("cowplot")
+	library("grid")
+	library("viridis")
+	library("ggplot2")
+})
 
 ###########################################
 #                                         #
