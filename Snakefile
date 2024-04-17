@@ -122,4 +122,4 @@ rule RNA_Plot_sex_DEG_double_heatmap:
 		clusters="results/RNA_sex_DEG_double_heatmap_clustering.csv"
 		# TFs="results/RNA_sex_DEG_double_heatmap_TFs.csv"
 	script:
-		"scripts/07.RNA_plot_sex_DEG_double_heatmap.R"
+		"scripts/07.RNA_sex_DEG_double_heatmap.R"
