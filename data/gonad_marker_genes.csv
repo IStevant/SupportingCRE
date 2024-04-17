@@ -1,0 +1,27 @@
+Gene,Cell_type
+Nr5a1,Somatic cells
+Wt1,Somatic cells
+Gata4,Somatic cells
+Sry,Sertoli
+Sox9,Sertoli
+Dmrt1,Sertoli
+Dhh,Sertoli
+Amh,Sertoli
+Runx1,Pre-granulosa
+Fst,Pre-granulosa
+Foxl2,Pre-granulosa
+Bmp2,Pre-granulosa
+Wnt4,Pre-granulosa
+Ptn,Interstitium/Stroma
+Nr2f2,Interstitium/Stroma
+Wnt5a,Interstitium/Stroma
+Tcf21,Interstitium/Stroma
+Arx,Interstitium/Stroma
+Hsd3b1,FLC
+Star,FLC
+Cyp11a1,FLC
+Insl3,FLC
+Mael,Germ cells
+Dazl,Germ cells
+Ddx4,Germ cells
+Stra8,Germ cells

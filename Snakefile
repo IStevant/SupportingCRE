@@ -1,7 +1,9 @@
 rule all:
 	input:
 		"graphs/RNA_corr_pca_all_samples.png",
-		"graphs/RNA_corr_pca.png"
+		"graphs/RNA_corr_pca.png",
+		"graphs/RNA_marker_genes.png",
+		"processed_data/RNA_SexDEGs.Robj"
 
 
 rule get_RNA_matrices:
@@ -39,3 +41,24 @@ rule RNA_corr_PCA:
 		png="graphs/RNA_corr_pca.png"
 	script:
 		"scripts/02.RNA_corr_pca.R"
+
+
+rule Plot_marker_genes:
+	input:
+		tpm="processed_data/RNA_TMP.csv"
+
+	output:
+		pdf="graphs/RNA_marker_genes.pdf",
+		png="graphs/RNA_marker_genes.png"
+	script:
+		"scripts/03.RNA_plot_marker_genes.R"
+
+
+rule Get_Sex_DEGs:
+	input:
+		counts="processed_data/RNA_raw_counts.csv",
+		samplesheet="processed_data/RNA_samplesheet.csv",
+	output:
+		Robj="processed_data/RNA_SexDEGs.Robj"
+	script:
+		"scripts/04.RNA_sex_DEG.R"

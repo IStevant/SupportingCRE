@@ -1,6 +1,9 @@
 library("ggplot2")
 library("viridis")
 library("pheatmap")
+library("dplyr")
+library("grid")
+library("cowplot")
 
 ###########################################
 #                                         #
