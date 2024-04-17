@@ -116,8 +116,8 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		legend_gp = gpar(fill = cluster_colors)
 	)
 
-	TF_list <- read.csv("../data/mouse_transcription_factors.txt", header=FALSE)
-	gonad_pheno_genes <- read.csv("../data/genes_gonad_asociated_pheno_MGI.txt", header=FALSE)
+	TF_list <- read.csv("data/mouse_transcription_factors.txt", header=FALSE)
+	gonad_pheno_genes <- read.csv("data/genes_gonad_asociated_pheno_MGI.txt", header=FALSE)
 
 	TF_list <- as.vector(TF_list[,1])
 	total_TFs <- unlist(lapply(TF_list, function(TF) which(rownames(matrix) %in% TF)))
@@ -267,3 +267,40 @@ panel_fix <- function(p = NULL, grob = NULL,
 #                                         #
 ###########################################
 
+load(snakemake@input[['sig_DEGs']])
+norm_counts <- read.csv(file=snakemake@input[['norm_counts']], row.names=1)
+samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+stages <- unique(samplesheet$stages)
+names(conditions_color) <- sort(unique(samplesheet$conditions))
+
+###########################################
+#                                         #
+#             Double heatmap              #
+#                                         #
+###########################################
+
+de_feature <- unique(unlist(lapply(sex_DEG, rownames)))
+sex_DEG_heatmap <- plot_double_heatmap(norm_counts, de_feature, conditions_color, 8, "../results/240306_sex_DEG_clustering_15.csv")
+
+plot_grid(sex_DEG_heatmap)
+
+
+save_plot(
+	"../graphs/240306_sex_DEG_heatmap.pdf", 
+	sex_DEG_heatmap, 
+	base_width=15,
+	base_height=20.5,
+	units = c("cm"), 
+	dpi=300, 
+	bg = "white"
+)
+
+save_plot(
+	"../graphs/240306_sex_DEG_heatmap.png", 
+	sex_DEG_heatmap, 
+	base_width=15,
+	base_height=20.5,
+	units = c("cm"), 
+	dpi=300, 
+	bg = "white"
+)
