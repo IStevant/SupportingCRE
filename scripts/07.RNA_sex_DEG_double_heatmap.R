@@ -286,14 +286,14 @@ sex_DEG_heatmap <- plot_double_heatmap(
 	norm_counts, 
 	de_feature, 
 	conditions_color, 
-	8, 
-	"../results/240306_sex_DEG_clustering_15.csv"
+	clusters, 
+	snakemake@output[['clusters']]
 )
 
 # plot_grid(sex_DEG_heatmap)
 
 save_plot(
-	"../graphs/240306_sex_DEG_heatmap.pdf", 
+	snakemake@output[['pdf']], 
 	sex_DEG_heatmap, 
 	base_width=15,
 	base_height=20.5,
@@ -303,7 +303,7 @@ save_plot(
 )
 
 save_plot(
-	"../graphs/240306_sex_DEG_heatmap.png", 
+	snakemake@output[['png']], 
 	sex_DEG_heatmap, 
 	base_width=15,
 	base_height=20.5,
