@@ -4,7 +4,7 @@ source("scripts/00.color_palettes.R")
 # install.packages('doParallel', repos="https://mirror.ibcp.fr/pub/CRAN/")
 # install.packages('foreach', repos="https://mirror.ibcp.fr/pub/CRAN/")
 # BiocManager::install('org.Mm.eg.db')
-# BiocManager::install("ComplexHeatmap")
+BiocManager::install("ComplexHeatmap", force = TRUE)
 # renv::snapshot()
 
 ###########################################
@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 	library("grid")
 })
 
-# renv::snapshot()
+renv::snapshot()
 
 ###########################################
 #                                         #
