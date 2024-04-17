@@ -1,9 +1,12 @@
 library("ggplot2")
+library("ggrepel")
 library("viridis")
 library("pheatmap")
 library("dplyr")
 library("grid")
 library("cowplot")
+library("DESeq2")
+library("clusterProfiler")
 
 ###########################################
 #                                         #
@@ -950,7 +953,7 @@ plot_volcano_sex <- function(dds, stage, p.adj, log2FC, colors){
 plot_DEG <- function(dds, stage, p.adj, log2FC, colors){
 	volcano <- plot_volcano_sex(dds, stage, p.adj, log2FC, colors)
 
-	res <- results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
+	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
 
 	de_res <- as.data.frame(res)
 	res <- mutate(

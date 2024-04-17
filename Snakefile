@@ -1,9 +1,11 @@
 rule all:
 	input:
-		"graphs/RNA_corr_pca_all_samples.png",
-		"graphs/RNA_corr_pca.png",
-		"graphs/RNA_marker_genes.png",
-		"processed_data/RNA_SexDEGs.Robj"
+		"graphs/PNG/RNA_corr_pca_all_samples.png",
+		"graphs/PNG/RNA_corr_pca.png",
+		"graphs/PNG/RNA_marker_genes.png",
+		"processed_data/RNA_all_SexDEGs.Robj",
+		"graphs/PNG/RNA_sex_DEG_histograms.png"
+		# "graphs/PNG/RNA_sex_DEG_volcano.png"
 
 
 rule get_RNA_matrices:
@@ -25,8 +27,8 @@ rule RNA_corr_PCA_all:
 	params:
 		corr_method="spearman"
 	output:
-		pdf="graphs/RNA_corr_pca_all_samples.pdf",
-		png="graphs/RNA_corr_pca_all_samples.png"
+		pdf="graphs/PDF/RNA_corr_pca_all_samples.pdf",
+		png="graphs/PNG/RNA_corr_pca_all_samples.png"
 	script:
 		"scripts/02.RNA_corr_pca.R"
 
@@ -37,8 +39,8 @@ rule RNA_corr_PCA:
 	params:
 		corr_method="spearman"
 	output:
-		pdf="graphs/RNA_corr_pca.pdf",
-		png="graphs/RNA_corr_pca.png"
+		pdf="graphs/PDF/RNA_corr_pca.pdf",
+		png="graphs/PNG/RNA_corr_pca.png"
 	script:
 		"scripts/02.RNA_corr_pca.R"
 
@@ -48,13 +50,13 @@ rule Plot_marker_genes:
 		tpm="processed_data/RNA_TMP.csv"
 
 	output:
-		pdf="graphs/RNA_marker_genes.pdf",
-		png="graphs/RNA_marker_genes.png"
+		pdf="graphs/PDF/RNA_marker_genes.pdf",
+		png="graphs/PNG/RNA_marker_genes.png"
 	script:
 		"scripts/03.RNA_plot_marker_genes.R"
 
 
-rule Get_Sex_DEGs:
+rule Get_sex_DEGs:
 	input:
 		counts="processed_data/RNA_raw_counts.csv",
 		samplesheet="processed_data/RNA_samplesheet.csv",
@@ -62,6 +64,32 @@ rule Get_Sex_DEGs:
 		adjpval=[0.01],
 		log2FC=[0.5]
 	output:
-		Robj="processed_data/RNA_SexDEGs.Robj"
+		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
+		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj"
 	script:
 		"scripts/04.RNA_sex_DEG.R"
+
+
+rule Plot_sex_DEG_histogram:
+	input:
+		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj",
+		samplesheet="processed_data/RNA_samplesheet.csv"
+	output:
+		pdf="graphs/PDF/RNA_sex_DEG_histograms.pdf",
+		png="graphs/PNG/RNA_sex_DEG_histograms.png"
+	script:
+		"scripts/05.RNA_plot_sex_DEG_hist.R"
+
+
+# rule Plot_sex_DEG_volcano:
+# 	input:
+# 		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
+# 		samplesheet="processed_data/RNA_samplesheet.csv"
+# 	params:
+# 		adjpval=[0.01],
+# 		log2FC=[0.5]
+# 	output:
+# 		pdf="graphs/PDF/RNA_sex_DEG_volcano.pdf",
+# 		png="graphs/PNG/RNA_sex_DEG_volcano.png"
+# 	script:
+# 		"scripts/06.RNA_plot_sex_volcano_GO.R"

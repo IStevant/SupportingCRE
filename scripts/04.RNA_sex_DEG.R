@@ -21,7 +21,7 @@ SexDEGs <- DESeq2::DESeqDataSetFromMatrix(
 SexDEGs <- DESeq2::DESeq(SexDEGs)
 
 # Save the Robj of the results for reuse
-save(SexDEGs, file=snakemake@output[['Robj']])
+save(SexDEGs, file=snakemake@output[['all_DEGs']])
 
 # Get embryonic stages
 stages <- unique(samplesheet$stages)
@@ -31,3 +31,6 @@ filtered_SexDEGs <- lapply(stages, function(stg) get_sex_DEG_per_stage(SexDEGs, 
 
 # For each stages, write DEG results into separated files
 export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0("results/RNA_DEG_sex_", stages[stg], ".csv")))
+
+names(filtered_SexDEGs) <- stages
+save(filtered_SexDEGs, file=snakemake@output[['sig_DEGs']])
