@@ -48,8 +48,8 @@ get_normalized_counts <- function(raw_counts, samplesheet){
 		colData = samplesheet,
 		design = ~conditions
 	)
-	dds <- estimateSizeFactors(dds)
-	norm_counts <- counts(dds, normalized=TRUE)
+	dds <- DESeq2::estimateSizeFactors(dds)
+	norm_counts <- DESeq2::counts(dds, normalized=TRUE)
 	# norm_counts <- assay(vst(dds, blind=FALSE))
 
 	return(norm_counts)
@@ -163,6 +163,17 @@ samplesheet <- data.frame(
 
 ###########################################
 #                                         #
+#           Normalize read counts         #
+#                                         #
+###########################################
+
+norm_counts <- get_normalized_counts(
+	raw_counts, 
+	samplesheet
+)
+
+###########################################
+#                                         #
 #               Save files                #
 #                                         #
 ###########################################
@@ -171,4 +182,5 @@ if(length(outlierSamples)>0){
 }
 write.csv(TPM, snakemake@output[['tpm']])
 write.csv(raw_counts, snakemake@output[['counts']])
+write.csv(norm_counts, snakemake@output[['norm_counts']])
 write.csv(samplesheet, snakemake@output[['samplesheet']])

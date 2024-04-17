@@ -3,8 +3,11 @@ source("scripts/00.color_palettes.R")
 
 # install.packages('doParallel', repos="https://mirror.ibcp.fr/pub/CRAN/")
 # install.packages('foreach', repos="https://mirror.ibcp.fr/pub/CRAN/")
+
+# install.packages('MetBrewer', repos="https://mirror.ibcp.fr/pub/CRAN/")
+
 # BiocManager::install('org.Mm.eg.db')
-BiocManager::install("ComplexHeatmap", force = TRUE)
+# BiocManager::install("ComplexHeatmap", force = TRUE)
 # renv::snapshot()
 
 ###########################################
@@ -14,13 +17,14 @@ BiocManager::install("ComplexHeatmap", force = TRUE)
 ###########################################
 
 suppressPackageStartupMessages({
-	library("ComplexeHeatmap")
+	library("ComplexHeatmap")
 	library("cowplot")
 	library("gtable")
 	library("grid")
+	library("ggplot2")
 })
 
-renv::snapshot()
+# renv::snapshot()
 
 ###########################################
 #                                         #
@@ -281,7 +285,7 @@ clusters <- snakemake@params[['clusters']]
 #                                         #
 ###########################################
 
-de_feature <- unique(unlist(lapply(sig_DEGs, rownames)))
+de_feature <- unique(unlist(lapply(filtered_SexDEGs, rownames)))
 sex_DEG_heatmap <- plot_double_heatmap(
 	norm_counts, 
 	de_feature, 

@@ -121,6 +121,33 @@
       ],
       "Hash": "86ffa781f132f54e9c963a13fd6cf9fc"
     },
+    "ComplexHeatmap": {
+      "Package": "ComplexHeatmap",
+      "Version": "2.18.0",
+      "Source": "Bioconductor",
+      "Requirements": [
+        "GetoptLong",
+        "GlobalOptions",
+        "IRanges",
+        "R",
+        "RColorBrewer",
+        "circlize",
+        "clue",
+        "codetools",
+        "colorspace",
+        "digest",
+        "doParallel",
+        "foreach",
+        "grDevices",
+        "graphics",
+        "grid",
+        "matrixStats",
+        "methods",
+        "png",
+        "stats"
+      ],
+      "Hash": "fd8d03c43e175afce12c1012711a05cc"
+    },
     "DBI": {
       "Package": "DBI",
       "Version": "1.2.2",
@@ -272,6 +299,32 @@
       ],
       "Hash": "7e0c1399af35369312d9c399454374e8"
     },
+    "GetoptLong": {
+      "Package": "GetoptLong",
+      "Version": "1.0.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "GlobalOptions",
+        "R",
+        "crayon",
+        "methods",
+        "rjson"
+      ],
+      "Hash": "61fac01c73abf03ac72e88dc3952c1e3"
+    },
+    "GlobalOptions": {
+      "Package": "GlobalOptions",
+      "Version": "0.1.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "utils"
+      ],
+      "Hash": "c3f7b221e60c28f5f3533d74c6fef024"
+    },
     "HDO.db": {
       "Package": "HDO.db",
       "Version": "0.99.1",
@@ -353,6 +406,16 @@
         "methods"
       ],
       "Hash": "088cd2077b5619fcb7b373b1a45174e7"
+    },
+    "MetBrewer": {
+      "Package": "MetBrewer",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "ggplot2"
+      ],
+      "Hash": "9dda8af6359c4b3932426430c38fa1b1"
     },
     "R6": {
       "Package": "R6",
@@ -519,6 +582,21 @@
       ],
       "Hash": "caee529bf9710ff6fe1776612fcaa266"
     },
+    "TSP": {
+      "Package": "TSP",
+      "Version": "1.2-4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "foreach",
+        "grDevices",
+        "graphics",
+        "stats",
+        "utils"
+      ],
+      "Hash": "7fba3f587b0f3cb3232d03d540dbf772"
+    },
     "XVector": {
       "Package": "XVector",
       "Version": "0.42.0",
@@ -636,6 +714,16 @@
       ],
       "Hash": "40415719b5a479b87949f3aa0aee737c"
     },
+    "ca": {
+      "Package": "ca",
+      "Version": "0.71.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "392f13bb4dfd3c07259ecdeba6aa71f9"
+    },
     "cachem": {
       "Package": "cachem",
       "Version": "1.0.8",
@@ -647,6 +735,25 @@
       ],
       "Hash": "c35768291560ce302c0a6589f92e837d"
     },
+    "circlize": {
+      "Package": "circlize",
+      "Version": "0.4.16",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "GlobalOptions",
+        "R",
+        "colorspace",
+        "grDevices",
+        "graphics",
+        "grid",
+        "methods",
+        "shape",
+        "stats",
+        "utils"
+      ],
+      "Hash": "bf366c80e2b55a5383b4af8fa2a10b74"
+    },
     "cli": {
       "Package": "cli",
       "Version": "3.6.2",
@@ -657,6 +764,34 @@
         "utils"
       ],
       "Hash": "1216ac65ac55ec0058a6f75d7ca0fd52"
+    },
+    "clue": {
+      "Package": "clue",
+      "Version": "0.3-65",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cluster",
+        "graphics",
+        "methods",
+        "stats"
+      ],
+      "Hash": "d6b53853800595408a776900bcc0c23f"
+    },
+    "cluster": {
+      "Package": "cluster",
+      "Version": "2.1.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "stats",
+        "utils"
+      ],
+      "Hash": "0aaa05204035dc43ea0004b9c76611dd"
     },
     "clusterProfiler": {
       "Package": "clusterProfiler",
@@ -975,6 +1110,17 @@
         "R"
       ],
       "Hash": "0d9bf02413ddc2bbe8da9ce369dcdd2b"
+    },
+    "gclus": {
+      "Package": "gclus",
+      "Version": "1.3.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cluster"
+      ],
+      "Hash": "8f905e7f70ac42e5b0e39d6ba360dd44"
     },
     "generics": {
       "Package": "generics",
@@ -1499,6 +1645,17 @@
       ],
       "Hash": "9c8ab14c00ac07e9e04d1664c0b74486"
     },
+    "permute": {
+      "Package": "permute",
+      "Version": "0.9-7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "stats"
+      ],
+      "Hash": "abf0ca85c1c752e0d04f46334e635046"
+    },
     "pheatmap": {
       "Package": "pheatmap",
       "Version": "1.0.12",
@@ -1596,6 +1753,13 @@
       ],
       "Hash": "1cba04a4e9414bdefc9dcaa99649a8dc"
     },
+    "qap": {
+      "Package": "qap",
+      "Version": "0.1-2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "21c4fc168ebf32add2db6a358ce4714c"
+    },
     "qvalue": {
       "Package": "qvalue",
       "Version": "2.34.0",
@@ -1608,6 +1772,17 @@
         "splines"
       ],
       "Hash": "76fc42834c44b69e4021f6ade524d299"
+    },
+    "registry": {
+      "Package": "registry",
+      "Version": "0.5-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "utils"
+      ],
+      "Hash": "1c9935f4f14c6c096c9c9072ddee59f1"
     },
     "renv": {
       "Package": "renv",
@@ -1631,6 +1806,16 @@
         "stringr"
       ],
       "Hash": "bb5996d0bd962d214a11140d77589917"
+    },
+    "rjson": {
+      "Package": "rjson",
+      "Version": "0.2.21",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "f9da75e6444e95a1baf8ca24909d63b9"
     },
     "rlang": {
       "Package": "rlang",
@@ -1681,6 +1866,29 @@
       ],
       "Hash": "5a6b2f02c942e71a06690a99cb51c060"
     },
+    "seriation": {
+      "Package": "seriation",
+      "Version": "1.5.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "MASS",
+        "R",
+        "TSP",
+        "ca",
+        "cluster",
+        "colorspace",
+        "foreach",
+        "gclus",
+        "grDevices",
+        "grid",
+        "qap",
+        "registry",
+        "stats",
+        "vegan"
+      ],
+      "Hash": "786c381ec4c40d1425e50ace3fee54bc"
+    },
     "shadowtext": {
       "Package": "shadowtext",
       "Version": "0.1.3",
@@ -1693,6 +1901,19 @@
         "scales"
       ],
       "Hash": "a6d0947671b22116358e2fa6595abdc4"
+    },
+    "shape": {
+      "Package": "shape",
+      "Version": "1.4.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "stats"
+      ],
+      "Hash": "9067f962730f58b14d8ae54ca885509f"
     },
     "snow": {
       "Package": "snow",
@@ -1913,6 +2134,21 @@
         "rlang"
       ],
       "Hash": "c03fa420630029418f7e6da3667aac4a"
+    },
+    "vegan": {
+      "Package": "vegan",
+      "Version": "2.6-4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "MASS",
+        "R",
+        "cluster",
+        "lattice",
+        "mgcv",
+        "permute"
+      ],
+      "Hash": "659fe7589b8e0b16baa49043a61a0ce0"
     },
     "viridis": {
       "Package": "viridis",
