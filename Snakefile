@@ -11,8 +11,8 @@ rule_all_input_list = [
 	"results/RNA_sex_DEG_double_heatmap_clustering.csv",
 	"results/RNA_DEG_stage_XX.csv",
 	"results/RNA_DEG_stage_XY.csv",
-	"graphs/RNA_XX_DEG_stage_heatmap.png",
-	"graphs/RNA_XY_DEG_stage_heatmap.png"
+	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
+	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png"
 ]
 
 if len(config["RNA_outliers"])<1:
