@@ -1470,6 +1470,17 @@
       ],
       "Hash": "2a0dc8c6adfb6f032e4d4af82d258ab5"
     },
+    "org.Mm.eg.db": {
+      "Package": "org.Mm.eg.db",
+      "Version": "3.18.0",
+      "Source": "Bioconductor",
+      "Requirements": [
+        "AnnotationDbi",
+        "R",
+        "methods"
+      ],
+      "Hash": "abded9efdefa42108f268872e15aa8bf"
+    },
     "patchwork": {
       "Package": "patchwork",
       "Version": "1.2.0",

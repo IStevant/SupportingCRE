@@ -6,8 +6,8 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_corr_pca.png",
 	"graphs/PNG/RNA_marker_genes.png",
 	"processed_data/RNA_all_SexDEGs.Robj",
-	"graphs/PNG/RNA_sex_DEG_histograms.png"
-	# "graphs/PNG/RNA_sex_DEG_volcano.png"
+	"graphs/PNG/RNA_sex_DEG_histograms.png",
+	"graphs/PNG/RNA_sex_DEG_volcano.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -95,15 +95,15 @@ rule Plot_sex_DEG_histogram:
 		"scripts/05.RNA_plot_sex_DEG_hist.R"
 
 
-# rule Plot_sex_DEG_volcano:
-# 	input:
-# 		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
-# 		samplesheet="processed_data/RNA_samplesheet.csv"
-# 	params:
-# 		adjpval=[0.01],
-# 		log2FC=[0.5]
-# 	output:
-# 		pdf="graphs/PDF/RNA_sex_DEG_volcano.pdf",
-# 		png="graphs/PNG/RNA_sex_DEG_volcano.png"
-# 	script:
-# 		"scripts/06.RNA_plot_sex_volcano_GO.R"
+rule Plot_sex_DEG_volcano:
+	input:
+		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
+		samplesheet="processed_data/RNA_samplesheet.csv"
+	params:
+		adjpval=[0.01],
+		log2FC=[0.5]
+	output:
+		pdf="graphs/PDF/RNA_sex_DEG_volcano.pdf",
+		png="graphs/PNG/RNA_sex_DEG_volcano.png"
+	script:
+		"scripts/06.RNA_plot_sex_volcano_GO.R"
