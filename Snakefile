@@ -4,8 +4,8 @@ rule_all_input_list = [
 	"processed_data/RNA_raw_counts.csv",
 	"graphs/PNG/RNA_corr_pca_all_samples.png",
 	"graphs/PNG/RNA_corr_pca.png",
-	"graphs/PNG/RNA_marker_genes.png"
-	# "processed_data/RNA_all_SexDEGs.Robj",
+	"graphs/PNG/RNA_marker_genes.png",
+	"processed_data/RNA_all_SexDEGs.Robj"
 	# "graphs/PNG/RNA_sex_DEG_histograms.png"
 	# "graphs/PNG/RNA_sex_DEG_volcano.png"
 ]

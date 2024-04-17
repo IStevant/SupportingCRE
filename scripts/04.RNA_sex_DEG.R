@@ -1,4 +1,42 @@
-source("scripts/00.functions.R")
+# source("scripts/00.color_palettes.R")
+
+###########################################
+#                                         #
+#               Functions                 #
+#                                         #
+###########################################
+
+#' Extract the significantly differentially expressed genes and annotate the result table to indicate in which sex the gene is up.
+#' @param dds DESeq2 result object.
+#' @param stage Embryonic stage.
+#' @param p.adj Maximal adjusted p-value threshold.
+#' @param p.adj Minimal log2FoldChange threshold.
+#' @return Return a datatable.
+get_sex_DEG_per_stage <- function(dds, stage, p.adj, log2FC){
+	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
+
+	de_res <- as.data.frame(res)
+	res <- dplyr::mutate(
+		de_res, 
+		Diff.Exp. = dplyr::case_when(
+			log2FoldChange >= log2FC & padj <= p.adj ~ "Up in XX",
+			log2FoldChange <= (-log2FC) & padj <= p.adj ~ "Up in XY",
+			TRUE ~ "non sig."
+		)
+	)
+	sig.DE <- subset(res, padj < p.adj)
+	sig.DE <- subset(sig.DE, abs(log2FoldChange) > log2FC)
+
+	return(sig.DE)
+}
+
+#################################################################################################################################
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
 
 raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
 samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
