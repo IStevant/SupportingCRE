@@ -12,7 +12,7 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
 	"graphs/PNG/RNA_sex_stage_common_DEGs.png",
 	"graphs/PNG/ATAC_corr_pca_all_samples.png",
-	"processed_data/ATAC_all_consensus_peak_annotation.Robj"
+	"graphs/PNG/ATAC_all_consensus_peak_annotation.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -248,6 +248,8 @@ rule ATAC_Plot_consensus_peak_annotation:
 	params:
 		promoter=config["ATAC_promoter_distance"]
 	output:
-		anno_list="processed_data/ATAC_all_consensus_peak_annotation.Robj"
+		anno_list="processed_data/ATAC_all_consensus_peak_annotation.Robj",
+		pdf="graphs/PDF/ATAC_all_consensus_peak_annotation.pdf",
+		png="graphs/PNG/ATAC_all_consensus_peak_annotation.png"
 	script:
-		"scripts/ATAC_peak_annotation.R"
+		"scripts/ATAC_all_peak_annotation.R"
