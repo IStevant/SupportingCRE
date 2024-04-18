@@ -19,6 +19,8 @@ RNA_XY_stage_DEG_clusters: 6
 
 ATAC_counts: "data/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
 
+ATAC_promoter_distance: 3000
+
 ATAC_minReads: 5
 
 ATAC_corr_met: "spearman"

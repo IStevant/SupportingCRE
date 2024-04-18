@@ -11,7 +11,8 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
 	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
 	"graphs/PNG/RNA_sex_stage_common_DEGs.png",
-	"graphs/PNG/ATAC_corr_pca_all_samples.png"
+	"graphs/PNG/ATAC_corr_pca_all_samples.png",
+	"processed_data/ATAC_all_consensus_peak_annotation.Robj"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -230,7 +231,7 @@ rule ATAC_Get_matrices:
 		"scripts/ATAC_clean_matrices.R"
 
 
-rule ATAC_corr_PCA_all:
+rule ATAC_corr_PCA:
 	input:
 		norm_data="processed_data/ATAC_norm_counts.csv"
 	params:
@@ -240,3 +241,13 @@ rule ATAC_corr_PCA_all:
 		png="graphs/PNG/ATAC_corr_pca_all_samples.png"
 	script:
 		"scripts/Corr_pca.R"
+
+rule ATAC_Plot_consensus_peak_annotation:
+	input:
+		peak_list="data/ATAC_all_consensus_peaks_2rep_list.Robj"
+	params:
+		promoter=config["ATAC_promoter_distance"]
+	output:
+		anno_list="processed_data/ATAC_all_consensus_peak_annotation.Robj"
+	script:
+		"scripts/ATAC_peak_annotation.R"

@@ -3,26 +3,6 @@
     "Version": "4.3.3",
     "Repositories": [
       {
-        "Name": "BioCsoft",
-        "URL": "https://bioconductor.org/packages/3.18/bioc"
-      },
-      {
-        "Name": "BioCann",
-        "URL": "https://bioconductor.org/packages/3.18/data/annotation"
-      },
-      {
-        "Name": "BioCexp",
-        "URL": "https://bioconductor.org/packages/3.18/data/experiment"
-      },
-      {
-        "Name": "BioCworkflows",
-        "URL": "https://bioconductor.org/packages/3.18/workflows"
-      },
-      {
-        "Name": "BioCbooks",
-        "URL": "https://bioconductor.org/packages/3.18/books"
-      },
-      {
         "Name": "CRAN",
         "URL": "https://cloud.r-project.org"
       }
@@ -123,7 +103,7 @@
     "Biostrings": {
       "Package": "Biostrings",
       "Version": "2.70.3",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "BiocGenerics",
@@ -168,6 +148,19 @@
       ],
       "Hash": "fd8d03c43e175afce12c1012711a05cc"
     },
+    "ComplexUpset": {
+      "Package": "ComplexUpset",
+      "Version": "1.3.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "colorspace",
+        "ggplot2",
+        "patchwork",
+        "scales"
+      ],
+      "Hash": "33a906b96379ddbd41dcb85f80f4fed9"
+    },
     "DBI": {
       "Package": "DBI",
       "Version": "1.2.2",
@@ -182,7 +175,7 @@
     "DESeq2": {
       "Package": "DESeq2",
       "Version": "1.42.1",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "Biobase",
@@ -206,7 +199,7 @@
     "DOSE": {
       "Package": "DOSE",
       "Version": "3.28.2",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "AnnotationDbi",
@@ -258,7 +251,7 @@
     "GOSemSim": {
       "Package": "GOSemSim",
       "Version": "2.28.1",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "AnnotationDbi",
@@ -286,7 +279,7 @@
     "GenomeInfoDb": {
       "Package": "GenomeInfoDb",
       "Version": "1.38.8",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "BiocGenerics",
@@ -511,7 +504,7 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "0.12.8.2.1",
+      "Version": "0.12.8.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -521,7 +514,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "d5448fb24fb114c4da1275a37a571f37"
+      "Hash": "e78bbbb81a5dcd71a4bd3268d6ede0b1"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -539,7 +532,7 @@
     "S4Arrays": {
       "Package": "S4Arrays",
       "Version": "1.2.1",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "BiocGenerics",
@@ -557,7 +550,7 @@
     "S4Vectors": {
       "Package": "S4Vectors",
       "Version": "0.40.2",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "BiocGenerics",
@@ -572,7 +565,7 @@
     "SparseArray": {
       "Package": "SparseArray",
       "Version": "1.2.4",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "BiocGenerics",
@@ -626,6 +619,24 @@
         "utils"
       ],
       "Hash": "7fba3f587b0f3cb3232d03d540dbf772"
+    },
+    "UpSetR": {
+      "Package": "UpSetR",
+      "Version": "1.4.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "ggplot2",
+        "grDevices",
+        "gridExtra",
+        "methods",
+        "plyr",
+        "scales",
+        "stats",
+        "utils"
+      ],
+      "Hash": "f6ef89503aaff474873f8bc1823894e1"
     },
     "XVector": {
       "Package": "XVector",
@@ -826,7 +837,7 @@
     "clusterProfiler": {
       "Package": "clusterProfiler",
       "Version": "4.10.1",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "AnnotationDbi",
@@ -1327,7 +1338,7 @@
     "ggtree": {
       "Package": "ggtree",
       "Version": "3.10.1",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Requirements": [
         "R",
@@ -1585,13 +1596,13 @@
     },
     "matrixStats": {
       "Package": "matrixStats",
-      "Version": "1.3.0",
+      "Version": "1.2.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "R"
       ],
-      "Hash": "4b3ea27a19d669c0405b38134d89a9d1"
+      "Hash": "33a3ca9e732b57244d14f5d732ffc9eb"
     },
     "memoise": {
       "Package": "memoise",
@@ -1875,13 +1886,13 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.0.3",
+      "Version": "1.0.7",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "utils"
       ],
-      "Hash": "41b847654f567341725473431dd0d5ab"
+      "Hash": "397b7b2a265bc5a7a06852524dabae20"
     },
     "reshape2": {
       "Package": "reshape2",
@@ -1957,7 +1968,7 @@
     },
     "seriation": {
       "Package": "seriation",
-      "Version": "1.5.5",
+      "Version": "1.5.4",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1976,7 +1987,7 @@
         "stats",
         "vegan"
       ],
-      "Hash": "fa74cd2b488a535ce9864c99ebd5d92a"
+      "Hash": "786c381ec4c40d1425e50ace3fee54bc"
     },
     "shadowtext": {
       "Package": "shadowtext",
@@ -2168,14 +2179,8 @@
     },
     "treeio": {
       "Package": "treeio",
-      "Version": "1.27.1",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteUsername": "GuangchuangYu",
-      "RemoteRepo": "treeio",
-      "RemoteRef": "devel",
-      "RemoteSha": "a91faf4b27064db82056a3c3b32084899df08249",
+      "Version": "1.26.0",
+      "Source": "Bioconductor",
       "Requirements": [
         "R",
         "ape",
@@ -2187,10 +2192,9 @@
         "stats",
         "tibble",
         "tidytree",
-        "utils",
-        "yulab.utils"
+        "utils"
       ],
-      "Hash": "2c3e9fd9cf42f345bc89807d684563c5"
+      "Hash": "a09203806aa0bc49965563ca7016620e"
     },
     "tweenr": {
       "Package": "tweenr",
@@ -2301,7 +2305,7 @@
     "zlibbioc": {
       "Package": "zlibbioc",
       "Version": "1.48.2",
-      "Source": "Repository",
+      "Source": "Bioconductor",
       "Repository": "Bioconductor 3.18",
       "Hash": "2344be62c2da4d9e9942b5d8db346e59"
     }
