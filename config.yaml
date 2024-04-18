@@ -21,5 +21,7 @@ ATAC_count: "data/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
 
 ATAC_minReads: 5
 
+ATAC_corr_met: "spearman"
+
 ATAC_adjpval: 0.01
 ATAC_log2FC: 0.75

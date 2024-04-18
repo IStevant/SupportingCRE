@@ -24,8 +24,6 @@ suppressPackageStartupMessages({
 	library("ggplot2")
 })
 
-# renv::snapshot()
-
 ###########################################
 #                                         #
 #               Functions                 #
