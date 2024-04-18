@@ -1,18 +1,20 @@
 configfile: "config.yaml"
 
 rule_all_input_list = [
-	"processed_data/RNA_raw_counts.csv",
+	# "processed_data/RNA_raw_counts.csv",
 	"graphs/PNG/RNA_corr_pca_all_samples.png",
 	"graphs/PNG/RNA_corr_pca.png",
 	"graphs/PNG/RNA_marker_genes.png",
-	"processed_data/RNA_all_SexDEGs.Robj",
+	# "processed_data/RNA_all_SexDEGs.Robj",
 	"graphs/PNG/RNA_sex_DEG_histograms.png",
 	"graphs/PNG/RNA_sex_DEG_volcano.png",
-	"results/RNA_sex_DEG_double_heatmap_clustering.csv",
-	"results/RNA_DEG_stage_XX.csv",
-	"results/RNA_DEG_stage_XY.csv",
+	"graphs/PNG/RNA_sex_DEG_double_heatmap.png",
+	"graphs/PNG/RNA_sex_DEG_upset.png",
+	# "results/RNA_DEG_stage_XX.csv",
+	# "results/RNA_DEG_stage_XY.csv",
 	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
-	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png"
+	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
+	"graphs/PNG/RNA_sex_stage_common_DEGs.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -38,7 +40,7 @@ rule RNA_Get_matrices:
 		norm_counts="processed_data/RNA_norm_counts.csv",
 		samplesheet="processed_data/RNA_samplesheet.csv"
 	script:
-		"scripts/01.RNA_clean_matrices.R"
+		"scripts/RNA_clean_matrices.R"
 
 
 rule RNA_corr_PCA_all:
@@ -50,7 +52,7 @@ rule RNA_corr_PCA_all:
 		pdf="graphs/PDF/RNA_corr_pca_all_samples.pdf",
 		png="graphs/PNG/RNA_corr_pca_all_samples.png"
 	script:
-		"scripts/02.RNA_corr_pca.R"
+		"scripts/RNA_corr_pca.R"
 
 
 rule RNA_corr_PCA:
@@ -62,7 +64,7 @@ rule RNA_corr_PCA:
 		pdf="graphs/PDF/RNA_corr_pca.pdf",
 		png="graphs/PNG/RNA_corr_pca.png"
 	script:
-		"scripts/02.RNA_corr_pca.R"
+		"scripts/RNA_corr_pca.R"
 
 
 rule RNA_Plot_marker_genes:
@@ -73,7 +75,7 @@ rule RNA_Plot_marker_genes:
 		pdf="graphs/PDF/RNA_marker_genes.pdf",
 		png="graphs/PNG/RNA_marker_genes.png"
 	script:
-		"scripts/03.RNA_plot_marker_genes.R"
+		"scripts/RNA_plot_marker_genes.R"
 
 
 rule RNA_Get_sex_DEGs:
@@ -87,7 +89,7 @@ rule RNA_Get_sex_DEGs:
 		all_DEGs="processed_data/RNA_all_SexDEGs.Robj",
 		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj"
 	script:
-		"scripts/04.RNA_sex_DEG.R"
+		"scripts/RNA_sex_DEG.R"
 
 
 rule RNA_Plot_sex_DEG_histogram:
@@ -98,7 +100,7 @@ rule RNA_Plot_sex_DEG_histogram:
 		pdf="graphs/PDF/RNA_sex_DEG_histograms.pdf",
 		png="graphs/PNG/RNA_sex_DEG_histograms.png"
 	script:
-		"scripts/05.RNA_plot_sex_DEG_hist.R"
+		"scripts/RNA_plot_sex_DEG_hist.R"
 
 
 rule RNA_Plot_sex_DEG_volcano_GO:
@@ -112,7 +114,7 @@ rule RNA_Plot_sex_DEG_volcano_GO:
 		pdf="graphs/PDF/RNA_sex_DEG_volcano.pdf",
 		png="graphs/PNG/RNA_sex_DEG_volcano.png"
 	script:
-		"scripts/06.RNA_plot_sex_volcano_GO.R"
+		"scripts/RNA_plot_sex_volcano_GO.R"
 
 
 rule RNA_Plot_sex_DEG_double_heatmap:
@@ -128,8 +130,18 @@ rule RNA_Plot_sex_DEG_double_heatmap:
 		clusters="results/RNA_sex_DEG_double_heatmap_clustering.csv"
 		# TFs="results/RNA_sex_DEG_double_heatmap_TFs.csv"
 	script:
-		"scripts/07.RNA_sex_DEG_double_heatmap.R"
+		"scripts/RNA_sex_DEG_double_heatmap.R"
 
+
+
+rule RNA_Plot_sex_DEG_upset:
+	input:
+		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj"
+	output:
+		pdf="graphs/PDF/RNA_sex_DEG_upset.pdf",
+		png="graphs/PNG/RNA_sex_DEG_upset.png"
+	script:
+		"scripts/RNA_sex_DEG_upset.R"
 
 rule RNA_Get_XX_dynamic_DEGs:
 	input:
@@ -143,7 +155,7 @@ rule RNA_Get_XX_dynamic_DEGs:
 		csv="results/RNA_XX_DEG_stage.csv",
 		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XX.Robj"
 	script:
-		"scripts/08.RNA_stage_DEG.R"
+		"scripts/RNA_stage_DEG.R"
 
 
 rule RNA_Get_XY_dynamic_DEGs:
@@ -158,7 +170,7 @@ rule RNA_Get_XY_dynamic_DEGs:
 		csv="results/RNA_XY_DEG_stage.csv",
 		sig_DEGs="processed_data/RNA_sig_stage_DEGs_XY.Robj"
 	script:
-		"scripts/08.RNA_stage_DEG.R"
+		"scripts/RNA_stage_DEG.R"
 
 
 rule RNA_Plot_heatmap_GO_XX:
@@ -175,7 +187,7 @@ rule RNA_Plot_heatmap_GO_XX:
 		pdf="graphs/PDF/RNA_XX_DEG_stage_heatmap.pdf",
 		png="graphs/PNG/RNA_XX_DEG_stage_heatmap.png"
 	script:
-		"scripts/09.RNA_stage_DEG_heatmap.R"
+		"scripts/RNA_stage_DEG_heatmap.R"
 
 
 rule RNA_Plot_heatmap_GO_XY:
@@ -192,4 +204,16 @@ rule RNA_Plot_heatmap_GO_XY:
 		pdf="graphs/PDF/RNA_XY_DEG_stage_heatmap.pdf",
 		png="graphs/PNG/RNA_XY_DEG_stage_heatmap.png"
 	script:
-		"scripts/09.RNA_stage_DEG_heatmap.R"
+		"scripts/RNA_stage_DEG_heatmap.R"
+
+rule RNA_Plot_sex_stage_common_DEGs:
+	input:
+		sex_DEGs="processed_data/RNA_sig_SexDEGs.Robj",
+		XY_stage_DEGs="processed_data/RNA_sig_stage_DEGs_XY.Robj",
+		XX_stage_DEGs="processed_data/RNA_sig_stage_DEGs_XX.Robj",
+		samplesheet="processed_data/RNA_samplesheet.csv"
+	output:
+		pdf="graphs/PDF/RNA_sex_stage_common_DEGs.pdf",
+		png="graphs/PNG/RNA_sex_stage_common_DEGs.png"
+	script:
+		"scripts/RNA_overlap_sex_stage_DEG.R"
