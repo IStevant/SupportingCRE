@@ -129,7 +129,6 @@ rule RNA_Plot_sex_DEG_double_heatmap:
 		"scripts/RNA_sex_DEG_double_heatmap.R"
 
 
-
 rule RNA_Plot_sex_DEG_upset:
 	input:
 		sig_DEGs="processed_data/RNA_sig_SexDEGs.Robj"
@@ -201,6 +200,7 @@ rule RNA_Plot_heatmap_GO_XY:
 		png="graphs/PNG/RNA_XY_DEG_stage_heatmap.png"
 	script:
 		"scripts/RNA_stage_DEG_heatmap.R"
+
 
 rule RNA_Plot_sex_stage_common_DEGs:
 	input:
