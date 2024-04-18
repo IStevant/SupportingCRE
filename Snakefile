@@ -10,7 +10,8 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_sex_DEG_upset.png",
 	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
 	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
-	"graphs/PNG/RNA_sex_stage_common_DEGs.png"
+	"graphs/PNG/RNA_sex_stage_common_DEGs.png",
+	"graphs/PNG/ATAC_corr_pca_all_samples.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -41,26 +42,26 @@ rule RNA_Get_matrices:
 
 rule RNA_corr_PCA_all:
 	input:
-		tpm="processed_data/RNA_TMP_all_samples.csv"
+		norm_data="processed_data/RNA_TMP_all_samples.csv"
 	params:
 		corr_method=config["RNA_corr_met"]
 	output:
 		pdf="graphs/PDF/RNA_corr_pca_all_samples.pdf",
 		png="graphs/PNG/RNA_corr_pca_all_samples.png"
 	script:
-		"scripts/RNA_corr_pca.R"
+		"scripts/Corr_pca.R"
 
 
 rule RNA_corr_PCA:
 	input:
-		tpm="processed_data/RNA_TMP.csv"
+		norm_data="processed_data/RNA_TMP.csv"
 	params:
 		corr_method="spearman"
 	output:
 		pdf="graphs/PDF/RNA_corr_pca.pdf",
 		png="graphs/PNG/RNA_corr_pca.png"
 	script:
-		"scripts/RNA_corr_pca.R"
+		"scripts/Corr_pca.R"
 
 
 rule RNA_Plot_marker_genes:
@@ -213,3 +214,29 @@ rule RNA_Plot_sex_stage_common_DEGs:
 		png="graphs/PNG/RNA_sex_stage_common_DEGs.png"
 	script:
 		"scripts/RNA_overlap_sex_stage_DEG.R"
+
+###################################################################
+
+rule ATAC_Get_matrices:
+	input:
+		counts=config["ATAC_counts"],
+	params:
+		minReads=config["ATAC_minReads"],
+	output:
+		counts="processed_data/ATAC_raw_counts.csv",
+		norm_counts="processed_data/ATAC_norm_counts.csv",
+		samplesheet="processed_data/ATAC_samplesheet.csv"
+	script:
+		"scripts/ATAC_clean_matrices.R"
+
+
+rule ATAC_corr_PCA_all:
+	input:
+		norm_data="processed_data/ATAC_norm_counts.csv"
+	params:
+		corr_method=config["ATAC_corr_met"]
+	output:
+		pdf="graphs/PDF/ATAC_corr_pca_all_samples.pdf",
+		png="graphs/PNG/ATAC_corr_pca_all_samples.png"
+	script:
+		"scripts/Corr_pca.R"
