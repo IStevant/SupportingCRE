@@ -27,7 +27,7 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors){
 	xx_sex_dar <- dar[dar$sex=="XX",]
 	p1 <- ggplot(xx_sex_dar, aes(x=DA, y=stage)) +
 		geom_col(fill=XX_colors) +
-		geom_text(aes(label = scales::comma(abs(DA))), x=-5000, size=4.5, color="white") +
+		geom_text(aes(label = scales::comma(abs(DA))), x=-4000, size=4.5, color="white") +
 		scale_x_reverse(labels = scales::comma, limits=c(max(dar$DA)+150,0)) +
 		scale_y_discrete(position = "right", limits=rev) +
 		ggtitle("Regions more accessible in XX") +
@@ -46,7 +46,7 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors){
 	xy_sex_dar <- dar[dar$sex=="XY",]
 	p2 <- ggplot(xy_sex_dar, aes(x=DA, y=stage)) +
 		geom_col(fill=XY_colors) +
-		geom_text(aes(label = scales::comma(abs(DA))), x=5000, size=4.5, color="white") +
+		geom_text(aes(label = scales::comma(abs(DA))), x=4000, size=4.5, color="white") +
 		scale_x_continuous(labels = scales::comma, limits=c(0,max(dar$DA)+150)) +
 		scale_y_discrete(limits=rev) +
 		ggtitle("Regions more accessible in XY") +

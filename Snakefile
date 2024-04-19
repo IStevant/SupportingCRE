@@ -5,7 +5,7 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_corr_pca.png",
 	"graphs/PNG/RNA_marker_genes.png",
 	"graphs/PNG/RNA_sex_DEG_histograms.png",
-	# "graphs/PNG/RNA_sex_DEG_volcano.png",
+	"graphs/PNG/RNA_sex_DEG_volcano.png",
 	"graphs/PNG/RNA_sex_DEG_double_heatmap.png",
 	"graphs/PNG/RNA_sex_DEG_upset.png",
 	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
