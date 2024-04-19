@@ -1,4 +1,5 @@
 # source("scripts/00.color_palettes.R")
+
 ###########################################
 #                                         #
 #               Libraries                 #
@@ -18,28 +19,28 @@ doParallel::registerDoParallel(cores=2)
 #                                         #
 ###########################################
 
-#' Extract the significantly differentially expressed genes and annotate the result table to indicate in which sex the gene is up.
+#' Extract the significantly differentially accessible peaks and annotate the result table to indicate in which sex the peak is more accessible.
 #' @param dds DESeq2 result object.
 #' @param stage Embryonic stage.
 #' @param p.adj Maximal adjusted p-value threshold.
 #' @param p.adj Minimal log2FoldChange threshold.
 #' @return Return a datatable.
-get_sex_DEG_per_stage <- function(dds, stage, p.adj, log2FC){
+get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC){
 	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
 
-	de_res <- as.data.frame(res)
+	da_res <- as.data.frame(res)
 	res <- dplyr::mutate(
-		de_res, 
-		Diff.Exp. = dplyr::case_when(
-			log2FoldChange >= log2FC & padj <= p.adj ~ "Up in XX",
-			log2FoldChange <= (-log2FC) & padj <= p.adj ~ "Up in XY",
+		da_res, 
+		Diff.Acc. = dplyr::case_when(
+			log2FoldChange >= log2FC & padj <= p.adj ~ "More in XX",
+			log2FoldChange <= (-log2FC) & padj <= p.adj ~ "More in XY",
 			TRUE ~ "non sig."
 		)
 	)
-	sig.DE <- subset(res, padj < p.adj)
-	sig.DE <- subset(sig.DE, abs(log2FoldChange) > log2FC)
+	sig.DA <- subset(res, padj < p.adj)
+	sig.DA <- subset(sig.DA, abs(log2FoldChange) > log2FC)
 
-	return(sig.DE)
+	return(sig.DA)
 }
 
 #################################################################################################################################
@@ -62,27 +63,24 @@ log2FC <- snakemake@params[['log2FC']]
 #                                         #
 ###########################################
 
-SexDEGs <- DESeq2::DESeqDataSetFromMatrix(
+SexDARs <- DESeq2::DESeqDataSetFromMatrix(
 		countData = raw_counts,
 		colData = samplesheet,
 		design = ~conditions
 )
 
-SexDEGs <- DESeq2::DESeq(SexDEGs)
-
-# Save the Robj of the results for reuse
-save(SexDEGs, file=snakemake@output[['all_DEGs']])
+SexDARs <- DESeq2::DESeq(SexDARs)
 
 # Get embryonic stages
 stages <- unique(samplesheet$stages)
 
-# For each stages, extract significant DEGs
-filtered_SexDEGs <- foreach(stg=stages) %dopar% {
-	get_sex_DEG_per_stage(SexDEGs, stg, adj.pval, log2FC)
+# For each stages, extract significant DARs
+filtered_SexDARs <- foreach(stg=stages) %dopar% {
+	get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC)
 }
 
-# For each stages, write DEG results into separated files
-export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0("results/RNA_DEG_sex_", stages[stg], ".csv")))
+# For each stages, write DAR results into separated files
+export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDARs[stg], paste0("results/ATAC_DAR_sex_", stages[stg], ".csv")))
 
-names(filtered_SexDEGs) <- stages
-save(filtered_SexDEGs, file=snakemake@output[['sig_DEGs']])
+names(filtered_SexDARs) <- stages
+save(filtered_SexDARs, file=snakemake@output[['sig_DARs']])

@@ -12,7 +12,8 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
 	"graphs/PNG/RNA_sex_stage_common_DEGs.png",
 	"graphs/PNG/ATAC_corr_pca_all_samples.png",
-	"graphs/PNG/ATAC_all_consensus_peak_annotation.png"
+	"graphs/PNG/ATAC_all_consensus_peak_annotation.png",
+	"processed_data/ATAC_sig_SexDARs.Robj"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -231,17 +232,6 @@ rule ATAC_Get_matrices:
 		"scripts/ATAC_clean_matrices.R"
 
 
-rule ATAC_corr_PCA:
-	input:
-		norm_data="processed_data/ATAC_norm_counts.csv"
-	params:
-		corr_method=config["ATAC_corr_met"]
-	output:
-		pdf="graphs/PDF/ATAC_corr_pca_all_samples.pdf",
-		png="graphs/PNG/ATAC_corr_pca_all_samples.png"
-	script:
-		"scripts/Corr_pca.R"
-
 rule ATAC_Plot_consensus_peak_annotation:
 	input:
 		peak_list="data/ATAC_all_consensus_peaks_2rep_list.Robj"
@@ -253,3 +243,29 @@ rule ATAC_Plot_consensus_peak_annotation:
 		png="graphs/PNG/ATAC_all_consensus_peak_annotation.png"
 	script:
 		"scripts/ATAC_all_peak_annotation.R"
+
+
+rule ATAC_corr_PCA:
+	input:
+		norm_data="processed_data/ATAC_norm_counts.csv"
+	params:
+		corr_method=config["ATAC_corr_met"]
+	output:
+		pdf="graphs/PDF/ATAC_corr_pca_all_samples.pdf",
+		png="graphs/PNG/ATAC_corr_pca_all_samples.png"
+	script:
+		"scripts/Corr_pca.R"
+
+
+rule ATAC_Get_sex_DARs:
+	input:
+		counts="processed_data/ATAC_raw_counts.csv",
+		samplesheet="processed_data/ATAC_samplesheet.csv",
+	params:
+		adjpval=config["ATAC_adjpval"],
+		log2FC=config["ATAC_log2FC"]
+	output:
+		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj"
+	script:
+		"scripts/ATAC_sex_DAR.R"
+
