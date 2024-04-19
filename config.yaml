@@ -26,4 +26,4 @@ ATAC_minReads: 5
 ATAC_corr_met: "spearman"
 
 ATAC_adjpval: 0.01
-ATAC_log2FC: 0.75
+ATAC_log2FC: 1

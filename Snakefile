@@ -5,7 +5,7 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_corr_pca.png",
 	"graphs/PNG/RNA_marker_genes.png",
 	"graphs/PNG/RNA_sex_DEG_histograms.png",
-	"graphs/PNG/RNA_sex_DEG_volcano.png",
+	# "graphs/PNG/RNA_sex_DEG_volcano.png",
 	"graphs/PNG/RNA_sex_DEG_double_heatmap.png",
 	"graphs/PNG/RNA_sex_DEG_upset.png",
 	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
@@ -13,7 +13,7 @@ rule_all_input_list = [
 	"graphs/PNG/RNA_sex_stage_common_DEGs.png",
 	"graphs/PNG/ATAC_corr_pca_all_samples.png",
 	"graphs/PNG/ATAC_all_consensus_peak_annotation.png",
-	"processed_data/ATAC_sig_SexDARs.Robj"
+	"graphs/PNG/ATAC_sex_DAR_histograms.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -269,3 +269,13 @@ rule ATAC_Get_sex_DARs:
 	script:
 		"scripts/ATAC_sex_DAR.R"
 
+
+rule ATAC_Plot_sex_DAR_histogram:
+	input:
+		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj",
+		samplesheet="processed_data/ATAC_samplesheet.csv"
+	output:
+		pdf="graphs/PDF/ATAC_sex_DAR_histograms.pdf",
+		png="graphs/PNG/ATAC_sex_DAR_histograms.png"
+	script:
+		"scripts/ATAC_plot_sex_DAR_hist.R"

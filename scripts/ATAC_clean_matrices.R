@@ -30,6 +30,7 @@ get_peak_matrix <- function(csv_file, peaks){
 	rep <- gsub("REP", "rep", rep)
 	sample_names <- paste(stage, sex, transgene, rep, sep="_")
 	colnames(raw_counts) <- sample_names
+	raw_counts <- raw_counts[, order(names(raw_counts))]
 	return(raw_counts)
 }
 

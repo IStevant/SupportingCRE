@@ -1,16 +1,4 @@
 # source("scripts/00.color_palettes.R")
-###########################################
-#                                         #
-#               Libraries                 #
-#                                         #
-###########################################
-
-suppressPackageStartupMessages({
-	library('doParallel')
-	library('foreach')
-})
-
-doParallel::registerDoParallel(cores=2)
 
 ###########################################
 #                                         #
@@ -77,9 +65,7 @@ save(SexDEGs, file=snakemake@output[['all_DEGs']])
 stages <- unique(samplesheet$stages)
 
 # For each stages, extract significant DEGs
-filtered_SexDEGs <- foreach(stg=stages) %dopar% {
-	get_sex_DEG_per_stage(SexDEGs, stg, adj.pval, log2FC)
-}
+filtered_SexDEGs <- lapply(stages, function(stg) get_sex_DEG_per_stage(SexDEGs, stg, adj.pval, log2FC))
 
 # For each stages, write DEG results into separated files
 export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0("results/RNA_DEG_sex_", stages[stg], ".csv")))

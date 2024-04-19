@@ -19,6 +19,7 @@ get_gene_matrix <- function(csv_file, genes){
 		raw_counts <- raw_counts[rownames(raw_counts) %in% protein_coding_genes$external_gene_name,]
 		rm(protein_coding_genes)
 	}
+	raw_counts <- raw_counts[, order(names(raw_counts))]
 	return(raw_counts)
 }
 

@@ -28,7 +28,7 @@ plot_dymorphic_genes <- function(de_genes, XX_colors, XY_colors){
 	p1 <- ggplot(xx_sex_de_genes, aes(x=DE, y=stage)) +
 		geom_col(fill=XX_colors) +
 		geom_text(aes(label = scales::comma(abs(DE))), x=-500, size=4.5, color="white") +
-		scale_x_reverse(labels = scales::comma, limits=c(4100,0)) +
+		scale_x_reverse(labels = scales::comma, limits=c(max(de_genes$DE)+150,0)) +
 		scale_y_discrete(position = "right", limits=rev) +
 		ggtitle("XX overexpressed genes") +
 		xlab("Gene count") +
@@ -47,7 +47,7 @@ plot_dymorphic_genes <- function(de_genes, XX_colors, XY_colors){
 	p2 <- ggplot(xy_sex_de_genes, aes(x=DE, y=stage)) +
 		geom_col(fill=XY_colors) +
 		geom_text(aes(label = scales::comma(abs(DE))), x=500, size=4.5, color="white") +
-		scale_x_continuous(labels = scales::comma, limits=c(0,4200)) +
+		scale_x_continuous(labels = scales::comma, limits=c(0,max(de_genes$DE)+150)) +
 		scale_y_discrete(limits=rev) +
 		ggtitle("XY overexpressed genes") +
 		xlab("Gene count") +

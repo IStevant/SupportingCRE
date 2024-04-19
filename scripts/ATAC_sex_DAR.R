@@ -2,19 +2,6 @@
 
 ###########################################
 #                                         #
-#               Libraries                 #
-#                                         #
-###########################################
-
-suppressPackageStartupMessages({
-	library('doParallel')
-	library('foreach')
-})
-
-doParallel::registerDoParallel(cores=2)
-
-###########################################
-#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -23,7 +10,7 @@ doParallel::registerDoParallel(cores=2)
 #' @param dds DESeq2 result object.
 #' @param stage Embryonic stage.
 #' @param p.adj Maximal adjusted p-value threshold.
-#' @param p.adj Minimal log2FoldChange threshold.
+#' @param log2FC Minimal log2FoldChange threshold.
 #' @return Return a datatable.
 get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC){
 	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
@@ -75,9 +62,7 @@ SexDARs <- DESeq2::DESeq(SexDARs)
 stages <- unique(samplesheet$stages)
 
 # For each stages, extract significant DARs
-filtered_SexDARs <- foreach(stg=stages) %dopar% {
-	get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC)
-}
+filtered_SexDARs <- lapply(stages, function(stg) get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC))
 
 # For each stages, write DAR results into separated files
 export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDARs[stg], paste0("results/ATAC_DAR_sex_", stages[stg], ".csv")))
