@@ -23,6 +23,9 @@ rule all:
 	input:
 		rule_all_input_list
 
+rule install_packages:
+	script:
+		"renv/restore.R"
 
 rule RNA_Get_matrices:
 	input:
