@@ -1,3 +1,4 @@
+source(".Rprofile")
 source("scripts/00.color_palettes.R")
 
 ###########################################
