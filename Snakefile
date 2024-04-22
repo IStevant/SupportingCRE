@@ -14,7 +14,8 @@ rule_all_input_list = [
 	"graphs/PNG/ATAC_corr_pca_all_samples.png",
 	"graphs/PNG/ATAC_all_consensus_peak_annotation.png",
 	"graphs/PNG/ATAC_sex_DAR_histograms.png",
-	"graphs/PNG/ATAC_sig_sex_DARs_annotation.png"
+	"graphs/PNG/ATAC_sig_sex_DARs_annotation.png",
+	"graphs/PNG/ATAC_sex_DAR_upset.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -297,3 +298,12 @@ rule ATAC_Plot_sex_DAR_peak_annotation:
 		png="graphs/PNG/ATAC_sig_sex_DARs_annotation.png"
 	script:
 		"scripts/ATAC_peak_annotation_per_sex.R"
+
+rule ATAC_Plot_sex_DAR_upset:
+	input:
+		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj"
+	output:
+		pdf="graphs/PDF/ATAC_sex_DAR_upset.pdf",
+		png="graphs/PNG/ATAC_sex_DAR_upset.png"
+	script:
+		"scripts/ATAC_sex_DAR_upset.R"
