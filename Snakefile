@@ -15,7 +15,8 @@ rule_all_input_list = [
 	"graphs/PNG/ATAC_all_consensus_peak_annotation.png",
 	"graphs/PNG/ATAC_sex_DAR_histograms.png",
 	"graphs/PNG/ATAC_sig_sex_DARs_annotation.png",
-	"graphs/PNG/ATAC_sex_DAR_upset.png"
+	"graphs/PNG/ATAC_sex_DAR_upset.png",
+	"graphs/PDF/ATAC_sex_DAR_TF_motifs.pdf"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -307,3 +308,16 @@ rule ATAC_Plot_sex_DAR_upset:
 		png="graphs/PNG/ATAC_sex_DAR_upset.png"
 	script:
 		"scripts/ATAC_sex_DAR_upset.R"
+
+
+rule ATAC_TFBS_motifs_sex_DAR:
+	input:
+		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj",
+		TPM="processed_data/RNA_TMP.csv"
+	params:
+		minTPM=config["RNA_minTPM"]
+	output:
+		pdf="graphs/PDF/ATAC_sex_DAR_TF_motifs.pdf",
+		# png="graphs/PNG/ATAC_sex_DAR_TF_motifs.png"
+	script:
+		"scripts/ATAC_sex_DAR_motif_enrich.R"
