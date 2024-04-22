@@ -296,4 +296,4 @@ rule ATAC_Plot_sex_DAR_peak_annotation:
 		pdf="graphs/PDF/ATAC_sig_sex_DARs_annotation.pdf",
 		png="graphs/PNG/ATAC_sig_sex_DARs_annotation.png"
 	script:
-		"scripts/ATAC_sig_sex_DAR_annotation.R"
+		"scripts/ATAC_peak_annotation_per_sex.R"

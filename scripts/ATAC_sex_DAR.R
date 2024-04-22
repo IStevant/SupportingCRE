@@ -96,4 +96,11 @@ names(filtered_SexDARs) <- stages
 save(filtered_SexDARs, file=snakemake@output[['sig_DARs']])
 
 sexDAR_GR_list <- lapply(filtered_SexDARs, get_GR)
-save(sexDAR_GR_list, file=snakemake@output[['sig_DARs_GR']])
+XX_peaks <- lapply(sexDAR_GR_list, function(stgGR) stgGR[(GenomicRanges::elementMetadata(stgGR)[, "Diff.Acc."] == "More in XX")])
+XY_peaks <- lapply(sexDAR_GR_list, function(stgGR) stgGR[(GenomicRanges::elementMetadata(stgGR)[, "Diff.Acc."] == "More in XY")])
+
+peak_list <- list(
+	XX=XX_peaks,
+	XY=XY_peaks
+)
+save(peak_list, file=snakemake@output[['sig_DARs_GR']])
