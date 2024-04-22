@@ -1,19 +1,20 @@
 configfile: "config.yaml"
 
 rule_all_input_list = [
-	"graphs/PNG/RNA_corr_pca_all_samples.png",
-	"graphs/PNG/RNA_corr_pca.png",
-	"graphs/PNG/RNA_marker_genes.png",
-	"graphs/PNG/RNA_sex_DEG_histograms.png",
-	"graphs/PNG/RNA_sex_DEG_volcano.png",
-	"graphs/PNG/RNA_sex_DEG_double_heatmap.png",
-	"graphs/PNG/RNA_sex_DEG_upset.png",
-	"graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
-	"graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
-	"graphs/PNG/RNA_sex_stage_common_DEGs.png",
+	# "graphs/PNG/RNA_corr_pca_all_samples.png",
+	# "graphs/PNG/RNA_corr_pca.png",
+	# "graphs/PNG/RNA_marker_genes.png",
+	# "graphs/PNG/RNA_sex_DEG_histograms.png",
+	# "graphs/PNG/RNA_sex_DEG_volcano.png",
+	# "graphs/PNG/RNA_sex_DEG_double_heatmap.png",
+	# "graphs/PNG/RNA_sex_DEG_upset.png",
+	# "graphs/PNG/RNA_XX_DEG_stage_heatmap.png",
+	# "graphs/PNG/RNA_XY_DEG_stage_heatmap.png",
+	# "graphs/PNG/RNA_sex_stage_common_DEGs.png",
 	"graphs/PNG/ATAC_corr_pca_all_samples.png",
 	"graphs/PNG/ATAC_all_consensus_peak_annotation.png",
-	"graphs/PNG/ATAC_sex_DAR_histograms.png"
+	"graphs/PNG/ATAC_sex_DAR_histograms.png",
+	"graphs/PNG/ATAC_sig_sex_DARs_annotation.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -285,14 +286,14 @@ rule ATAC_Plot_sex_DAR_histogram:
 		"scripts/ATAC_plot_sex_DAR_hist.R"
 
 
-# rule ATAC_Plot_sex_DE_peak_annotation:
-# 	input:
-# 		peak_list="data/ATAC_all_consensus_peaks_2rep_list.Robj"
-# 	params:
-# 		promoter=config["ATAC_promoter_distance"]
-# 	output:
-# 		anno_list="processed_data/ATAC_all_consensus_peak_annotation.Robj",
-# 		pdf="graphs/PDF/ATAC_all_consensus_peak_annotation.pdf",
-# 		png="graphs/PNG/ATAC_all_consensus_peak_annotation.png"
-# 	script:
-# 		"scripts/ATAC_peak_annotation_per_sex.R"
+rule ATAC_Plot_sex_DAR_peak_annotation:
+	input:
+		peak_list="processed_data/ATAC_sig_SexDARs_GR.Robj"
+	params:
+		promoter=config["ATAC_promoter_distance"]
+	output:
+		anno_list="processed_data/ATAC_sig_SexDARs_annotation.Robj",
+		pdf="graphs/PDF/ATAC_sig_sex_DARs_annotation.pdf",
+		png="graphs/PNG/ATAC_sig_sex_DARs_annotation.png"
+	script:
+		"scripts/ATAC_sig_sex_DAR_annotation.R"
