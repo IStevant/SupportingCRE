@@ -31,6 +31,30 @@ get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC){
 	return(sig.DA)
 }
 
+get_GR <- function(dataframe){
+	# Test is the dataframe is not empty
+	if (nrow(dataframe)>0){
+		# Get DAR names
+		DAR <- rownames(dataframe)
+		# Expression is null
+		expr <- rep(0, length(DAR))
+	# If the dataframe is emtpy
+	} else {
+		# Generate an empty GR object
+		gr <- GenomicRanges::GRanges(c(seqnames=NULL,ranges=NULL,strand=NULL, name=NULL))
+		return(gr)
+	}
+	# generate the GR object by extracting the DAR locus coordinates from its name
+	gr <- GenomicRanges::GRanges(
+		DAR,
+		name = DAR,
+		Diff.Acc.=dataframe$Diff.Acc.
+	)
+	return(gr)
+}
+
+
+
 #################################################################################################################################
 
 ###########################################
@@ -70,3 +94,6 @@ export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDARs[stg
 
 names(filtered_SexDARs) <- stages
 save(filtered_SexDARs, file=snakemake@output[['sig_DARs']])
+
+sexDAR_GR_list <- lapply(filtered_SexDARs, get_GR)
+save(sexDAR_GR_list, file=snakemake@output[['sig_DARs_GR']])

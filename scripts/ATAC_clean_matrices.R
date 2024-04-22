@@ -12,7 +12,7 @@ get_peak_matrix <- function(csv_file, peaks){
 	# load file
 	raw_counts <- read.csv(file=csv_file, header=TRUE, sep="\t")
 	# Define peak names
-	peak_names <- paste0(raw_counts$Chr, ":", raw_counts$Start, "-", raw_counts$End, "|", raw_counts$Length)
+	peak_names <- paste0(raw_counts$Chr, ":", raw_counts$Start, "-", raw_counts$End)
 	# Remove the extra columns of the file
 	raw_counts <- raw_counts[,-c(1:6)]
 	# Apply peak names

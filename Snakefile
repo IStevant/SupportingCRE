@@ -245,7 +245,7 @@ rule ATAC_Plot_consensus_peak_annotation:
 		pdf="graphs/PDF/ATAC_all_consensus_peak_annotation.pdf",
 		png="graphs/PNG/ATAC_all_consensus_peak_annotation.png"
 	script:
-		"scripts/ATAC_all_peak_annotation.R"
+		"scripts/ATAC_peak_annotation_per_sex.R"
 
 
 rule ATAC_corr_PCA:
@@ -268,7 +268,8 @@ rule ATAC_Get_sex_DARs:
 		adjpval=config["ATAC_adjpval"],
 		log2FC=config["ATAC_log2FC"]
 	output:
-		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj"
+		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj",
+		sig_DARs_GR="processed_data/ATAC_sig_SexDARs_GR.Robj"
 	script:
 		"scripts/ATAC_sex_DAR.R"
 
@@ -282,3 +283,16 @@ rule ATAC_Plot_sex_DAR_histogram:
 		png="graphs/PNG/ATAC_sex_DAR_histograms.png"
 	script:
 		"scripts/ATAC_plot_sex_DAR_hist.R"
+
+
+# rule ATAC_Plot_sex_DE_peak_annotation:
+# 	input:
+# 		peak_list="data/ATAC_all_consensus_peaks_2rep_list.Robj"
+# 	params:
+# 		promoter=config["ATAC_promoter_distance"]
+# 	output:
+# 		anno_list="processed_data/ATAC_all_consensus_peak_annotation.Robj",
+# 		pdf="graphs/PDF/ATAC_all_consensus_peak_annotation.pdf",
+# 		png="graphs/PNG/ATAC_all_consensus_peak_annotation.png"
+# 	script:
+# 		"scripts/ATAC_peak_annotation_per_sex.R"
