@@ -159,7 +159,7 @@ plot_DEG <- function(dds, stage, p.adj, log2FC, colors){
 		cluster=sig.DE$Diff.Exp.
 	)
 
-	res_file <- paste0("results/RNA_", stage, "_GO_sex_DEG.csv")
+	res_file <- paste0("results/tables/RNA_", stage, "_GO_sex_DEG.csv")
 	GO_terms <- GO_term_per_cluster(de_genes, res_file)
 	go_term_plot <- go_plot(GO_terms, nb_terms=5)
 
