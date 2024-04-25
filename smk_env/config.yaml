@@ -1,9 +1,3 @@
-sex: ["XX", "XY"]
-stages: ["E11.5", "E12.5", "E13.5", "E15.5"]
-
-sex_colors: "workflow/data/sex_colors.csv"
-stg_colors: "workflow/data/stg_colors.csv"
-
 genome: "workflow/data/iGenome_mm10_ucsc_genes.gtf.gz"
 whole_gonad_RNAseq: "workflow/data/Zhao_tpm_matrix_for_analysis.csv"
 protein_genes: "workflow/data/mart_prot_coding_genes.txt"
@@ -31,3 +25,5 @@ ATAC_minReads: 5
 ATAC_corr_met: "spearman"
 ATAC_adjpval: 0.01
 ATAC_log2FC: 1
+ATAC_XX_stage_DAR_clusters: 4
+ATAC_XY_stage_DAR_clusters: 4

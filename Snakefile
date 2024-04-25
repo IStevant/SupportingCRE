@@ -17,7 +17,9 @@ rule_all_input_list = [
 	"results/graphs/PNG/ATAC_sig_sex_DARs_annotation.png",
 	"results/graphs/PNG/ATAC_sex_DAR_upset.png",
 	"results/graphs/PDF/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
-	"results/graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf"
+	"results/graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
+	"results/graphs/PNG/ATAC_XX_DAR_stage_heatmap.png",
+	"results/graphs/PNG/ATAC_XY_DAR_stage_heatmap.png"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -341,3 +343,61 @@ rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 		pdf="results/graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf"
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
+
+rule ATAC_Get_XX_dynamic_DARs:
+	input:
+		counts="results/processed_data/ATAC_raw_counts.csv",
+		samplesheet="results/processed_data/ATAC_samplesheet.csv",
+	params:
+		adjpval=config["ATAC_adjpval"],
+		log2FC=config["ATAC_log2FC"],
+		sex="XX"
+	output:
+		csv="results/tables/ATAC_XX_DEG_stage.csv",
+		sig_DARs="results/processed_data/ATAC_sig_stage_DARs_XX.Robj"
+	script:
+		"workflow/scripts/ATAC_stage_DAR.R"
+
+rule ATAC_Get_XY_dynamic_DARs:
+	input:
+		counts="results/processed_data/ATAC_raw_counts.csv",
+		samplesheet="results/processed_data/ATAC_samplesheet.csv",
+	params:
+		adjpval=config["ATAC_adjpval"],
+		log2FC=config["ATAC_log2FC"],
+		sex="XY"
+	output:
+		csv="results/tables/ATAC_XY_DEG_stage.csv",
+		sig_DARs="results/processed_data/ATAC_sig_stage_DARs_XY.Robj"
+	script:
+		"workflow/scripts/ATAC_stage_DAR.R"
+
+rule ATAC_Plot_heatmap_dyn_DARs_XX:
+	input:
+		sig_DARs="results/processed_data/ATAC_sig_stage_DARs_XX.Robj",
+		norm_counts="results/processed_data/ATAC_norm_counts.csv",
+		samplesheet="results/processed_data/ATAC_samplesheet.csv"
+	params:
+		sex="XX",
+		clusters=config["ATAC_XX_stage_DAR_clusters"]
+	output:
+		clusters="results/tables/ATAC_XX_DAR_stage_heatmap_clusters.csv",
+		pdf="results/graphs/PDF/ATAC_XX_DAR_stage_heatmap.pdf",
+		png="results/graphs/PNG/ATAC_XX_DAR_stage_heatmap.png"
+	script:
+		"workflow/scripts/ATAC_stage_DAR_heatmap.R"
+
+rule ATAC_Plot_heatmap_dyn_DARs_XY:
+	input:
+		sig_DARs="results/processed_data/ATAC_sig_stage_DARs_XY.Robj",
+		norm_counts="results/processed_data/ATAC_norm_counts.csv",
+		samplesheet="results/processed_data/ATAC_samplesheet.csv"
+	params:
+		sex="XY",
+		clusters=config["ATAC_XY_stage_DAR_clusters"]
+	output:
+		clusters="results/tables/ATAC_XY_DAR_stage_heatmap_clusters.csv",
+		pdf="results/graphs/PDF/ATAC_XY_DAR_stage_heatmap.pdf",
+		png="results/graphs/PNG/ATAC_XY_DAR_stage_heatmap.png"
+	script:
+		"workflow/scripts/ATAC_stage_DAR_heatmap.R"
