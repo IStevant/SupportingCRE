@@ -69,7 +69,7 @@ stages <- unique(samplesheet$stages)
 filtered_SexDEGs <- lapply(stages, function(stg) get_sex_DEG_per_stage(SexDEGs, stg, adj.pval, log2FC))
 
 # For each stages, write DEG results into separated files
-export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0("results/RNA_DEG_sex_", stages[stg], ".csv")))
+export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0("results/tables/RNA_DEG_sex_", stages[stg], ".csv")))
 
 names(filtered_SexDEGs) <- stages
 save(filtered_SexDEGs, file=snakemake@output[['sig_DEGs']])
