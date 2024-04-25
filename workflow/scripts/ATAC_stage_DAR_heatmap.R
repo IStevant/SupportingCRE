@@ -28,26 +28,29 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	# Calculate z-scores
 	matrix <- t(scale(t(matrix_DAR)))
 
+	set.seed(654)
+
 	# Cluster matrix
 	row_dend <- hclust(dist(matrix), method= "ward.D2")
 	clustering <- cutree(row_dend, k=clusters)
 
-	# Order clusters
-	mean_per_cluster <- lapply(
-		unique(clustering),
-		function(cluster){
-			peaks <- names(clustering[clustering==cluster])
-			matrix_cluster <- matrix[rownames(matrix) %in% peaks,]
-			mean <- as.data.frame(t(colMeans(matrix_cluster)))
-			return(mean)
-		}
-	)
+	# # Order clusters
+	# mean_per_cluster <- lapply(
+	# 	unique(clustering),
+	# 	function(cluster){
+	# 		peaks <- names(clustering[clustering==cluster])
+	# 		matrix_cluster <- matrix[rownames(matrix) %in% peaks,]
+	# 		mean <- as.data.frame(t(matrixStats::colMedians(matrix_cluster)))
+	# 		return(mean)
+	# 	}
+	# )
 
-	mean_per_cluster <- data.table::rbindlist(mean_per_cluster)
-	o1 <- seriation::seriate(dist(mean_per_cluster), method="GW")
-	levels <- seriation::get_order(o1)
+	# mean_per_cluster <- data.table::rbindlist(mean_per_cluster)
+	# o1 <- seriation::seriate(dist(mean_per_cluster), method="OLO")
+	# levels <- seriation::get_order(o1)
 
-	clustering <- factor(clustering, levels=levels)
+	# clustering <- factor(clustering, levels=levels)
+
 	levels(clustering) <- letters[1:clusters]
 
 	# Save clustering
@@ -56,7 +59,7 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	# Limit zscore to |2|
 	matrix[matrix>2] <- 2
 	matrix[matrix<(-2)] <- (-2)
- 
+
 	# Prepare top annotation
 	conditions <-sapply(strsplit(colnames(matrix), "_"), `[`, 1)
 	annotation_col <- data.frame(
@@ -76,7 +79,6 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	warm <- colorRampPalette(c('#f4fbd2','#feeda3','#fa8a57','#d73027'))
 	mypalette <- c(rev(cold(12)), warm(12))
 
-	# set.seed(654)
 
 	# Top annotation (stages)
 	stage_anno <- HeatmapAnnotation(
@@ -115,7 +117,7 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		show_column_names = FALSE,
 		show_row_names = FALSE,
 		show_row_dend = FALSE,
-		cluster_row_slices = FALSE, 
+		cluster_row_slices = TRUE,
 		col = mypalette,
 		heatmap_legend_param = list(direction = "vertical"),
 		row_title=NULL
@@ -152,65 +154,8 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		width = width
 	)
 
-
-	p_fix <- panel_fix(plot_grid(gTree), width = width, height = height, units="inch")
-	p <- plot_grid(p_fix)
-
-	return(p_fix)
+	return(gTree)
 }
-
-###############################################
-# Fix complexeheatmap peak annotation
-
-panel_fix <- function(p = NULL, grob = NULL,
-						width = NULL, height = NULL, margin = 1, units = "cm",
-						filename = NULL) {
-	if (is.null(p) & is.null(grob)) {
-			stop("'p' or 'grob' must be provided with at least one.")
-	}
-	if (is.null(width) & is.null(height)) {
-			stop("'width' or 'height' must be provided with at least one.")
-	}
-	if (is.null(grob)) {
-			grob <- ggplotGrob(p)
-	}
-
-	panels <- grep("panel", grob[["layout"]][["name"]])
-	panel_index_h <- sort(unique(grob[["layout"]][["t"]][panels]))
-	panel_index_w <- sort(unique(grob[["layout"]][["l"]][panels]))
-	nw <- length(panel_index_w)
-	nh <- length(panel_index_h)
-	raw_w <- as.numeric(grob[["widths"]][panel_index_w])
-	raw_h <- as.numeric(grob[["heights"]][panel_index_h])
-	raw_aspect <- raw_h / raw_w
-	if (is.null(width)) {
-			width <- height / raw_aspect
-	}
-	if (is.null(height)) {
-			height <- width * raw_aspect
-	}
-	if (!length(width) %in% c(1, length(raw_aspect)) | !length(height) %in% c(1, length(raw_aspect))) {
-			stop("The length of 'width' and 'height' must be 1 or the length of panels.")
-	}
-	if (length(width) == 1) {
-			width <- rep(width, nw)
-	}
-	if (length(height) == 1) {
-			height <- rep(height, nh)
-	}
-	grob[["widths"]][panel_index_w] <- unit(width, units = units)
-	grob[["heights"]][panel_index_h] <- unit(height, units = units)
-	grob <- gtable_add_padding(grob, unit(margin, units = units))
-	plot_width <- convertWidth(sum(grob[["widths"]]), unitTo = units, valueOnly = TRUE)
-	plot_height <- convertHeight(sum(grob[["heights"]]), unitTo = units, valueOnly = TRUE)
-
-	if (!is.null(filename)) {
-			ggsave(filename = filename, plot = grob, units = units, width = plot_width, height = plot_height)
-	}
-	attr(grob, "size") <- list(units = units, width = plot_width, height = plot_height)
-	return(grob)
-}
-
 
 #################################################################################################################################
 
@@ -250,8 +195,8 @@ dynamic_peaks <- plot_simple_heatmap(
 save_plot(
 	snakemake@output[['pdf']], 
 	dynamic_peaks, 
-	base_width=33,
-	base_height=23.2,
+	base_width=14,
+	base_height=20,
 	units = c("cm"), 
 	dpi=300, 
 	bg = "white"
@@ -260,8 +205,8 @@ save_plot(
 save_plot(
 	snakemake@output[['png']], 
 	dynamic_peaks, 
-	base_width=33,
-	base_height=23.2,
+	base_width=14,
+	base_height=20,
 	units = c("cm"), 
 	dpi=300, 
 	bg = "white"
