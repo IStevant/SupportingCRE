@@ -1,3 +1,4 @@
 .snakemake/
 Rplots.pdf
 results/
+.character(highlight) 
