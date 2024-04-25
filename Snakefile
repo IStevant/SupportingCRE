@@ -16,7 +16,8 @@ rule_all_input_list = [
 	"graphs/PNG/ATAC_sex_DAR_histograms.png",
 	"graphs/PNG/ATAC_sig_sex_DARs_annotation.png",
 	"graphs/PNG/ATAC_sex_DAR_upset.png",
-	"graphs/PDF/ATAC_sex_DAR_TF_motifs.pdf"
+	"graphs/PDF/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
+	"graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -310,14 +311,32 @@ rule ATAC_Plot_sex_DAR_upset:
 		"scripts/ATAC_sex_DAR_upset.R"
 
 
-rule ATAC_TFBS_motifs_sex_DAR:
+rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 	input:
 		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj",
 		TPM="processed_data/RNA_TMP.csv"
 	params:
-		minTPM=config["RNA_minTPM"]
+		minTPM=config["RNA_minTPM"],
+		background="genome",
+		logos="FALSE",
+		nbTFs=40
 	output:
-		pdf="graphs/PDF/ATAC_sex_DAR_TF_motifs.pdf",
-		# png="graphs/PNG/ATAC_sex_DAR_TF_motifs.png"
+		pdf="graphs/PDF/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
+		png="graphs/PNG/ATAC_sex_DAR_TF_motifs_rdm_bg.png"
+	script:
+		"scripts/ATAC_sex_DAR_motif_enrich.R"
+
+
+rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
+	input:
+		sig_DARs="processed_data/ATAC_sig_SexDARs.Robj",
+		TPM="processed_data/RNA_TMP.csv"
+	params:
+		minTPM=config["RNA_minTPM"],
+		background="conditions",
+		logos="TRUE",
+		nbTFs=20
+	output:
+		pdf="graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf"
 	script:
 		"scripts/ATAC_sex_DAR_motif_enrich.R"
