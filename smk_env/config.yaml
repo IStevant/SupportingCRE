@@ -27,3 +27,7 @@ ATAC_adjpval: 0.01
 ATAC_log2FC: 1
 ATAC_XX_stage_DAR_clusters: 4
 ATAC_XY_stage_DAR_clusters: 4
+
+MULTI_peak_gene_distance: 50000
+MULTI_peak_gene_min_cor: 0.7
+MULTI_peak_gene_FDR: 0.01

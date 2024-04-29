@@ -361,7 +361,7 @@ get_entiched_TFs <- function(stg){
 	sel2 <- apply(SummarizedExperiment::assay(se2, "negLog10Padj"), 1, 
 				function(x) max(abs(x), 0, na.rm = TRUE)) > 10.0
 
-
+	write.csv(SummarizedExperiment::assay(se2[sel2, ]), file=paste0("results/tables/ATAC_sex_DAR_TF_", stg, "_", background,"_bg.csv"))
 	seSel <- se2[sel2, ]
 
 	top_XX <- names(sort(assays(seSel)$negLog10Padj[,"XX"], decreasing=TRUE)[1:nbTFs])
@@ -393,17 +393,26 @@ plot_TF_heatmap <- function(seSel, stg){
 	# If the logo is FALSE, print the heatmap side by side using cowplot
 	if (logos=="TRUE") {
 		# pdf(file=snakemake@output[['pdf']], width = 20,  height = nbTFs,  units = "cm")
-		heatmap <- plotMotifHeatmaps_exp(
-			x = seSel,
-			bincols = bincols,
-			which.plots = c("log2enr", "expr"), 
-			show_seqlogo = TRUE,
-			width = 1.3, 
-			cluster = hcl,
-			maxEnr = 1.5, 
-			maxSig = 100,
-			width.seqlogo = 1.8
+		heatmap <- grid.grabExpr(
+			plotMotifHeatmaps_exp(
+				x = seSel,
+					bincols = bincols,
+				which.plots = c("log2enr", "expr"), 
+				show_seqlogo = TRUE,
+				width = 1.3, 
+				cluster = hcl,
+				maxEnr = 1.5, 
+				maxSig = 100,
+				width.seqlogo = 1.8
+			),
+			wrap.grobs = TRUE
 		)
+		figure <- plot_grid(
+			heatmap,
+			labels = stg,
+			ncol=1
+		)
+		return(figure)
 	} else {
 		heatmap <- grid.grabExpr(
 			plotMotifHeatmaps_exp(
@@ -414,7 +423,8 @@ plot_TF_heatmap <- function(seSel, stg){
 				cluster = hcl,
 				maxEnr = 1.5, 
 				maxSig = 100
-			)
+			),
+			wrap.grobs = TRUE
 		)
 		figure <- plot_grid(
 			heatmap,
@@ -451,7 +461,7 @@ background <- snakemake@params[['background']]
 logos <- snakemake@params[['logos']]
 
 if (logos=="TRUE") {
-	width <- 80
+	width <- 70
 } else {
 	width <- 50
 }
@@ -486,38 +496,29 @@ enrichments <- foreach(stg=stages) %dopar% {
 # stg <- "E15.5"
 # enrichments <- list(get_entiched_TFs(stg))
 
-if (logos=="TRUE") {
-	pdf(snakemake@output[['pdf']], width=8, height=nbTFs/2)
-	# pdf("test.pdf", width=8, height=nbTFs/2)
-		for (i in seq_along(enrichments)){ plot_TF_heatmap(enrichments[[i]], stages[i]) }
-	dev.off()
+heatmap_list <- lapply(seq_along(enrichments), function(i) plot_TF_heatmap(enrichments[[i]], stages[i]))
 
-} else {
+figure <- plot_grid(
+	plotlist=heatmap_list,
+	labels = "AUTO",
+	ncol=4
+)
 
-	heatmap_list <- lapply(seq_along(enrichments), function(i) plot_TF_heatmap(enrichments[[i]], stages[i]))
+save_plot(
+	snakemake@output[['pdf']],
+	figure,
+	base_width=width,
+	base_height=nbTFs*1.2,
+	units = c("cm"), 
+	dpi=300
+)
 
-	figure <- plot_grid(
-		plotlist=heatmap_list,
-		labels = "AUTO",
-		ncol=4
-	)
-
-	save_plot(
-		snakemake@output[['pdf']],
-		figure,
-		base_width=width,
-		base_height=nbTFs,
-		units = c("cm"), 
-		dpi=300
-	)
-
-	save_plot(
-		snakemake@output[['png']],
-		figure,
-		base_width=width,
-		base_height=nbTFs,
-		units = c("cm"), 
-		dpi=300, 
-		bg = "white"
-	)
-}
+save_plot(
+	snakemake@output[['png']],
+	figure,
+	base_width=width,
+	base_height=nbTFs*1.2,
+	units = c("cm"), 
+	dpi=300, 
+	bg = "white"
+)

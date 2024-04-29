@@ -19,7 +19,9 @@ rule_all_input_list = [
 	"results/graphs/PDF/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
 	"results/graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
 	"results/graphs/PNG/ATAC_XX_DAR_stage_heatmap.png",
-	"results/graphs/PNG/ATAC_XY_DAR_stage_heatmap.png"
+	"results/graphs/PNG/ATAC_XY_DAR_stage_heatmap.png",
+	"results/tables/XX_sig_gene2peak_linkage.csv",
+	"results/tables/XY_sig_gene2peak_linkage.csv"
 ]
 
 if len(config["RNA_outliers"])<1:
@@ -237,7 +239,6 @@ rule ATAC_Get_matrices:
 	script:
 		"workflow/scripts/ATAC_clean_matrices.R"
 
-
 rule ATAC_Plot_consensus_peak_annotation:
 	input:
 		genome=config["genome"],
@@ -251,7 +252,6 @@ rule ATAC_Plot_consensus_peak_annotation:
 	script:
 		"workflow/scripts/ATAC_peak_annotation_per_sex.R"
 
-
 rule ATAC_corr_PCA:
 	input:
 		norm_data="results/processed_data/ATAC_norm_counts.csv"
@@ -262,7 +262,6 @@ rule ATAC_corr_PCA:
 		png="results/graphs/PNG/ATAC_corr_pca_all_samples.png"
 	script:
 		"workflow/scripts/Corr_pca.R"
-
 
 rule ATAC_Get_sex_DARs:
 	input:
@@ -277,7 +276,6 @@ rule ATAC_Get_sex_DARs:
 	script:
 		"workflow/scripts/ATAC_sex_DAR.R"
 
-
 rule ATAC_Plot_sex_DAR_histogram:
 	input:
 		sig_DARs="results/processed_data/ATAC_sig_SexDARs.Robj",
@@ -287,7 +285,6 @@ rule ATAC_Plot_sex_DAR_histogram:
 		png="results/graphs/PNG/ATAC_sex_DAR_histograms.png"
 	script:
 		"workflow/scripts/ATAC_plot_sex_DAR_hist.R"
-
 
 rule ATAC_Plot_sex_DAR_peak_annotation:
 	input:
@@ -311,7 +308,6 @@ rule ATAC_Plot_sex_DAR_upset:
 	script:
 		"workflow/scripts/ATAC_sex_DAR_upset.R"
 
-
 rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
@@ -321,13 +317,12 @@ rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 		minTPM=config["RNA_minTPM"],
 		background="genome",
 		logos="FALSE",
-		nbTFs=40
+		nbTFs=20
 	output:
 		pdf="results/graphs/PDF/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
 		png="results/graphs/PNG/ATAC_sex_DAR_TF_motifs_rdm_bg.png"
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
-
 
 rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 	input:
@@ -338,9 +333,10 @@ rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
 		logos="TRUE",
-		nbTFs=20
+		nbTFs=10
 	output:
-		pdf="results/graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf"
+		pdf="results/graphs/PDF/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
+		png="results/graphs/PNG/ATAC_sex_DAR_TF_motifs_sex_bg.png"
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
 
@@ -401,3 +397,36 @@ rule ATAC_Plot_heatmap_dyn_DARs_XY:
 		png="results/graphs/PNG/ATAC_XY_DAR_stage_heatmap.png"
 	script:
 		"workflow/scripts/ATAC_stage_DAR_heatmap.R"
+
+################################################################################################
+rule MULTI_Get_XX_gene_peak_correlation:
+	input:
+		RNA_samplesheet="results/processed_data/RNA_samplesheet.csv",
+		ATAC_samplesheet="results/processed_data/ATAC_samplesheet.csv",
+		RNA_norm_counts="results/processed_data/RNA_norm_counts.csv",
+		ATAC_norm_counts="results/processed_data/ATAC_norm_counts.csv"
+	params:
+		sex="XX",
+		distance=config["MULTI_peak_gene_distance"],
+		min_cor=config["MULTI_peak_gene_min_cor"],
+		FDR=config["MULTI_peak_gene_FDR"]
+	output:
+		linkage="results/tables/XX_sig_gene2peak_linkage.csv",
+	script:
+		"workflow/scripts/MULTI_gene2peak.R"
+
+rule MULTI_Get_XY_gene_peak_correlation:
+	input:
+		RNA_samplesheet="results/processed_data/RNA_samplesheet.csv",
+		ATAC_samplesheet="results/processed_data/ATAC_samplesheet.csv",
+		RNA_norm_counts="results/processed_data/RNA_norm_counts.csv",
+		ATAC_norm_counts="results/processed_data/ATAC_norm_counts.csv"
+	params:
+		sex="XY",
+		distance=config["MULTI_peak_gene_distance"],
+		min_cor=config["MULTI_peak_gene_min_cor"],
+		FDR=config["MULTI_peak_gene_FDR"]
+	output:
+		linkage="results/tables/XY_sig_gene2peak_linkage.csv",
+	script:
+		"workflow/scripts/MULTI_gene2peak.R"
