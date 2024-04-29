@@ -32,7 +32,7 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   tss_df <- tss[,c(1,2,3,4,6)]
   colnames(tss_df) <- c("chr","start","end","gene","strand")
   gr.tss <- GenomicRanges::makeGRangesFromDataFrame(tss_df,keep.extra.columns=TRUE)
-  peak_bed <- read.table(peak_annotation,head=T)
+  peak_bed <- peak_annotation
   peak_bed$Peak <- sprintf("%s:%s-%s",peak_bed$Chromosome, peak_bed$Start, peak_bed$End)
   rownames(peak_bed) <- NULL
   peak_gr <- GenomicRanges::makeGRangesFromDataFrame(peak_bed, keep.extra.columns=TRUE)
@@ -151,8 +151,6 @@ anno <- annoMergedPeaks(
 	tss_flank=1000
 )
 
-write.table(anno, file="results/processed_data/Merged_Peak_Anno.txt", row.names=FALSE, quote=FALSE, sep="\t")
-
 #################################################################################################################################
 
 ###########################################
@@ -216,7 +214,7 @@ p2g_split <- foreach(split=split_rna) %dopar% {
 	my_getPeak2Gene(
 		atac_matrix = atac_means,
 		rna_matrix = split,
-		peak_annotation = "results/processed_data/Merged_Peak_Anno.txt",
+		peak_annotation = anno,
 		max_distance = distance,
 		N_permutation = 10000
 	)
