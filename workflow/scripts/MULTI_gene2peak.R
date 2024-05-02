@@ -6,11 +6,12 @@ source(".Rprofile")
 #                                         #
 ###########################################
 suppressPackageStartupMessages({
-	library("cisDynet")
 	library("dplyr")
 	library('doParallel')
 	library('foreach')
 	library("tidyverse")
+	library("MASS")
+	library("cisDynet")
 })
 
 doParallel::registerDoParallel(cores=4)
