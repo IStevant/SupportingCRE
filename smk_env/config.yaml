@@ -5,7 +5,6 @@ marker_genes: "workflow/data/gonad_marker_genes.csv"
 TF_genes: "workflow/data/mouse_transcription_factors.txt"
 TF_pheno: "workflow/data/genes_gonad_asociated_pheno_MGI.txt"
 
-
 RNA_counts: "workflow/data/RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
 RNA_TPM: "workflow/data/RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
 RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
@@ -18,7 +17,6 @@ RNA_sex_double_heatmap_clusters: 8
 RNA_XX_stage_DEG_clusters: 6
 RNA_XY_stage_DEG_clusters: 6
 
-
 ATAC_counts: "workflow/data/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
 ATAC_promoter_distance: 3000
 ATAC_minReads: 5
@@ -29,5 +27,5 @@ ATAC_XX_stage_DAR_clusters: 4
 ATAC_XY_stage_DAR_clusters: 4
 
 MULTI_peak_gene_distance: 500000
-MULTI_peak_gene_min_cor: 0.6
-MULTI_peak_gene_FDR: 0.05
+MULTI_peak_gene_min_cor: 0.8
+MULTI_peak_gene_FDR: 0.01
