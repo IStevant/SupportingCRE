@@ -26,7 +26,7 @@ doParallel::registerDoParallel(cores=4)
 
 my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
                           max_distance=20000, N_permutation=10000, save_path=NA){
-  checkGeAnno()
+  # checkGeAnno()
   atac_paired_norm <- atac_matrix
   rna_paired <- rna_matrix
   logfile("Remove the gene with all expression value is 0.")
