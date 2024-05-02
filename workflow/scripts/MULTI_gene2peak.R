@@ -122,7 +122,7 @@ addAnnotation <- function(gene_bed, gtf, genome_size) {
 }
 
 annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path=NA, save_name=NA){
-  checkGeAnno()
+  # checkGeAnno()
   peak <- read.table(quant_data, header = T, row.names = 1)
   merged<- data.frame(peak=rownames(peak))
   merged_peaks <- merged %>% tidyr::separate(peak, c("chrom", "tem1"), ":") %>% tidyr::separate(tem1, c("start", "end"), "-")
