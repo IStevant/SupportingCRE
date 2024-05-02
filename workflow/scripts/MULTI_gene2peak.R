@@ -29,7 +29,7 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   # checkGeAnno()
   atac_paired_norm <- atac_matrix
   rna_paired <- rna_matrix
-  logfile("Remove the gene with all expression value is 0.")
+  # logfile("Remove the gene with all expression value is 0.")
   rna_paired <- rna_paired[rowSums(rna_paired) > 0,]
   tss <- CATAnno$tss %>% as.data.frame()
   rownames(tss) <- tss$name
@@ -42,7 +42,7 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   peak_gr <- GenomicRanges::makeGRangesFromDataFrame(peak_bed, keep.extra.columns=TRUE)
 
   ## Make the pseudo data for permutation
-  logfile("Make the pseudo data for permutation...")
+  # logfile("Make the pseudo data for permutation...")
   test_random <- atac_paired_norm[sample(nrow(atac_paired_norm), N_permutation), ]
 
 
