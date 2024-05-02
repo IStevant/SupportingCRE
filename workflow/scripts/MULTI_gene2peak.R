@@ -9,9 +9,9 @@ suppressPackageStartupMessages({
 	library("dplyr")
 	library('doParallel')
 	library('foreach')
-	library("tidyverse")
-	library("MASS")
-	library("cisDynet")
+	# library("tidyverse")
+	# library("MASS")
+	# library("cisDynet")
 })
 
 doParallel::registerDoParallel(cores=4)
@@ -107,6 +107,61 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
     saveRDS(final_res, sprintf("%s/Peak2Gene_All_Links.rds",save_path))
   }
   return(final_res)
+}
+
+addAnnotation <- function(gene_bed, gtf, genome_size) {
+  # gene <- valr::read_bed(gene_bed, n_fields = 6)
+  gene <- valr::read_bed(gene_bed)  ## valr 0.7.0 update
+  tss <- gene
+  tss$start <- ifelse(tss$strand=="+", tss$start, tss$end)
+  tss$end <- ifelse(tss$strand=="+", tss$start + 1, tss$end+1)
+  genome_size <- valr::read_genome(genome_size)
+  CATAnno <- list(gene, tss, genome_size, gtf)
+  names(CATAnno) <- c("gene", "tss", "genome","gtf")
+  assign("CATAnno", CATAnno, envir = .GlobalEnv)
+}
+
+annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path=NA, save_name=NA){
+  checkGeAnno()
+  peak <- read.table(quant_data, header = T, row.names = 1)
+  merged<- data.frame(peak=rownames(peak))
+  merged_peaks <- merged %>% tidyr::separate(peak, c("chrom", "tem1"), ":") %>% tidyr::separate(tem1, c("start", "end"), "-")
+  merged_peaks$start <- as.integer(merged_peaks$start)
+  merged_peaks$end <- as.integer(merged_peaks$end)
+
+  gene <- CATAnno$gene
+  tss <- CATAnno$tss
+  gene$start <- ifelse(gene$strand == "+", gene$start + tss_flank, gene$start)
+  gene$end <- ifelse(gene$strand == "+", gene$end, gene$end - tss_flank)
+  genome <- CATAnno$genome
+  promoter <- valr::bed_flank(tss, genome, left = cutoff, right = tss_flank, strand = TRUE)
+
+  merged_peaks$Start <- merged_peaks$start
+  merged_peaks$End <- merged_peaks$end
+  merged_peaks$start <- as.integer((merged_peaks$start + merged_peaks$end) / 2)
+  merged_peaks$end <- merged_peaks$start + 1
+  pro <- valr::bed_intersect(merged_peaks, promoter)[,c(1:5)]
+  pro <-  pro[!duplicated(pro[,c(1,2,3)]),]
+  pro$Type <- "Proximal"
+  colnames(pro)[2:5] <- c("start","end","Start","End")
+  intra <- valr::bed_intersect(merged_peaks, promoter,invert = TRUE)
+  intra <-  intra[!duplicated(intra[,c(1,2,3)]),]
+  intra_res <- valr::bed_intersect(intra, gene)[,c(1:5)]
+  intra_res <- intra_res[!duplicated(intra_res[,c(1,2,3)]),]
+  intra_res$Type <- "Intragenic"
+  colnames(intra_res)[2:5] <- c("start","end","Start","End")
+  re <- valr::bed_intersect(intra, intra_res,invert = TRUE)[,c(1:5)]
+  re <-  re[!duplicated(re[,c(1,2,3)]),]
+  re$Type <- "Distal"
+  intra_pe <- rbind(re, intra_res, pro)
+  intra_pe <- as.data.frame(intra_pe[!duplicated(intra_pe[,c(1,2,3)]), ])
+  intra_pe <- intra_pe[,c(1,4,5,6,2)]
+  colnames(intra_pe) <- c("Chromosome","Start","End","Type","summit")
+  rownames(intra_pe) <- sprintf("%s:%s-%s", intra_pe$Chromosome, intra_pe$Start, intra_pe$End)
+  if(!is.na(save_path)){
+  write.table(sprintf("%s/%s_Merged_Peaks_Annotations.tsv", save_path, save_name), sep='\t', quote=F, col.names=T, row.names=T)
+  }
+  return(intra_pe)
 }
 
 ###########################################
