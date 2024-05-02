@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
 	library('foreach')
 	library("tidyverse")
 	library("MASS")
-	# library("cisDynet")
+	library("cisDynet")
 })
 
 doParallel::registerDoParallel(cores=4)
