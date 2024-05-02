@@ -10,6 +10,7 @@ suppressPackageStartupMessages({
 	library("dplyr")
 	library('doParallel')
 	library('foreach')
+	library("tidyverse")
 })
 
 doParallel::registerDoParallel(cores=4)
@@ -19,6 +20,8 @@ doParallel::registerDoParallel(cores=4)
 #               Functions                 #
 #                                         #
 ###########################################
+
+# Modified version of the function from cisDynet
 
 my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
                           max_distance=20000, N_permutation=10000, save_path=NA){
@@ -104,10 +107,6 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   }
   return(final_res)
 }
-
-
-
-
 
 ###########################################
 #                                         #
