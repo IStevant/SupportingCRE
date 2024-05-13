@@ -104,6 +104,16 @@
       ],
       "Hash": "219e412d379146b5e2b1c7ec6cc92b8f"
     },
+    "BSgenome.Mmusculus.UCSC.mm39": {
+      "Package": "BSgenome.Mmusculus.UCSC.mm39",
+      "Version": "1.4.3",
+      "Source": "Bioconductor",
+      "Requirements": [
+        "BSgenome",
+        "R"
+      ],
+      "Hash": "032e86183d0272059f87fc94e914020f"
+    },
     "Biobase": {
       "Package": "Biobase",
       "Version": "2.62.0",

@@ -137,7 +137,7 @@ plot_volcano_sex <- function(dds, stage, p.adj, log2FC, colors){
 
 
 
-plot_DEG <- function(dds, stage, p.adj, log2FC, colors){
+plot_DEG <- function(dds, stage, p.adj, log2FC, colors, path){
 	volcano <- plot_volcano_sex(dds, stage, p.adj, log2FC, colors)
 
 	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
@@ -159,7 +159,7 @@ plot_DEG <- function(dds, stage, p.adj, log2FC, colors){
 		cluster=sig.DE$Diff.Exp.
 	)
 
-	res_file <- paste0("results/tables/RNA_", stage, "_GO_sex_DEG.csv")
+	res_file <- paste0(path,"/RNA_", stage, "_GO_sex_DEG.csv")
 	GO_terms <- GO_term_per_cluster(de_genes, res_file)
 	go_term_plot <- go_plot(GO_terms, nb_terms=5)
 
@@ -235,6 +235,7 @@ names(conditions_color) <- sort(unique(samplesheet$conditions))
 
 adj.pval <- snakemake@params[['adjpval']]
 log2FC <- snakemake@params[['log2FC']]
+path <- snakemake@params[['path']]
 
 ###########################################
 #                                         #
@@ -243,7 +244,7 @@ log2FC <- snakemake@params[['log2FC']]
 ###########################################
 
 sex_DEG_plots <- foreach(stg=stages) %dopar% {
-	plot_DEG(SexDEGs, stg, adj.pval, log2FC, conditions_color)
+	plot_DEG(SexDEGs, stg, adj.pval, log2FC, conditions_color, path)
 }
 
 figure <- plot_grid(

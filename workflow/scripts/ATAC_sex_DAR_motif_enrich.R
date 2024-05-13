@@ -9,7 +9,11 @@ source("workflow/scripts/00.color_palettes.R")
 
 suppressPackageStartupMessages({
 	library("monaLisa")
-	library("BSgenome.Mmusculus.UCSC.mm10")
+	if (snakemake@params[['genome']]=="mm10"){
+		library("BSgenome.Mmusculus.UCSC.mm10")
+	} else {
+		library("BSgenome.Mmusculus.UCSC.mm39")
+	}
 	library('doParallel')
 	library('foreach')
 	library('dplyr')
@@ -258,7 +262,7 @@ plotMotifHeatmaps_exp <- function(x,
 	invisible(ret)
 }
 
-get_entiched_TFs <- function(stg){
+get_entiched_TFs <- function(stg, save_folder){
 	# Select the genes expressed at a specific stage for both sexes
 	genes <- TPM[,grep(stg, colnames(TPM))]
 	# genes <- TPM[,grep("XX", colnames(genes))]
@@ -302,7 +306,11 @@ get_entiched_TFs <- function(stg){
 	all <- c(female, male)
 
 	# Get the peak sequences
-	sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, all)
+	if (genome_version=="mm10"){
+		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, all)
+	} else {
+		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm39, all)
+	}
 
 	# Define which sequences are male or female specific
 	bins <- rep(c("XX", "XY"), c(length(female), length(male)))
@@ -313,16 +321,29 @@ get_entiched_TFs <- function(stg){
 	# If background is "genome", run the analysis against radom genomic regions
 	# Else, compare the two sexes
 	if (background=="genome"){
-		se2 <- calcBinnedMotifEnrR(
-			seqs = sequences, 
-			bins = bins,
-			pwmL = pwms,
-			background = "genome",
-			genome = BSgenome.Mmusculus.UCSC.mm10,
-			genome.regions = NULL, # sample from full genome
-			genome.oversample = 2,
-			BPPARAM = BiocParallel::MulticoreParam(4)
-		)
+		if (genome_version=="mm10"){
+			se2 <- calcBinnedMotifEnrR(
+				seqs = sequences, 
+				bins = bins,
+				pwmL = pwms,
+				background = "genome",
+				genome = BSgenome.Mmusculus.UCSC.mm10,
+				genome.regions = NULL, # sample from full genome
+				genome.oversample = 2,
+				BPPARAM = BiocParallel::MulticoreParam(4)
+			)
+		} else {
+			se2 <- calcBinnedMotifEnrR(
+				seqs = sequences, 
+				bins = bins,
+				pwmL = pwms,
+				background = "genome",
+				genome = BSgenome.Mmusculus.UCSC.mm39,
+				genome.regions = NULL, # sample from full genome
+				genome.oversample = 2,
+				BPPARAM = BiocParallel::MulticoreParam(4)
+			)
+		}
 	} else {
 		se2 <- calcBinnedMotifEnrR(
 			seqs = sequences, 
@@ -361,7 +382,12 @@ get_entiched_TFs <- function(stg){
 	sel2 <- apply(SummarizedExperiment::assay(se2, "negLog10Padj"), 1, 
 				function(x) max(abs(x), 0, na.rm = TRUE)) > 10.0
 
-	write.csv(SummarizedExperiment::assay(se2[sel2, ]), file=paste0("results/tables/ATAC_sex_DAR_TF_", stg, "_", background,"_bg.csv"))
+	TF_summary <- data.frame(
+		SummarizedExperiment::assay(se2[sel2, ]),
+		TF.name=se2[sel2, ]@elementMetadata$motif.name
+	)
+
+	write.csv(TF_summary, file=paste0(save_folder, "/ATAC_sex_DAR_TF_", stg, "_", background,"_bg.csv"))
 	seSel <- se2[sel2, ]
 
 	top_XX <- names(sort(assays(seSel)$negLog10Padj[,"XX"], decreasing=TRUE)[1:nbTFs])
@@ -444,21 +470,33 @@ plot_TF_heatmap <- function(seSel, stg){
 
 # filtered_SexDARs
 load(snakemake@input[['sig_DARs']])
+# load("results/processed_data/mm39/ATAC_sig_SexDARs.Robj")
 
 # Load RNA-seq TPM matrix to filter the TFs that are expressed in the gonads
 TPM <- read.csv(file=snakemake@input[['TPM']], header=TRUE, row.names=1)
+# TPM <- read.csv(file="results/processed_data/mm39/RNA_TPM.csv", header=TRUE, row.names=1)
 
 # Load the mouse TFs list
 TFs <- as.vector(read.csv(snakemake@input[['TF_genes']], header=FALSE)[,1])
+# TFs <- as.vector(read.csv("workflow/data/mouse_transcription_factors.txt", header=FALSE)[,1])
 
 # Minimum TPM value to considere a gene expressed
 minTPM <- snakemake@params[['minTPM']]
+# minTPM <- 2
 
 # Run analysis using the genome bakground or calculating the enrichment compared to the conditions
 background <- snakemake@params[['background']]
+# background <- "conditions"
+
+save_folder <- snakemake@params[['save_folder']]
+# save_folder <- "."
 
 # Print the logos of the TFs on the heatmap
 logos <- snakemake@params[['logos']]
+# logos <- FALSE
+
+genome_version <- snakemake@params[['genome']]
+# genome_version <- "mm39"
 
 if (logos=="TRUE") {
 	width <- 70
@@ -468,6 +506,7 @@ if (logos=="TRUE") {
 
 # Nb of top TFs per sex to print 
 nbTFs <- snakemake@params[['nbTFs']]
+# nbTFs <- 10
 
 stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
 sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
@@ -487,10 +526,11 @@ JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 ###########################################
 
 stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
+# stages <- "E11.5"
 
 # For each stage, get TFBS motid enrichments
 enrichments <- foreach(stg=stages) %dopar% {
-	get_entiched_TFs(stg)
+	get_entiched_TFs(stg, save_folder)
 }
 
 # stg <- "E15.5"

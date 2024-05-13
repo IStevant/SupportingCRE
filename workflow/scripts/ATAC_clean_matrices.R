@@ -59,7 +59,9 @@ get_normalized_counts <- function(raw_counts, samplesheet){
 run_filter_low_counts <- function(data, minExp=5) {
 	col_names <- colnames(data)
 	data <- t(apply(data, 1, filter_low_counts, col_names = col_names, minExp = minExp))
-	return(as.data.frame(data))
+	data <- as.data.frame(data)
+	data <- data[rowSums(data[])>0,]
+	return(data)
 }
 filter_low_counts <- function(row, col_names, minExp) {
 	if (max(row) < minExp) {
@@ -98,8 +100,7 @@ raw_counts <- get_peak_matrix(
 ###########################################
 
 # Remove peaks if max value < x reads
-raw_counts <- run_filter_low_counts(raw_counts, 5)
-
+raw_counts <- run_filter_low_counts(raw_counts, minReads)
 
 ###########################################
 #                                         #

@@ -69,6 +69,8 @@ samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
 adj.pval <- snakemake@params[['adjpval']]
 log2FC <- snakemake@params[['log2FC']]
 
+save_folder <- snakemake@params[['save_folder']]
+
 ###########################################
 #                                         #
 #     DESeq2 analysis sex per stages      #
@@ -90,7 +92,7 @@ stages <- unique(samplesheet$stages)
 filtered_SexDARs <- lapply(stages, function(stg) get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC))
 
 # For each stages, write DAR results into separated files
-export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDARs[stg], paste0("results/tables/ATAC_DAR_sex_", stages[stg], ".csv")))
+export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDARs[stg], paste0(save_folder, "/ATAC_DAR_sex_", stages[stg], ".csv")))
 
 names(filtered_SexDARs) <- stages
 save(filtered_SexDARs, file=snakemake@output[['sig_DARs']])

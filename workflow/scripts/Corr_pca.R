@@ -130,6 +130,7 @@ plot.pca <- function(matrix, conditions, colours, PCs=c("PC1", "PC2")){
 ###########################################
 
 norm_data <- read.csv(file=snakemake@input[['norm_data']], row.names=1)
+# norm_data <- read.csv("results/processed_data/mm39/RNA_TMP_all_samples.csv", row.names=1)
 # print(head(norm_data))
 
 conditions <- paste(
@@ -142,6 +143,7 @@ names(conditions_color) <- sort(unique(conditions))
 # print(conditions)
 
 corr_method <- snakemake@params[['corr_method']]
+# corr_method <- "spearman"
 
 ###########################################
 #                                         #

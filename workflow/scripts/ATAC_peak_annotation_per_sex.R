@@ -86,12 +86,15 @@ plot_anno_sex <- function(anno){
 
 # peak_list
 load(file=snakemake@input[['peak_list']])
+# load(file="workflow/data/mm10/ATAC_all_consensus_peaks_2rep_list.Robj")
 
 # Promoter region, i.e. distance to TSS
 promoter <- snakemake@params[['promoter']]
+# promoter <- 3000
 
 # Load mouse genome
 genome_file <- snakemake@input[['genome']]
+# genome_file <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
 mm10Genes <- rtracklayer::import(genome_file)
 # the column symbol was present in other version of the script so I add it again but ultimately change the $symbol to $gene_name
 mm10Genes$symbol <- mm10Genes$gene_name
@@ -107,8 +110,9 @@ txdb <- GenomicFeatures::makeTxDbFromGRanges(
 #                                         #
 ###########################################
 
-XX_peaks <- peak_list$XX
-XY_peaks <- peak_list$XY
+XX_peaks <- peak_list[["XX"]]
+
+XY_peaks <- peak_list[["XY"]]
 
 XX_anno <- lapply(
 	XX_peaks, 
@@ -116,8 +120,7 @@ XX_anno <- lapply(
 		ChIPseeker::annotatePeak(stage, tssRegion=c(-promoter, promoter), TxDb=txdb)
 )
 
-names(XX_anno) <- names(XX_peaks)
-
+names(XX_anno) <- sapply(strsplit(names(XX_peaks), "_"), `[`, 1)
 
 XY_anno <- lapply(
 	XY_peaks, 
@@ -125,7 +128,7 @@ XY_anno <- lapply(
 		ChIPseeker::annotatePeak(stage, tssRegion=c(-promoter, promoter), TxDb=txdb)
 )
 
-names(XY_anno) <- names(XY_peaks)
+names(XY_anno) <- sapply(strsplit(names(XY_peaks), "_"), `[`, 1)
 
 peak_anno_list <- list(
 	XX=XX_anno,
@@ -147,7 +150,7 @@ figures <- plot_grid(
 )
 
 save_plot(
-	snakemake@output[['pdf']], 
+	snakemake@output[['pdf']],
 	figures, 
 	base_width=30,
 	base_height=20,
