@@ -1,40 +1,15 @@
-# Can be either "mm10" or "mm39"
-# Overwrite using --config genome_version="mmxx" when running the pipeline
-genome_version: "mm10"
+cores: 12
+latency-wait: 60
+reason: True
+show-failed-logs: True
+keep-going: True
+printshellcmds: True
+rerun-incomplete: True
+restart-times: 3
 
-path_to_data: "workflow/data/"
-path_to_process: "results/processed_data/"
-path_to_tables: "results/tables/"
-path_to_graphs: "results/graphs/"
-
-protein_genes: "workflow/data/mart_prot_coding_genes.txt"
-marker_genes: "workflow/data/gonad_marker_genes.csv"
-TF_genes: "workflow/data/mouse_transcription_factors.txt"
-TF_pheno: "workflow/data/genes_gonad_asociated_pheno_MGI.txt"
-
-whole_gonad_RNAseq: "Zhao_tpm_matrix_for_analysis.csv"
-
-RNA_counts: "RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
-RNA_TPM: "RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
-RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
-RNA_minReads: 15
-RNA_minTPM: 2
-RNA_corr_met: "spearman"
-RNA_adjpval: 0.01
-RNA_log2FC: 0.5
-RNA_sex_double_heatmap_clusters: 8
-RNA_XX_stage_DEG_clusters: 6
-RNA_XY_stage_DEG_clusters: 6
-
-ATAC_counts: "ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
-ATAC_promoter_distance: 1000
-ATAC_minReads: 50
-ATAC_corr_met: "spearman"
-ATAC_adjpval: 0.01
-ATAC_log2FC: 1
-ATAC_XX_stage_DAR_clusters: 4
-ATAC_XY_stage_DAR_clusters: 4
-
-MULTI_peak_gene_distance: 500000
-MULTI_peak_gene_min_cor: 0.7
-MULTI_peak_gene_FDR: 0.01
+# Cluster submission
+jobname: "{rule}.{jobid}"              # Provide a custom name for the jobscript that is submitted to the cluster.
+max-jobs-per-second: 1                 #Maximal number of cluster/drmaa jobs per second, default is 10, fractions allowed.
+max-status-checks-per-second: 10       #Maximal number of job status checks per second, default is 10
+jobs: 20                               #Use at most N CPU cluster/cloud jobs in parallel.
+cluster: "sbatch --output=\"jobs/{rule}/slurm_%x_%j.out\" --error=\"jobs/{rule}/slurm_%x_%j.log\""
