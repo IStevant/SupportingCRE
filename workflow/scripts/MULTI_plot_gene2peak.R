@@ -10,12 +10,12 @@ suppressPackageStartupMessages({
 	library("Gviz")
 	library("GenomicInteractions")
 	library("InteractionSet")
-	# library("BSgenome.Mmusculus.UCSC.mm10")
-	# library("TxDb.Mmusculus.UCSC.mm10.knownGene")
-	# library("Mus.musculus")
 	library("dplyr")
 	library('doParallel')
 	library('foreach')
+	library("cowplot")
+	library("grid")
+	library("ggplotify")
 })
 
 doParallel::registerDoParallel(cores=12)
@@ -29,14 +29,21 @@ doParallel::registerDoParallel(cores=12)
 import_bw_files <- function(folder, files, locus, window){
 
 	locus <- resize(gene_TSS[gene_TSS$name %in% locus,], width=2, fix='start')
+	full_locus <- locus
+	start(full_locus) <- start(full_locus) - window[1]
+	end(full_locus) <- end(full_locus) + window[2]
 
 	imports <- foreach(file=files, .final = function(file) setNames(file, files)) %dopar% {
 		sex <- sapply(strsplit(file, "_"), `[`, 2)
 		stage <- sapply(strsplit(file, "_"), `[`, 1)
 		gr <- rtracklayer::import(
 			paste(folder, file, sep="/"),
-			which=locus+window
+			which=full_locus
 		)
+		if(length(gr)<1){
+			gr <- locus
+			gr$score <- 0.1
+		}
 		gr$cond <- rep(paste0(sex, " ", stage), length(gr))
 		return(gr)
 	}
@@ -85,57 +92,63 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 	return(track)
 }
 
+
 plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 
 	locus_TSS <- resize(gene_TSS[gene_TSS$name %in% locus,], width=2, fix='start')
 
-	locus_gr <- locus_TSS+window
+	full_locus <- locus_TSS
+	start(full_locus) <- start(full_locus) - window[1]
+	end(full_locus) <- end(full_locus) + window[2]
+
+	locus_gr <- full_locus
 	peak_gr_locus <- subsetByOverlaps(peak_gr, locus_gr)
-
-
 	gene_links <- links[links$Gene %in% locus,]
-	cor_type <- gene_links$correlations
-	cor_type[cor_type>0] <- "Positive"
-	cor_type[cor_type<0] <- "Negative"
-	colors <- cor_type
-	colors[colors=="Positive"] <- "#EF6351"
-	colors[colors=="Negative"] <- "#2191FB"
+	print(paste(nrow(gene_links), "interactions found."))
 
-	link_peak_gr <- GRanges(gene_links$Peak)
-	link_peak_gr$type <- cor_type
-	link_peak_gr$colors <- colors
-	link_gene_TSS <- GRanges(seqname=seqnames(link_peak_gr), ranges = IRanges::IRanges(start=gene_links$TSS, end=gene_links$TSS+1))
-	link_gene_TSS$type <- rep("Promoter", length(link_gene_TSS))
-	interactions <- GenomicInteractions(link_peak_gr, link_gene_TSS, counts=abs(gene_links$correlations))
-	annotateInteractions(
-		interactions, 
-		list(
-			positive=link_peak_gr[link_peak_gr$type=="Positive",], 
-			negative=link_peak_gr[link_peak_gr$type=="Negative",]
+	# If links exist, plot link track
+	if(nrow(gene_links)>=1){
+		cor_type <- gene_links$correlations
+		cor_type[cor_type>0] <- "Positive"
+		cor_type[cor_type<0] <- "Negative"
+		colors <- cor_type
+		colors[colors=="Positive"] <- "#EF6351"
+		colors[colors=="Negative"] <- "#2191FB"
+
+		link_peak_gr <- GRanges(gene_links$Peak)
+		link_peak_gr$type <- cor_type
+		link_peak_gr$colors <- colors
+		link_gene_TSS <- GRanges(seqname=seqnames(link_peak_gr), ranges = IRanges::IRanges(start=gene_links$TSS, end=gene_links$TSS+1))
+		link_gene_TSS$type <- rep("Promoter", length(link_gene_TSS))
+		interactions <- GenomicInteractions(link_peak_gr, link_gene_TSS, counts=abs(gene_links$correlations))
+		annotateInteractions(
+			interactions, 
+			list(
+				positive=link_peak_gr[link_peak_gr$type=="Positive",], 
+				negative=link_peak_gr[link_peak_gr$type=="Negative",]
+			)
 		)
-	)
-	# interactions$correlation <- gene_links$correlations
-	interaction_track <- InteractionTrack(interactions, name = "Links")
+		# interactions$correlation <- gene_links$correlations
+		interaction_track <- InteractionTrack(interactions, name = "Links")
 
-	displayPars(interaction_track) <- list(
-		plot.anchors=FALSE,
-		# col.interactions="red",
-		# interaction.measure = "counts",
-		# interaction.dimension="width",
-		# plot.trans=FALSE,
-		plot.outside = TRUE,
-		# plot.outside = FALSE,
-		col.interaction.types= c('positive-distal'="#EF6351", 'negative-distal'="#2191FB"),
-		# col.outside="grey",
-		rotation.title=0,
-		legend=TRUE
-	)
-
-
+		displayPars(interaction_track) <- list(
+			plot.anchors=FALSE,
+			# col.interactions="red",
+			# interaction.measure = "counts",
+			# interaction.dimension="width",
+			# plot.trans=FALSE,
+			plot.outside = TRUE,
+			# plot.outside = FALSE,
+			col.interaction.types= c('positive-distal'="#EF6351", 'negative-distal'="#2191FB"),
+			# col.outside="grey",
+			rotation.title=0,
+			legend=TRUE
+		)
+	}
 
 	genome_track <- GenomeAxisTrack(
 		col = "#333333", 
-		fontsize=8,
+		fontsize=13,
 		lwd=1,
 		distFromAxis=0.5,
 		labelPos = "alternating",
@@ -149,9 +162,10 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 		chromosome = as.character(seqnames(locus_gr)),
 		start = start(locus_gr),
 		end = end(locus_gr),
-		fontface.group="bold.italic",
+		fontface.group="italic",
 		col = NULL,
-		fill = "#585858", 
+		fill = "#585858",
+		fontcolor.group= "#333333",
 		fontsize.group=18,
 		sizes=0.3,
 		rotation.title=0
@@ -164,7 +178,7 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 		start = start(peak_gr_locus),
 		end = end(peak_gr_locus),
 		strand = as.character(strand(peak_gr_locus)),
-		name = "Peaks",
+		name = "OCRs",
 		col = "#5f4780",
 		fill = "#5f4780",
 		sizes=0.2,
@@ -173,40 +187,91 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 
 
 	visible_linked_peaks <- subsetByOverlaps(link_peak_gr, locus_gr)
+	promoter <- locus_TSS+500
 
-	ht <- HighlightTrack(
-		trackList = c(peak_track, gene_track, plot_list),
-		start = start(visible_linked_peaks),
-		end = end(visible_linked_peaks),
-		col=visible_linked_peaks$colors,
-		fill=visible_linked_peaks$colors,
-		chromosome=as.character(seqnames(visible_linked_peaks)),
-		alpha=0.1
-	)
+	if(length(visible_linked_peaks)>=1){
+		ht <- HighlightTrack(
+			trackList = c(peak_track, gene_track, plot_list),
+			start = c(start(visible_linked_peaks), start(promoter)),
+			end = c(end(visible_linked_peaks), end(promoter)),
+			col = c(visible_linked_peaks$colors, "#000000"),
+			fill = c(visible_linked_peaks$colors, "#000000"),
+			chromosome = as.character(unique(seqnames(visible_linked_peaks))),
+			alpha=0.1
+		)
 
-	# plotTracks(list(itrack, gtrack, ht), from = lim[1], to = lim[2])
+		plot <- plotTracks(
+			c(interaction_track, ht, genome_track),
+			chromosome = as.character(seqnames(locus_gr)),
+			from = start(locus_gr),
+			to = end(locus_gr),
+			transcriptAnnotation="symbol",
+			background.title = "transparent",
+			col.border.title="transparent",
+			col.title = "#333333",
+			col.axis = "#333333",
+			alpha.title=1,
+			alpha.axis=1,
+			sizes=c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
+			cex.title=0.9,
+			title.width=1
+		)
 
+	} else if(nrow(gene_links)<1) {
+		ht <- HighlightTrack(
+			trackList = c(peak_track, gene_track, plot_list),
+			start = start(promoter),
+			end = end(promoter),
+			col = "#000000",
+			fill = "#000000",
+			chromosome = as.character(seqnames(promoter)),
+			alpha=0.1
+		)
 
-	plot <- plotTracks(
-		c(link_track, ht, genome_track),
-		chromosome = as.character(seqnames(locus_gr)),
-		from = start(locus_gr),
-		to = end(locus_gr),
-		fontsize=10,
-		transcriptAnnotation="symbol",
-		background.title = "transparent",
-		col.border.title="transparent",
-		col.title = "#333333",
-		col.axis = "#333333",
-		# rotation.title=0,
-		alpha.title=1,
-		alpha.axis=1,
-		sizes=c(0.5, 0.2, 0.3, rep(0.5, length(plot_list)), 0.4),
-		cex.title=0.8,
-		title.width=0.7,
-		stackHeight=2
-		# rotation.title=0
-	)
+		plot <- plotTracks(
+			c(ht, genome_track),
+			chromosome = as.character(seqnames(locus_gr)),
+			from = start(locus_gr),
+			to = end(locus_gr),
+			transcriptAnnotation="symbol",
+			background.title = "transparent",
+			col.border.title="transparent",
+			col.title = "#333333",
+			col.axis = "#333333",
+			alpha.title=1,
+			alpha.axis=1,
+			sizes=c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
+			cex.title=0.9,
+			title.width=1
+		)
+	} else {
+		ht <- HighlightTrack(
+			trackList = c(peak_track, gene_track, plot_list),
+			start = start(promoter),
+			end = end(promoter),
+			col = "#000000",
+			fill = "#000000",
+			chromosome = as.character(seqnames(promoter)),
+			alpha=0.1
+		)
+
+		plot <- plotTracks(
+			c(interaction_track, ht, genome_track),
+			chromosome = as.character(seqnames(locus_gr)),
+			from = start(locus_gr),
+			to = end(locus_gr),
+			transcriptAnnotation="symbol",
+			background.title = "transparent",
+			col.border.title="transparent",
+			col.title = "#333333",
+			col.axis = "#333333",
+			alpha.title=1,
+			alpha.axis=1,
+			sizes=c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
+			cex.title=0.9,
+			title.width=1
+		)
+	}
 
 	return(plot)
 }
@@ -217,67 +282,96 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 #               Load data                 #
 #                                         #
 ###########################################
-# samplesheet <- snakemake@input[['samplesheet']]
-# bw_folder <- snakemake@params[['bw_folder']]
-# window <- snakemake@params[['window']]
-# genome <- snakemake@input[['genome']]
-# peaks <- snakemake@input[['peaks']]
-# links <- snakemake@input[['links']]
-# gene_bed <- snakemake@input[['gene_bed']]
 
+bw_folder <- snakemake@params[['bw_folder']]
+genome <- snakemake@input[['genome']]
+peaks <- snakemake@input[['peaks']]
+links <- snakemake@input[['linkage']]
+gene_bed <- snakemake@input[['gene_bed']]
+gene_list <- snakemake@input[['gene_list']]
 
-bw_folder <- "results/processed_data/mm10/bigWig"
-
-
+# bw_folder <- "results/processed_data/mm10/bigWig"
+# genome <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
+# peaks <- "results/processed_data/mm10/ATAC_norm_counts.csv"
+# links <- "results/tables/mm10/all_sig_gene2peak_linkage.csv"
+# gene_bed <- "workflow/data/mm10/gene_standard.bed"
+# gene_list <- "workflow/data/peak2gene_query.tsv"
 
 bw_files <- list.files(path=bw_folder, pattern = "REP..bw")
-genome <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
-
-peaks <- "results/processed_data/mm10/ATAC_norm_counts.csv"
-links <- "results/tables/mm10/all_sig_gene2peak_linkage.csv"
-gene_bed <- "workflow/data/mm10/gene_standard.bed"
-
 links <- read.table(links, header=TRUE, row.names=1)
+gene_list <- read.table(gene_list, header=TRUE)
+window <- c(gene_list$Start, gene_list$End)
+genes <- gene_list$Gene
 
 peak_gr <- GRanges(rownames(read.csv(peaks, header=TRUE, row.names=1)))
 gene_TSS <- GRanges(rtracklayer::import(gene_bed))
-
-
-
-window <- 85000
-locus_gene <- "Amh"
-
-
 
 conditions <- paste(
 	sapply(strsplit(bw_files, "_"), `[`, 1),
 	sapply(strsplit(bw_files, "_"), `[`, 2),
 	sep="_"
 )
-
 conditions <- unique(conditions)
-
 conditions <- c(conditions[c(TRUE, FALSE)], conditions[c(FALSE, TRUE)])
-
 names(conditions_color) <- conditions
 
 
-atac__coverage <- import_bw_files(
-	bw_folder, 
-	bw_files,
-	locus_gene, 
-	window
-)
+pdf(file=snakemake@output[['pdf']], width=6, height=8)
 
-max_score <- do.call("c", do.call("c", do.call("c", atac__coverage)))
-max_score <- max(unlist(lapply(max_score, function(x) x$score)))
+plot <- lapply(genes, function(gene){
+
+	locus <- gene_list[gene_list$Gene == gene,]
+	window <- c(locus$Start, locus$End)*1000
+	max_score <- locus$MaxScore
+
+	atac_coverage <- import_bw_files(
+		bw_folder, 
+		bw_files,
+		gene, 
+		window
+	)
+
+	if(max_score==0){
+		max_score <- do.call("c", do.call("c", do.call("c", atac_coverage)))
+		max_score <- max(unlist(lapply(max_score, function(x) x$score)))
+	}
+
+	XX_track_list <- lapply(
+		atac_coverage[["XX"]], 
+		function(stage) 
+			generate_genomic_tracks(
+				stage, 
+				gene, 
+				window, 
+				max_score, 
+				conditions_color
+			)
+		)
+
+	XY_track_list <- lapply(
+		atac_coverage[["XY"]], 
+		function(stage) 
+			generate_genomic_tracks(
+				stage, 
+				gene, 
+				window, 
+				max_score, 
+				conditions_color
+			)
+		)
 
 
-link_track <- generate_link_track(locus_gene, links)
-XX_track_list <- lapply(atac__coverage[["XX"]], function(stage) generate_genomic_tracks(stage, locus_gene, window, max_score, conditions_color))
-XY_track_list <- lapply(atac__coverage[["XY"]], function(stage) generate_genomic_tracks(stage, locus_gene, window, max_score, conditions_color))
+	plot <- plot_tracks(
+		peak_gr, 
+		genome, 
+		links, 
+		c(XX_track_list, XY_track_list), 
+		gene, 
+		window
+	)
 
-pdf(file="test.pdf", width=8, height=8)
-	plot <- plot_tracks(peak_gr, genome, links, c(XX_track_list, XY_track_list), locus_gene, window)
+	return(plot)
+
+})
+
 dev.off()
-

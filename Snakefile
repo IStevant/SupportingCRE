@@ -1,4 +1,4 @@
-configfile: "smk_env/config.yaml"
+configfile: "smk_env/workflow_config.yaml"
 
 # Get file path according to the genome version
 input_data = f'{config["path_to_data"]}{config["genome_version"]}'
@@ -33,9 +33,7 @@ rule_all_input_list = [
 	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
 	f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
 	f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
-	# f"{output_tables}/XX_sig_gene2peak_linkage.csv",
-	# f"{output_tables}/XY_sig_gene2peak_linkage.csv",
-	f"{output_tables}/all_sig_gene2peak_linkage.csv"
+	f"{output_pdf}/gene2peak_plots.pdf"
 ]
 
 # If there is no outliers, do not run the analysis that discard the
@@ -67,6 +65,9 @@ rule RNA_Get_matrices:
 		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
 		norm_counts_all=f"{processed_data}/RNA_norm_counts_all.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_clean_matrices.R"
 
@@ -78,6 +79,9 @@ rule RNA_corr_PCA_with outliers:
 	output:
 		pdf=f"{output_pdf}/RNA_corr_pca_all_samples.pdf",
 		png=f"{output_png}/RNA_corr_pca_all_samples.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/Corr_pca.R"
 
@@ -89,6 +93,9 @@ rule RNA_corr_PCA:
 	output:
 		pdf=f"{output_pdf}/RNA_corr_pca.pdf",
 		png=f"{output_png}/RNA_corr_pca.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/Corr_pca.R"
 
@@ -100,6 +107,9 @@ rule RNA_Plot_marker_genes:
 	output:
 		pdf=f"{output_pdf}/RNA_marker_genes.pdf",
 		png=f"{output_png}/RNA_marker_genes.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_plot_marker_genes.R"
 
@@ -114,6 +124,9 @@ rule RNA_Get_sex_DEGs:
 	output:
 		all_DEGs=f"{processed_data}/RNA_all_SexDEGs.Robj",
 		sig_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_sex_DEG.R"
 
@@ -124,6 +137,9 @@ rule RNA_Plot_sex_DEG_histogram:
 	output:
 		pdf=f"{output_pdf}/RNA_sex_DEG_histograms.pdf",
 		png=f"{output_png}/RNA_sex_DEG_histograms.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_plot_sex_DEG_hist.R"
 
@@ -138,6 +154,9 @@ rule RNA_Plot_sex_DEG_volcano_GO:
 	output:
 		pdf=f"{output_pdf}/RNA_sex_DEG_volcano.pdf",
 		png=f"{output_png}/RNA_sex_DEG_volcano.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_plot_sex_volcano_GO.R"
 
@@ -155,6 +174,9 @@ rule RNA_Plot_sex_DEG_double_heatmap:
 		png=f"{output_png}/RNA_sex_DEG_double_heatmap.png",
 		clusters=f"{output_tables}/RNA_sex_DEG_double_heatmap_clustering.csv"
 		# TFs=f"{output_tables}/RNA_sex_DEG_double_heatmap_TFs.csv"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_sex_DEG_double_heatmap.R"
 
@@ -164,6 +186,9 @@ rule RNA_Plot_sex_DEG_upset:
 	output:
 		pdf=f"{output_pdf}/RNA_sex_DEG_upset.pdf",
 		png=f"{output_png}/RNA_sex_DEG_upset.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_sex_DEG_upset.R"
 
@@ -178,6 +203,9 @@ rule RNA_Get_XX_dynamic_DEGs:
 	output:
 		csv=f"{output_tables}/RNA_XX_DEG_stage.csv",
 		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XX.Robj"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_stage_DEG.R"
 
@@ -192,6 +220,9 @@ rule RNA_Get_XY_dynamic_DEGs:
 	output:
 		csv=f"{output_tables}/RNA_XY_DEG_stage.csv",
 		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XY.Robj"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_stage_DEG.R"
 
@@ -210,6 +241,9 @@ rule RNA_Plot_heatmap_GO_XX:
 		clusters=f"{output_tables}/RNA_XX_DEG_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/RNA_XX_DEG_stage_heatmap.pdf",
 		png=f"{output_png}/RNA_XX_DEG_stage_heatmap.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_stage_DEG_heatmap.R"
 
@@ -228,6 +262,9 @@ rule RNA_Plot_heatmap_GO_XY:
 		clusters=f"{output_tables}/RNA_XY_DEG_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/RNA_XY_DEG_stage_heatmap.pdf",
 		png=f"{output_png}/RNA_XY_DEG_stage_heatmap.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_stage_DEG_heatmap.R"
 
@@ -240,6 +277,9 @@ rule RNA_Plot_sex_stage_common_DEGs:
 	output:
 		pdf=f"{output_pdf}/RNA_sex_stage_common_DEGs.pdf",
 		png=f"{output_png}/RNA_sex_stage_common_DEGs.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_overlap_sex_stage_DEG.R"
 
@@ -253,6 +293,9 @@ rule ATAC_Get_matrices:
 		counts=f"{processed_data}/ATAC_raw_counts.csv",
 		norm_counts=f"{processed_data}/ATAC_norm_counts.csv",
 		samplesheet=f"{processed_data}/ATAC_samplesheet.csv"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_clean_matrices.R"
 
@@ -266,6 +309,9 @@ rule ATAC_Plot_consensus_peak_annotation:
 		anno_list=f"{processed_data}/ATAC_all_consensus_peak_annotation.Robj",
 		pdf=f"{output_pdf}/ATAC_all_consensus_peak_annotation.pdf",
 		png=f"{output_png}/ATAC_all_consensus_peak_annotation.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_peak_annotation_per_sex.R"
 
@@ -277,6 +323,9 @@ rule ATAC_corr_PCA:
 	output:
 		pdf=f"{output_pdf}/ATAC_corr_pca_all_samples.pdf",
 		png=f"{output_png}/ATAC_corr_pca_all_samples.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/Corr_pca.R"
 
@@ -291,6 +340,9 @@ rule ATAC_Get_sex_DARs:
 	output:
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
 		sig_DARs_GR=f"{processed_data}/ATAC_sig_SexDARs_GR.Robj"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_sex_DAR.R"
 
@@ -301,6 +353,9 @@ rule ATAC_Plot_sex_DAR_histogram:
 	output:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_histograms.pdf",
 		png=f"{output_png}/ATAC_sex_DAR_histograms.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_plot_sex_DAR_hist.R"
 
@@ -314,6 +369,9 @@ rule ATAC_Plot_sex_DAR_peak_annotation:
 		anno_list=f"{processed_data}/ATAC_sig_SexDARs_annotation.Robj",
 		pdf=f"{output_pdf}/ATAC_sig_sex_DARs_annotation.pdf",
 		png=f"{output_png}/ATAC_sig_sex_DARs_annotation.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_peak_annotation_per_sex.R"
 
@@ -323,6 +381,9 @@ rule ATAC_Plot_sex_DAR_upset:
 	output:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_upset.pdf",
 		png=f"{output_png}/ATAC_sex_DAR_upset.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_sex_DAR_upset.R"
 
@@ -341,6 +402,9 @@ rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 	output:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
 		png=f"{output_png}/ATAC_sex_DAR_TF_motifs_rdm_bg.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
 
@@ -359,6 +423,9 @@ rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 	output:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
 		png=f"{output_png}/ATAC_sex_DAR_TF_motifs_sex_bg.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
 
@@ -373,6 +440,9 @@ rule ATAC_Get_XX_dynamic_DARs:
 	output:
 		csv=f"{output_tables}/ATAC_XX_DEG_stage.csv",
 		sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XX.Robj"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_stage_DAR.R"
 
@@ -387,6 +457,9 @@ rule ATAC_Get_XY_dynamic_DARs:
 	output:
 		csv=f"{output_tables}/ATAC_XY_DEG_stage.csv",
 		sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XY.Robj"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_stage_DAR.R"
 
@@ -402,6 +475,9 @@ rule ATAC_Plot_heatmap_dyn_DARs_XX:
 		clusters=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/ATAC_XX_DAR_stage_heatmap.pdf",
 		png=f"{output_png}/ATAC_XX_DAR_stage_heatmap.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_stage_DAR_heatmap.R"
 
@@ -417,6 +493,9 @@ rule ATAC_Plot_heatmap_dyn_DARs_XY:
 		clusters=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/ATAC_XY_DAR_stage_heatmap.pdf",
 		png=f"{output_png}/ATAC_XY_DAR_stage_heatmap.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_stage_DAR_heatmap.R"
 
@@ -437,7 +516,10 @@ rule ATAC_Plot_heatmap_dyn_DARs_XY:
 # 		FDR=config["MULTI_peak_gene_FDR"]
 # 	output:
 # 		linkage=f"{output_tables}/XX_sig_gene2peak_linkage.csv",
-# 	script:
+#     resources:
+	# 	cpus_per_task=12,
+	# 	mem_mb=64000
+	# script:
 # 		"workflow/scripts/MULTI_gene2peak.R"
 
 # rule MULTI_Get_XY_gene_peak_correlation:
@@ -456,7 +538,10 @@ rule ATAC_Plot_heatmap_dyn_DARs_XY:
 # 		FDR=config["MULTI_peak_gene_FDR"]
 # 	output:
 # 		linkage=f"{output_tables}/XY_sig_gene2peak_linkage.csv",
-# 	script:
+#     resources:
+	# 	cpus_per_task=12,
+	# 	mem_mb=64000
+	# script:
 # 		"workflow/scripts/MULTI_gene2peak.R"
 
 rule MULTI_Get_all_gene_peak_correlation:
@@ -475,5 +560,25 @@ rule MULTI_Get_all_gene_peak_correlation:
 		FDR=config["MULTI_peak_gene_FDR"]
 	output:
 		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
 	script:
 		"workflow/scripts/MULTI_gene2peak.R"
+
+rule MULTI_Plot_gene_peak_correlation:
+	input:
+		genome=f"{genome}",
+		gene_bed=f"{input_data}/gene_standard.bed",
+		peaks=f"{processed_data}/ATAC_norm_counts.csv",
+		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+		gene_list=config["gene_peak_examples"],
+	params:
+		bw_folder="results/processed_data/mm10/bigWig"
+	output:
+		pdf=f"{output_pdf}/gene2peak_plots.pdf"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
+	script:
+		"workflow/scripts/MULTI_plot_gene2peak.R"
