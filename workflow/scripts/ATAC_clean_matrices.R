@@ -1,4 +1,6 @@
 source(".Rprofile")
+
+
 ###########################################
 #                                         #
 #               Functions                 #
@@ -51,6 +53,25 @@ get_normalized_counts <- function(raw_counts, samplesheet){
 
 	return(norm_counts)
 }
+
+get_size_factors <- function(raw_counts, samplesheet){
+	dds <- DESeq2::DESeqDataSetFromMatrix(
+		countData = raw_counts,
+		colData = samplesheet,
+		design = ~conditions
+	)
+	dds <- DESeq2::estimateSizeFactors(dds)
+	size_factors <- DESeq2::sizeFactors(dds)
+	# norm_counts <- DESeq2::counts(dds, normalized=TRUE)
+	# norm_counts <- SummarizedExperiment::assay(DESeq2::vst(dds, blind=FALSE))
+	size_factors <- data.frame(
+		sample = names(size_factors),
+		SizeFactor = size_factors
+	)
+	return(size_factors)
+}
+
+
 
 #' When the maximum value (read count) of a peak between samples is under a certain threshold, we considere it is not relevant and the values are set to 0.
 #' @param data Read count matrix.
@@ -135,6 +156,11 @@ norm_counts <- get_normalized_counts(
 	samplesheet
 )
 
+size_factors <- get_size_factors(
+	raw_counts, 
+	samplesheet
+)
+
 ###########################################
 #                                         #
 #               Save files                #
@@ -144,3 +170,4 @@ norm_counts <- get_normalized_counts(
 write.csv(raw_counts, snakemake@output[['counts']])
 write.csv(norm_counts, snakemake@output[['norm_counts']])
 write.csv(samplesheet, snakemake@output[['samplesheet']])
+write.csv(size_factors, snakemake@output[['size_factors']])

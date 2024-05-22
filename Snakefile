@@ -1,5 +1,8 @@
 configfile: "smk_env/workflow_config.yaml"
 
+# Generate the report
+# report: "report/workflow.rst"
+
 # Get file path according to the genome version
 input_data = f'{config["path_to_data"]}{config["genome_version"]}'
 processed_data = f'{config["path_to_process"]}{config["genome_version"]}'
@@ -8,7 +11,7 @@ output_pdf = f'{config["path_to_graphs"]}{config["genome_version"]}/PDF'
 output_tables = f'{config["path_to_tables"]}{config["genome_version"]}'
 
 if config["genome_version"] == "mm10":
-	genome = f'{input_data}/iGenome_mm10_ucsc_genes.gtf.gz'
+	genome = f'{input_data}/gencode.vM25.annotation.gtf.gz'
 else :
 	genome = f'{input_data}/gencode.vM34.annotation.gtf.gz'
 
@@ -25,6 +28,7 @@ rule_all_input_list = [
 	f"{output_png}/RNA_XY_DEG_stage_heatmap.png",
 	f"{output_png}/RNA_sex_stage_common_DEGs.png",
 	f"{output_png}/ATAC_corr_pca_all_samples.png",
+	f"{output_png}/ATAC_consensus_peak_distribution.png",
 	f"{output_png}/ATAC_all_consensus_peak_annotation.png",
 	f"{output_png}/ATAC_sex_DAR_histograms.png",
 	f"{output_png}/ATAC_sig_sex_DARs_annotation.png",
@@ -64,12 +68,26 @@ rule RNA_Get_matrices:
 		counts=f"{processed_data}/RNA_raw_counts.csv",
 		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
 		norm_counts_all=f"{processed_data}/RNA_norm_counts_all.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
+		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
+		size_factors=f"{processed_data}/ATAC_size_factors.csv"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_clean_matrices.R"
+
+# Force the execution if you need to re-normalize the bigwig files
+rule RNA_Normalize_bigwig:
+	input:
+		size_factors=f"{processed_data}/RNA_size_factors.csv"
+	params:
+		bigwig_folder=config["RNA_bigwig_folder"],
+		new_bigwig_folder=f"{processed_data}/bigwig"
+	resources:
+		cpus_per_task=12,
+		mem_mb=16000
+	script:
+		"workflow/scripts/MULTI_norm_bigwig.R"
 
 rule RNA_corr_PCA_with outliers:
 	input:
@@ -292,12 +310,40 @@ rule ATAC_Get_matrices:
 	output:
 		counts=f"{processed_data}/ATAC_raw_counts.csv",
 		norm_counts=f"{processed_data}/ATAC_norm_counts.csv",
-		samplesheet=f"{processed_data}/ATAC_samplesheet.csv"
+		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
+		size_factors=f"{processed_data}/ATAC_size_factors.csv"
 	resources:
-		cpus_per_task=12,
-		mem_mb=64000
+		cpus_per_task=4,
+		mem_mb=16000
 	script:
 		"workflow/scripts/ATAC_clean_matrices.R"
+
+# Force the execution if you need to re-normalize the bigwig files
+rule ATAC_Normalize_bigwig:
+	input:
+		size_factors=f"{processed_data}/ATAC_size_factors.csv"
+	params:
+		bigwig_folder=config["ATAC_bigwig_folder"],
+		new_bigwig_folder=f"{processed_data}/bigwig"
+	resources:
+		cpus_per_task=12,
+		mem_mb=16000
+	script:
+		"workflow/scripts/MULTI_norm_bigwig.R"
+
+rule ATAC_Plot_nb_consensus_peak:
+	input:
+		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj",
+		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
+		norm_data=f"{processed_data}/ATAC_norm_counts.csv"
+	output:
+		pdf=f"{output_pdf}/ATAC_consensus_peak_distribution.pdf",
+		png=f"{output_png}/ATAC_consensus_peak_distribution.png"
+	resources:
+		cpus_per_task=4,
+		mem_mb=16000
+	script:
+		"workflow/scripts/ATAC_peak_distribution_per_sex.R"
 
 rule ATAC_Plot_consensus_peak_annotation:
 	input:
@@ -310,8 +356,8 @@ rule ATAC_Plot_consensus_peak_annotation:
 		pdf=f"{output_pdf}/ATAC_all_consensus_peak_annotation.pdf",
 		png=f"{output_png}/ATAC_all_consensus_peak_annotation.png"
 	resources:
-		cpus_per_task=12,
-		mem_mb=64000
+		cpus_per_task=4,
+		mem_mb=16000
 	script:
 		"workflow/scripts/ATAC_peak_annotation_per_sex.R"
 
@@ -500,50 +546,6 @@ rule ATAC_Plot_heatmap_dyn_DARs_XY:
 		"workflow/scripts/ATAC_stage_DAR_heatmap.R"
 
 ################################################################################################
-# rule MULTI_Get_XX_gene_peak_correlation:
-# 	input:
-# 		RNA_samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-# 		ATAC_samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-# 		RNA_norm_counts=f"{processed_data}/RNA_norm_counts.csv",
-# 		ATAC_norm_counts=f"{processed_data}/ATAC_norm_counts.csv",
-# 		chrom_size=f"{input_data}/chrom.size",
-# 		genes=f"{input_data}/gene_standard.bed",
-# 		gtf=f"{genome}"
-# 	params:
-# 		sex="XX",
-# 		distance=config["MULTI_peak_gene_distance"],
-# 		min_cor=config["MULTI_peak_gene_min_cor"],
-# 		FDR=config["MULTI_peak_gene_FDR"]
-# 	output:
-# 		linkage=f"{output_tables}/XX_sig_gene2peak_linkage.csv",
-#     resources:
-	# 	cpus_per_task=12,
-	# 	mem_mb=64000
-	# script:
-# 		"workflow/scripts/MULTI_gene2peak.R"
-
-# rule MULTI_Get_XY_gene_peak_correlation:
-# 	input:
-# 		RNA_samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-# 		ATAC_samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-# 		RNA_norm_counts=f"{processed_data}/RNA_norm_counts.csv",
-# 		ATAC_norm_counts=f"{processed_data}/ATAC_norm_counts.csv",
-# 		chrom_size=f"{input_data}/chrom.size",
-# 		genes=f"{input_data}/gene_standard.bed",
-# 		gtf=f"{genome}"
-# 	params:
-# 		sex="XY",
-# 		distance=config["MULTI_peak_gene_distance"],
-# 		min_cor=config["MULTI_peak_gene_min_cor"],
-# 		FDR=config["MULTI_peak_gene_FDR"]
-# 	output:
-# 		linkage=f"{output_tables}/XY_sig_gene2peak_linkage.csv",
-#     resources:
-	# 	cpus_per_task=12,
-	# 	mem_mb=64000
-	# script:
-# 		"workflow/scripts/MULTI_gene2peak.R"
-
 rule MULTI_Get_all_gene_peak_correlation:
 	input:
 		RNA_samplesheet=f"{processed_data}/RNA_samplesheet.csv",

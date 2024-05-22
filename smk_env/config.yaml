@@ -5,7 +5,7 @@ show-failed-logs: True
 keep-going: True
 printshellcmds: True
 rerun-incomplete: True
-restart-times: 3
+# restart-times: 3
 
 # Cluster submission
 jobname: "{rule}.{jobid}"              # Provide a custom name for the jobscript that is submitted to the cluster.

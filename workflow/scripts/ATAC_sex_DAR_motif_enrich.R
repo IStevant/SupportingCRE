@@ -262,7 +262,7 @@ plotMotifHeatmaps_exp <- function(x,
 	invisible(ret)
 }
 
-get_entiched_TFs <- function(stg, save_folder){
+get_enriched_TFs <- function(stg, save_folder){
 	# Select the genes expressed at a specific stage for both sexes
 	genes <- TPM[,grep(stg, colnames(TPM))]
 	# genes <- TPM[,grep("XX", colnames(genes))]
@@ -530,11 +530,11 @@ stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
 
 # For each stage, get TFBS motid enrichments
 enrichments <- foreach(stg=stages) %dopar% {
-	get_entiched_TFs(stg, save_folder)
+	get_enriched_TFs(stg, save_folder)
 }
 
 # stg <- "E15.5"
-# enrichments <- list(get_entiched_TFs(stg))
+# enrichments <- list(get_enriched_TFs(stg))
 
 heatmap_list <- lapply(seq_along(enrichments), function(i) plot_TF_heatmap(enrichments[[i]], stages[i]))
 

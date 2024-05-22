@@ -73,7 +73,6 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 		function(gr){
 			DataTrack(
 				range = gr, 
-				genome = "mm10",
 				type = "hist",
 				baseline=0,
 				window=res,
@@ -83,8 +82,9 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 				col.histogram=color,
 				fill.histogram=color,
 				ylim=c(0, trunc(max_score, digit=4)),
-				yTicksAt=c(0,trunc(max_score, digit=4))
-				# alpha=0.8
+				yTicksAt=c(0,trunc(max_score, digit=4)),
+				lwd=0,
+				alpha=0.8
 			)
 		}
 	)
@@ -93,7 +93,7 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 }
 
 
-plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
+plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, window){
 
 	locus_TSS <- resize(gene_TSS[gene_TSS$name %in% locus,], width=2, fix='start')
 
@@ -156,7 +156,7 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 	)
 
 	gene_track <- GeneRegionTrack(
-		genome,
+		TxDb,
 		collapseTranscripts = "meta",
 		name = "Genes",
 		chromosome = as.character(seqnames(locus_gr)),
@@ -164,13 +164,17 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 		end = end(locus_gr),
 		fontface.group="italic",
 		col = NULL,
+		col.line = NULL,
 		fill = "#585858",
+		# lwd=0.3,
 		fontcolor.group= "#333333",
 		fontsize.group=18,
 		sizes=0.3,
-		rotation.title=0
+		rotation.title=0,
+		thinBoxFeature="UTR"
 		# just.group="above"
 	)
+	ranges(gene_track)$symbol <- gene2symbol[ranges(gene_track)$gene, "gene_name"]
 
 	peak_track <- AnnotationTrack(
 		peak_gr_locus,
@@ -179,7 +183,8 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 		end = end(peak_gr_locus),
 		strand = as.character(strand(peak_gr_locus)),
 		name = "OCRs",
-		col = "#5f4780",
+		col.line = NULL,
+		col = NULL,
 		fill = "#5f4780",
 		sizes=0.2,
 		rotation.title=0
@@ -197,7 +202,8 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 			col = c(visible_linked_peaks$colors, "#000000"),
 			fill = c(visible_linked_peaks$colors, "#000000"),
 			chromosome = as.character(unique(seqnames(visible_linked_peaks))),
-			alpha=0.1
+			alpha=0.2,
+			lwd=0.5
 		)
 
 		plot <- plotTracks(
@@ -225,7 +231,8 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 			col = "#000000",
 			fill = "#000000",
 			chromosome = as.character(seqnames(promoter)),
-			alpha=0.1
+			alpha=0.2,
+			lwd=0.5
 		)
 
 		plot <- plotTracks(
@@ -252,7 +259,8 @@ plot_tracks <- function(peak_gr, genome, link, plot_list, locus, window){
 			col = "#000000",
 			fill = "#000000",
 			chromosome = as.character(seqnames(promoter)),
-			alpha=0.1
+			alpha=0.2,
+			lwd=0.5
 		)
 
 		plot <- plotTracks(
@@ -291,7 +299,8 @@ gene_bed <- snakemake@input[['gene_bed']]
 gene_list <- snakemake@input[['gene_list']]
 
 # bw_folder <- "results/processed_data/mm10/bigWig"
-# genome <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
+# # genome <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
+# genome <- "workflow/data/mm10/gencode.vM25.annotation.gtf.gz"
 # peaks <- "results/processed_data/mm10/ATAC_norm_counts.csv"
 # links <- "results/tables/mm10/all_sig_gene2peak_linkage.csv"
 # gene_bed <- "workflow/data/mm10/gene_standard.bed"
@@ -315,8 +324,16 @@ conditions <- unique(conditions)
 conditions <- c(conditions[c(TRUE, FALSE)], conditions[c(FALSE, TRUE)])
 names(conditions_color) <- conditions
 
+genome_gtf <- rtracklayer::import(genome)
+gene2symbol <- mcols(genome_gtf)[,c("gene_id","gene_name")]
+gene2symbol <- unique(gene2symbol)
+rownames(gene2symbol) <- gene2symbol$gene_id
+
+TxDb <- GenomicFeatures::makeTxDbFromGFF(genome)
+
 
 pdf(file=snakemake@output[['pdf']], width=6, height=8)
+# pdf(file="test.pdf", width=6, height=8)
 
 plot <- lapply(genes, function(gene){
 
@@ -363,7 +380,8 @@ plot <- lapply(genes, function(gene){
 
 	plot <- plot_tracks(
 		peak_gr, 
-		genome, 
+		TxDb,
+		gene2symbol,
 		links, 
 		c(XX_track_list, XY_track_list), 
 		gene, 

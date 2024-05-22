@@ -9,12 +9,9 @@ suppressPackageStartupMessages({
 	library("dplyr")
 	library('doParallel')
 	library('foreach')
-	# library("tidyverse")
-	# library("MASS")
-	# library("cisDynet")
 })
 
-doParallel::registerDoParallel(cores=4)
+doParallel::registerDoParallel(cores=12)
 
 ###########################################
 #                                         #
@@ -280,7 +277,7 @@ means <- lapply(samples, function(cond) rowMeans(rna[,cond]))
 names(means) <- conditions
 rna_means <- as.data.frame(do.call(cbind, means))
 # split_RNA data into 4 tables to parallelize the work
-split_rna <- split(rna_means, factor(sort(rank(row.names(rna_means)) %% 8)))
+split_rna <- split(rna_means, factor(sort(rank(row.names(rna_means)) %% 12)))
 
 # split_rna <- split(rna, factor(sort(rank(row.names(rna)) %% 8)))
 
@@ -311,5 +308,4 @@ sig_p2g_res <- sig_p2g_res[abs(sig_p2g_res$correlations)>min_cor,]
 
 # Remove all peaks corresponding to promoters
 sig_p2g_res <- sig_p2g_res[!sig_p2g_res$Type=="Proximal",]
-
 write.table(sig_p2g_res, snakemake@output[['linkage']])
