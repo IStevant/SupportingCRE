@@ -1,4 +1,20 @@
 source(".Rprofile")
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+count_file <- snakemake@input[['counts']]
+TPM_file <- snakemake@input[['tpm']]
+protein_genes <- snakemake@input[['protein_genes']]
+minReads <- snakemake@params[['minReads']]
+minTPM <- snakemake@params[['minTPM']]
+outlierSamples <- snakemake@params[['RNA_outliers']]
+
+#################################################################################################################################
+
 ###########################################
 #                                         #
 #               Functions                 #
@@ -57,6 +73,10 @@ get_normalized_counts <- function(raw_counts, samplesheet){
 	return(norm_counts)
 }
 
+#' Extract the size factor normalization from DESeq2 to later normalize the bigwig files
+#' @param raw_counts Read count matrix.
+#' @param samplesheet Samplesheet for DESeq2.
+#' @return Return a dataframe.
 get_size_factors <- function(raw_counts, samplesheet){
 	dds <- DESeq2::DESeqDataSetFromMatrix(
 		countData = raw_counts,
@@ -75,6 +95,19 @@ get_size_factors <- function(raw_counts, samplesheet){
 }
 
 #' When the maximum expression value (TPM or read count) of a gene between samples is under a certain threshold, we considere it is not properly expressed and the expression values are set to 0.
+#' @param row Current gene expression data.
+#' @param col_names Save sample names to keep the colnames in the final dataframe.
+#' @param minExp Minimum expression value. Default is 10.
+#' @return Return a dataframe.
+filter_low_counts <- function(row, col_names, minExp) {
+	if (max(row) < minExp) {
+		return(setNames(rep(0, length(row)), col_names))
+	} else {
+		return(setNames(row, col_names))
+	}
+}
+
+#' Apply the expression filtration for lowly expressed genes.
 #' @param data Read count or TPM matrix.
 #' @param minExp Minimum expression value. Default is 10.
 #' @return Return a dataframe.
@@ -85,31 +118,8 @@ run_filter_low_counts <- function(data, minExp) {
 	data <- data[rowSums(data[])>0,]
 	return(data)
 }
-filter_low_counts <- function(row, col_names, minExp) {
-	if (max(row) < minExp) {
-		return(setNames(rep(0, length(row)), col_names))
-	} else {
-		return(setNames(row, col_names))
-	}
-}
 
 #################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-count_file <- snakemake@input[['counts']]
-TPM_file <- snakemake@input[['tpm']]
-protein_genes <- snakemake@input[['protein_genes']]
-
-minReads <- snakemake@params[['minReads']]
-
-minTPM <- snakemake@params[['minTPM']]
-
-outlierSamples <- snakemake@params[['RNA_outliers']]
 
 ###########################################
 #                                         #
@@ -134,20 +144,14 @@ TPM <- get_gene_matrix(
 ###########################################
 
 # Remove gene expression if max value < x TPM
-
 TPM <- run_filter_low_counts(TPM, minTPM)
 kept_genes <- rownames(TPM[rowSums(TPM)>0,])
 
-
 # Remove gene expression if max value < x reads
-# raw_counts <- run_filter_low_counts(raw_counts, minReads)
-# print("µµµµµµµ")
-# print(minReads)
-
+raw_counts <- run_filter_low_counts(raw_counts, minReads)
 
 # Remove genes with low TPM from the count matrix
 raw_counts <- raw_counts[rownames(raw_counts) %in% kept_genes,]
-
 
 ###########################################
 #                                         #
@@ -155,6 +159,7 @@ raw_counts <- raw_counts[rownames(raw_counts) %in% kept_genes,]
 #                                         #
 ###########################################
 
+# If there is an outlier sample, remove it from the matrices but also keep the full version to plot them for QCs
 if(length(outlierSamples)>0){
 	# Keep the full TPM matrix
 	TPM_all <- TPM
@@ -170,6 +175,28 @@ if(length(outlierSamples)>0){
 #                                         #
 ###########################################
 
+# Generate the reduced samplesheet whith all samples
+stage <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 1)
+sex <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 2)
+conditions <- paste(sex, stage, sep=" ")
+conditions_all <- paste(
+	sapply(strsplit(colnames(TPM_all), "_"), `[`, 2), 
+	sapply(strsplit(colnames(TPM_all), "_"), `[`, 1), 
+	sep=" "
+)
+replicate <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 4)
+transgene <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 3)
+
+samplesheet <- data.frame(
+	sample = colnames(raw_counts),
+	stages = stage,
+	sex = sex,
+	conditions = conditions,
+	replicate = replicate,
+	transgene = transgene
+)
+
+# Generate the reduced samplesheet whithout outliers
 if(length(outlierSamples)>0){
 	stage <- sapply(strsplit(colnames(raw_counts_all), "_"), `[`, 1)
 	sex <- sapply(strsplit(colnames(raw_counts_all), "_"), `[`, 2)
@@ -192,31 +219,13 @@ if(length(outlierSamples)>0){
 	)
 }
 
-stage <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 1)
-sex <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 2)
-conditions <- paste(sex, stage, sep=" ")
-conditions_all <- paste(
-	sapply(strsplit(colnames(TPM_all), "_"), `[`, 2), 
-	sapply(strsplit(colnames(TPM_all), "_"), `[`, 1), 
-	sep=" "
-)
-replicate <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 4)
-transgene <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 3)
-
-samplesheet <- data.frame(
-	sample = colnames(raw_counts),
-	stages = stage,
-	sex = sex,
-	conditions = conditions,
-	replicate = replicate,
-	transgene = transgene
-)
-
 ###########################################
 #                                         #
 #           Normalize read counts         #
 #                                         #
 ###########################################
+
+# Generate the normalized read count matrice with the final samples for the analysis (without outliers)
 if(length(outlierSamples)>0){
 	norm_counts <- get_normalized_counts(
 		raw_counts, 
@@ -234,6 +243,7 @@ if(length(outlierSamples)>0){
 	)
 }
 
+# Extract the size factors used for the normalization
 size_factors <- get_size_factors(
 	raw_counts, 
 	samplesheet
@@ -244,10 +254,14 @@ size_factors <- get_size_factors(
 #               Save files                #
 #                                         #
 ###########################################
+
+# If there are outliers, white the TPM and the normalized counts matrices including them
 if(length(outlierSamples)>0){
 	write.csv(TPM_all, snakemake@output[['tpm_all']])
 	write.csv(norm_counts_all, snakemake@output[['norm_counts_all']])
 }
+
+# Save the matrices without ourliers fort the analysis
 write.csv(TPM, snakemake@output[['tpm']])
 write.csv(raw_counts, snakemake@output[['counts']])
 write.csv(norm_counts, snakemake@output[['norm_counts']])
