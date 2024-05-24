@@ -16,6 +16,26 @@ suppressPackageStartupMessages({
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+norm_data <- read.csv(file=snakemake@input[['norm_data']], row.names=1)
+
+conditions <- paste(
+	sapply(strsplit(colnames(norm_data), "_"), `[`, 2), 
+	sapply(strsplit(colnames(norm_data), "_"), `[`, 1), 
+	sep=" "
+)
+
+names(conditions_color) <- sort(unique(conditions))
+
+corr_method <- snakemake@params[['corr_method']]
+
+#################################################################################################################################
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -41,11 +61,8 @@ correlation <- function(matrix, conditions, method="Spearman", colours){
 	col_annotation <- data.frame(
 		Samples=conditions[order(conditions)]
 	)
-
 	rownames(col_annotation) <- names(matrix)
-
 	col <- list(Samples=colours)
-
 	pheatmap::pheatmap(
 		mat = cor_data,
 		cluster_cols = FALSE,
@@ -53,8 +70,8 @@ correlation <- function(matrix, conditions, method="Spearman", colours){
 		color = viridis(15),
 		annotation_colors = col,
 		border_color = NA,
-		cellwidth = 12,
-		cellheight = 12,
+		cellwidth = 11,
+		cellheight = 11,
 		annotation_col = col_annotation,
 		annotation_row = col_annotation
 	)
@@ -125,28 +142,6 @@ plot.pca <- function(matrix, conditions, colours, PCs=c("PC1", "PC2")){
 
 ###########################################
 #                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-norm_data <- read.csv(file=snakemake@input[['norm_data']], row.names=1)
-# norm_data <- read.csv("results/processed_data/mm39/RNA_TMP_all_samples.csv", row.names=1)
-# print(head(norm_data))
-
-conditions <- paste(
-	sapply(strsplit(colnames(norm_data), "_"), `[`, 2), 
-	sapply(strsplit(colnames(norm_data), "_"), `[`, 1), 
-	sep=" "
-)
-
-names(conditions_color) <- sort(unique(conditions))
-# print(conditions)
-
-corr_method <- snakemake@params[['corr_method']]
-# corr_method <- "spearman"
-
-###########################################
-#                                         #
 #        Plot correlation and PCA         #
 #                                         #
 ###########################################
@@ -155,12 +150,21 @@ corr_plot <- grid.grabExpr(correlation(norm_data, conditions, corr_method, condi
 
 pca_plot <- plot.pca(norm_data, conditions, conditions_color, c("PC1", "PC2"))
 
+
+# Combine the two plots
 figure <- plot_grid(
 	plotlist=list(corr_plot, pca_plot[[1]]),
 	labels = "AUTO",
 	ncol=2
 )
 
+##########################################
+#                                        #
+#               Save plots               #
+#                                        #
+##########################################
+
+# As PDF
 save_plot(
 	snakemake@output[['pdf']], 
 	figure, 
@@ -170,6 +174,7 @@ save_plot(
 	dpi=300
 )
 
+# As PNG
 save_plot(
 	snakemake@output[['png']], 
 	figure, 

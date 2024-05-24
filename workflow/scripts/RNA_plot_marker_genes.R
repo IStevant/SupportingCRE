@@ -1,5 +1,4 @@
 source(".Rprofile")
-# source("scripts/00.color_palettes.R")
 
 ###########################################
 #                                         #
@@ -11,6 +10,18 @@ suppressPackageStartupMessages({
 	library("cowplot")
 	library("ggplot2")
 })
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+TPM <- read.csv(file=snakemake@input[['tpm']], row.names=1)
+markerGenes <- read.csv(file=snakemake@input[['marker_genes']])
+whole_gonad <- read.csv(file=snakemake@input[['whole_gonad']])
+
+#################################################################################################################################
 
 ###########################################
 #                                         #
@@ -115,23 +126,9 @@ gene_exp <- function(genes, TPM, title){
 
 #################################################################################################################################
 
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-TPM <- read.csv(file=snakemake@input[['tpm']], row.names=1)
-
-# Load marker gene list
-markerGenes <- read.csv(file=snakemake@input[['marker_genes']])
-
-# Load whole gonad RNA-seq data
-whole_gonad <- read.csv(file=snakemake@input[['whole_gonad']])
-
 ##########################################
 #                                        #
-#              Marker Genes              #
+#              Prepare data              #
 #                                        #
 ##########################################
 
@@ -147,6 +144,12 @@ TPM <- merge(TPM,whole_gonad,by="row.names",all.x=TRUE)
 rownames(TPM) <- TPM[,1]
 TPM <- TPM[,-1]
 
+##########################################
+#                                        #
+#          Plot gene expression          #
+#                                        #
+##########################################
+
 # Plot expression of the marker genes
 plot_list <- plot_expression_scatter(TPM, markerGenes)
 
@@ -156,6 +159,13 @@ figure <- plot_grid(
 	ncol=1
 )
 
+##########################################
+#                                        #
+#               Save plots               #
+#                                        #
+##########################################
+
+# As PDF
 save_plot(
 	snakemake@output[['pdf']], 
 	figure, 
@@ -166,6 +176,7 @@ save_plot(
 	bg = "white"
 )
 
+# As PNG
 save_plot(
 	snakemake@output[['png']], 
 	figure, 
