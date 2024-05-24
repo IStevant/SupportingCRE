@@ -1,0 +1,4 @@
+- The project is out-of-sync -- use `renv::status()` for details.
+[1] "Calculating the PCA..."
+[1] "Generating the plots..."
+[1] "Done."

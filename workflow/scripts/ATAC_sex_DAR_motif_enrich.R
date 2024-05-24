@@ -26,7 +26,7 @@ suppressPackageStartupMessages({
 	library("circlize")
 })
 
-doParallel::registerDoParallel(cores=8)
+doParallel::registerDoParallel(cores=12)
 
 ###########################################
 #                                         #
@@ -205,7 +205,7 @@ plotMotifHeatmaps_exp <- function(x,
 					   negLog10Padj = "adj. P value (-log10)",
 					   pearsonResid = "Pearson residual (o-e)/sqrt(e)",
 					   log2enr = "Motif \nenrichment",
-					   expr = "TF\nexpression")
+					   expr = "TF gene\nexpression")
 	L <- list(labels = hmMotifs)
 	if (show_motif_GC) {
 		tmp <- as.matrix(rowData(x)[, "motif.percentGC", drop = FALSE])
@@ -263,6 +263,8 @@ plotMotifHeatmaps_exp <- function(x,
 }
 
 get_enriched_TFs <- function(stg, save_folder){
+	# stg <- "E11.5"
+	# save_folder <- "."
 	# Select the genes expressed at a specific stage for both sexes
 	genes <- TPM[,grep(stg, colnames(TPM))]
 	# genes <- TPM[,grep("XX", colnames(genes))]
@@ -272,30 +274,45 @@ get_enriched_TFs <- function(stg, save_folder){
 	# Select only the TFs
 	stg_TFs <- genes[which(genes %in% TFs)]
 
+	print("Get TF matrices...")
 	# Get human TF matrices
-	pwms_human <- TFBSTools::getMatrixSet(
+	# pwms_human <- TFBSTools::getMatrixSet(
+	# 	JASPAR,
+	# 	opts = list(
+	# 		# name=toupper(stg_TFs),
+	# 		matrixtype = "PWM",
+	# 		# tax_group = "vertebrates"
+	# 		species = "Homo sapiens"
+	# 	)
+	# )
+	# # Get mouse TF matrices
+	# pwms_mouse <- TFBSTools::getMatrixSet(
+	# 	JASPAR,
+	# 	opts = list(
+	# 		# name=stg_TFs,
+	# 		matrixtype = "PWM",
+	# 		tax_group = "vertebrates"
+	# 		# species = "Mus musculus"
+	# 	)
+	# )
+
+	# # merge human and mouse lists of TF matrices
+	# pwms <- c(pwms_human, pwms_mouse)
+
+	pwms <- TFBSTools::getMatrixSet(
 		JASPAR,
 		opts = list(
-			name=toupper(stg_TFs),
 			matrixtype = "PWM",
-			# tax_group = "vertebrates"
-			species = "Homo sapiens"
-		)
-	)
-	# Get mouse TF matrices
-	pwms_mouse <- TFBSTools::getMatrixSet(
-		JASPAR,
-		opts = list(
-			name=stg_TFs,
-			matrixtype = "PWM",
-			# tax_group = "vertebrates"
-			species = "Mus musculus"
+			tax_group = "vertebrates"
+			# species = "Mus musculus"
 		)
 	)
 
-	# merge human and mouse lists of TF matrices
-	pwms <- c(pwms_human, pwms_mouse)
+	# print(stg_TFs)
+	# print(pwms)
 
+	# save tested matrices
+	# write.csv(pwms, file=paste0(save_folder, "/ATAC_tested_TF_matrices_", stg, "_", background,"_bg.csv"))
 
 	# Get sex specific peaks for the given stage
 	sex_peaks <- filtered_SexDARs[[stg]]
@@ -305,6 +322,7 @@ get_enriched_TFs <- function(stg, save_folder){
 	male <- GenomicRanges::GRanges(rownames(sex_peaks[sex_peaks$Diff.Acc.=="More in XY",]))
 	all <- c(female, male)
 
+	print("Get peak sequences...")
 	# Get the peak sequences
 	if (genome_version=="mm10"){
 		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, all)
@@ -359,36 +377,43 @@ get_enriched_TFs <- function(stg, save_folder){
 	genes <- TPM[,grep(stg, colnames(TPM))]
 	rownames(genes) <- tolower(rownames(genes))
 
-	results <- list()
+	TF_exp <- matrix(0, nrow=length(TF_names), ncol=ncol(genes))
+	rownames(TF_exp) <- TF_names
+	colnames(TF_exp) <- colnames(genes)
 
-	for (i in seq_along(TF_names)) {
-	  result <- genes[rownames(genes) == TF_names[i],]
-	  rownames(result) <- names(TF_names[i])
-	  results[[names(TF_names[i])]] <- result
+	for (TF in TF_names) {
+		if (TF %in% rownames(genes)){
+			TF_exp[TF,] <- unlist(genes[TF,])
+		}
 	}
-	names(results) <- names(TF_names)
-
-	expr <- do.call(rbind.data.frame, results)
 
 	TF_expression <- data.frame(
-		XX=rowMeans(expr[,grep("XX",colnames(expr))]),
-		XY=rowMeans(expr[,grep("XY",colnames(expr))])
+		XX=rowMeans(TF_exp[,grep("XX",colnames(TF_exp))]),
+		XY=rowMeans(TF_exp[,grep("XY",colnames(TF_exp))])
 	)
 
-	assays(se2)$expr <- log10(TF_expression)
+	rownames(TF_expression) <- rownames(SummarizedExperiment::assay(se2, "negLog10Padj"))
 
+	assays(se2)$expr <- TF_expression
 
 	# Select the motifs enriched with a -Log10Padj > 10
 	sel2 <- apply(SummarizedExperiment::assay(se2, "negLog10Padj"), 1, 
 				function(x) max(abs(x), 0, na.rm = TRUE)) > 10.0
+	seSel <- se2[sel2, ]
+
+	sel2 <- apply(SummarizedExperiment::assay(seSel, "expr"), 1, 
+			function(x) max(x, 0, na.rm = TRUE)) > 5
+	seSel <- seSel[sel2, ]
+	seSel@elementMetadata$motif.name <- toupper(seSel@elementMetadata$motif.name)
+	assays(seSel)$expr <- log10(assays(seSel)$expr)
 
 	TF_summary <- data.frame(
-		SummarizedExperiment::assay(se2[sel2, ]),
-		TF.name=se2[sel2, ]@elementMetadata$motif.name
+		SummarizedExperiment::assay(seSel),
+		TF.name=seSel@elementMetadata$motif.name
 	)
 
 	write.csv(TF_summary, file=paste0(save_folder, "/ATAC_sex_DAR_TF_", stg, "_", background,"_bg.csv"))
-	seSel <- se2[sel2, ]
+
 
 	top_XX <- names(sort(assays(seSel)$negLog10Padj[,"XX"], decreasing=TRUE)[1:nbTFs])
 	top_XX <- names(assays(seSel[top_XX,])$log2enr[,"XX"][assays(seSel[top_XX,])$log2enr[,"XX"] > 0])
@@ -424,6 +449,7 @@ plot_TF_heatmap <- function(seSel, stg){
 				x = seSel,
 					bincols = bincols,
 				which.plots = c("log2enr", "expr"), 
+				# which.plots = c("log2enr"),
 				show_seqlogo = TRUE,
 				width = 1.3, 
 				cluster = hcl,
@@ -445,6 +471,7 @@ plot_TF_heatmap <- function(seSel, stg){
 				x = seSel,
 				bincols = bincols,
 				which.plots = c("log2enr", "expr"), 
+				# which.plots = c("log2enr"),
 				width = 1.3, 
 				cluster = hcl,
 				maxEnr = 1.5, 
@@ -470,11 +497,11 @@ plot_TF_heatmap <- function(seSel, stg){
 
 # filtered_SexDARs
 load(snakemake@input[['sig_DARs']])
-# load("results/processed_data/mm39/ATAC_sig_SexDARs.Robj")
+# load("results/processed_data/mm10/ATAC_sig_SexDARs.Robj")
 
 # Load RNA-seq TPM matrix to filter the TFs that are expressed in the gonads
 TPM <- read.csv(file=snakemake@input[['TPM']], header=TRUE, row.names=1)
-# TPM <- read.csv(file="results/processed_data/mm39/RNA_TPM.csv", header=TRUE, row.names=1)
+# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
 
 # Load the mouse TFs list
 TFs <- as.vector(read.csv(snakemake@input[['TF_genes']], header=FALSE)[,1])
@@ -487,16 +514,18 @@ minTPM <- snakemake@params[['minTPM']]
 # Run analysis using the genome bakground or calculating the enrichment compared to the conditions
 background <- snakemake@params[['background']]
 # background <- "conditions"
+# background <- "genome"
+
 
 save_folder <- snakemake@params[['save_folder']]
 # save_folder <- "."
 
 # Print the logos of the TFs on the heatmap
 logos <- snakemake@params[['logos']]
-# logos <- FALSE
+# logos <- TRUE
 
 genome_version <- snakemake@params[['genome']]
-# genome_version <- "mm39"
+# genome_version <- "mm10"
 
 if (logos=="TRUE") {
 	width <- 70
@@ -506,7 +535,7 @@ if (logos=="TRUE") {
 
 # Nb of top TFs per sex to print 
 nbTFs <- snakemake@params[['nbTFs']]
-# nbTFs <- 10
+# nbTFs <- 40
 
 stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
 sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
@@ -528,7 +557,7 @@ JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
 # stages <- "E11.5"
 
-# For each stage, get TFBS motid enrichments
+# For each stage, get TFBS motif enrichments
 enrichments <- foreach(stg=stages) %dopar% {
 	get_enriched_TFs(stg, save_folder)
 }
@@ -546,6 +575,7 @@ figure <- plot_grid(
 
 save_plot(
 	snakemake@output[['pdf']],
+	# "test.pdf",
 	figure,
 	base_width=width,
 	base_height=nbTFs*1.2,

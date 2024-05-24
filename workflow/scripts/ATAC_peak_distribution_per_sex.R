@@ -24,14 +24,16 @@ plot_distribution <- function(peaks, conditions_color){
 
 	# peaks <- peak_list
 
-	peaks_XX <- peaks[["XX"]]
-	peaks_XY <- peaks[["XY"]]
+	peaks_XX <- unlist(peaks[grep("XX", names(peaks))])
+	peaks_XY <- unlist(peaks[grep("XY", names(peaks))])
 
-	stages_XX <- names(peaks_XX)
-	stages_XY <- names(peaks_XY)
+	stages_XX <- sapply(strsplit(names(peaks_XX), "_"), `[`, 1)
+	stages_XY <- sapply(strsplit(names(peaks_XY), "_"), `[`, 1)
 
-	nb_peaks_XX <-	unlist(lapply(stages_XX, function(stg) length(peaks_XX[[stg]])))
-	nb_peaks_XY <- unlist(lapply(stages_XY, function(stg) length(peaks_XY[[stg]])))
+	nb_peaks_XX <- unlist(lapply(peaks_XX, length))
+	nb_peaks_XY <- unlist(lapply(peaks_XY, length))
+
+	# print(nb_peaks_XX)
 
 	stage <- c(stages_XX, stages_XY)
 	sex <- c(rep("XX", length(stages_XX)), rep("XY", length(stages_XY)))
@@ -42,6 +44,8 @@ plot_distribution <- function(peaks, conditions_color){
 		Counts = c(nb_peaks_XX, nb_peaks_XY), 
 		condition = paste(sex, stage)
 	)
+
+	# print(data)
 
 	plot <- ggplot(data, aes(x=Sex, y=Counts)) +
 		geom_bar(stat="identity", aes(fill=condition)) +
@@ -79,9 +83,8 @@ plot_distribution <- function(peaks, conditions_color){
 
 # peak_list
 load(file=snakemake@input[['peak_list']])
-# load(file="workflow/data/mm10/ATAC_all_consensus_peaks_2rep_list.Robj")
-# samplesheet <- read.csv(file="results/processed_data/mm10/ATAC_samplesheet.csv", row.names=1)
-# filtered_ATAC <- read.csv(file="results/processed_data/mm10/ATAC_norm_counts.csv", row.names=1)
+# load(file="workflow/data/mm39/ATAC_all_consensus_peaks_2rep_list.Robj")
+# samplesheet <- read.csv(file="results/processed_data/mm39/ATAC_samplesheet.csv", row.names=1)
 
 samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
 
@@ -93,6 +96,9 @@ names(conditions_color) <- sort(unique(samplesheet$conditions))
 #                                         #
 ###########################################
 
+# There is an unpredicted behaviour here. If I run the function once, I get 1 peak only for one sample, which is not correct
+# If I run the function a second time the peak number is correct... 
+plot_list <- plot_distribution(peak_list, conditions_color)
 plot_list <- plot_distribution(peak_list, conditions_color)
 
 figures <- plot_grid(
@@ -103,8 +109,8 @@ save_plot(
 	snakemake@output[['pdf']],
 	# "test.pdf",
 	figures, 
-	base_width=30,
-	base_height=20,
+	base_width=25,
+	base_height=10,
 	units = c("cm"), 
 	dpi=300
 )
@@ -112,8 +118,8 @@ save_plot(
 save_plot(
 	snakemake@output[['png']], 
 	figures, 
-	base_width=30,
-	base_height=20,
+	base_width=25,
+	base_height=10,
 	units = c("cm"), 
 	dpi=300
 )

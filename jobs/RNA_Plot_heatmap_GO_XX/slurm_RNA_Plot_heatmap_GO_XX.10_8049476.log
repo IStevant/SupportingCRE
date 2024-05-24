@@ -1,0 +1,45 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, cpus_per_task=12
+Select jobs to execute...
+
+[Thu May 23 14:44:42 2024]
+rule RNA_Plot_heatmap_GO_XX:
+    input: workflow/data/mouse_transcription_factors.txt, workflow/data/genes_gonad_asociated_pheno_MGI.txt, results/processed_data/mm10/RNA_sig_stage_DEGs_XX.Robj, results/processed_data/mm10/RNA_norm_counts.csv, results/processed_data/mm10/RNA_samplesheet.csv
+    output: results/tables/mm10/RNA_XX_GO_DEG_stage.csv, results/tables/mm10/RNA_XX_DEG_stage_heatmap_clusters.csv, results/graphs/mm10/PDF/RNA_XX_DEG_stage_heatmap.pdf, results/graphs/mm10/PNG/RNA_XX_DEG_stage_heatmap.png
+    jobid: 0
+    reason: Forced execution
+    resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus_per_task=12
+
+Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpa2hk3u2y.RNA_stage_DEG_heatmap.R
+Registered S3 method overwritten by 'gclus':
+  method         from     
+  reorder.hclust seriation
+`use_raster` is automatically set to TRUE for a matrix with more than
+2000 rows. You can control `use_raster` argument by explicitly setting
+TRUE/FALSE to it.
+
+Set `ht_opt$message = FALSE` to turn off this message.
+'magick' package is suggested to install to give better rasterization.
+
+Set `ht_opt$message = FALSE` to turn off this message.
+/usr/bin/bash: line 1: 1508256 Killed                  Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpa2hk3u2y.RNA_stage_DEG_heatmap.R
+Not cleaning up /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpa2hk3u2y.RNA_stage_DEG_heatmap.R
+[Thu May 23 14:45:20 2024]
+Error in rule RNA_Plot_heatmap_GO_XX:
+    jobid: 0
+    input: workflow/data/mouse_transcription_factors.txt, workflow/data/genes_gonad_asociated_pheno_MGI.txt, results/processed_data/mm10/RNA_sig_stage_DEGs_XX.Robj, results/processed_data/mm10/RNA_norm_counts.csv, results/processed_data/mm10/RNA_samplesheet.csv
+    output: results/tables/mm10/RNA_XX_GO_DEG_stage.csv, results/tables/mm10/RNA_XX_DEG_stage_heatmap_clusters.csv, results/graphs/mm10/PDF/RNA_XX_DEG_stage_heatmap.pdf, results/graphs/mm10/PNG/RNA_XX_DEG_stage_heatmap.png
+
+RuleException:
+CalledProcessError in file /work/user/istevant/project/SupportingCRE/Snakefile, line 270:
+Command 'set -euo pipefail;  Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpa2hk3u2y.RNA_stage_DEG_heatmap.R' returned non-zero exit status 137.
+  File "/work/user/istevant/project/SupportingCRE/Snakefile", line 270, in __rule_RNA_Plot_heatmap_GO_XX
+  File "/work/user/istevant/project/SupportingCRE/.conda/envs/SupportingCRE/lib/python3.9/concurrent/futures/thread.py", line 58, in run
+Removing output files of failed job RNA_Plot_heatmap_GO_XX since they might be corrupted:
+results/tables/mm10/RNA_XX_DEG_stage_heatmap_clusters.csv
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+slurmstepd: error: Detected 1 oom_kill event in StepId=8049476.batch. Some of the step tasks have been OOM Killed.

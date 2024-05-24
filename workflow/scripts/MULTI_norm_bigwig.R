@@ -9,6 +9,7 @@ suppressPackageStartupMessages({
 	library("dplyr")
 	library('doParallel')
 	library('foreach')
+	library("rtracklayer")
 })
 
 doParallel::registerDoParallel(cores=12)
@@ -27,13 +28,15 @@ doParallel::registerDoParallel(cores=12)
 #                                         #
 ###########################################
 
-bigwig_folder <- snakemake@param[['bigwig_folder']]
 size_factors <- snakemake@input[['size_factors']]
-new_bigwig_folder <- snakemake@param[['new_bigwig_folder']]
+bigwig_folder <- snakemake@params[['bigwig_folder']]
+new_bigwig_folder <- snakemake@params[['new_bigwig_folder']]
+output_file <- snakemake@output[['output_file']]
 
-# bigwig_folder <- "/home/istevant/work/data/ATACseq/240521_XX-enh8_XY-sox9_mm10_sub/mapping_nf-core_atacseq_v2.1.2_GRCm39/bwa/merged_library/bigwig"
-# size_factors <- "/home/istevant/work/project/SupportingCRE/results/processed_data/mm39/ATAC_size_factors.csv"
-# new_bigwig_folder <- "/home/istevant/work/project/SupportingCRE/results/processed_data/mm39/bigwig"
+
+# bigwig_folder <- "/home/istevant/work/data/ATACseq/240521_XX-enh8_XY-sox9_sub/mapping_nf-core_atacseq_v2.1.2_GRCm38/bwa/merged_library/bigwig"
+# size_factors <- "/home/istevant/work/project/SupportingCRE/results/processed_data/mm10/ATAC_size_factors.csv"
+# new_bigwig_folder <- "/home/istevant/work/project/SupportingCRE/results/processed_data/mm10/ATAC_bigwig"
 
 pattern <- "*.mLb.clN.bigWig"
 
@@ -45,6 +48,7 @@ rownames(size_factors) <- gsub("Sox9.IRES.GFP","Sox9-IRES-GFP", rownames(size_fa
 rownames(size_factors) <- gsub("Enh8.","Enh8-", rownames(size_factors))
 
 norm_bigwig <- foreach(sample=samples) %dopar% {
+	# print(sample)
 	bw <- paste0(sample, ".mLb.clN.bigWig")
 	# print(paste(bigwig_folder, bw, sep="/"))
 	bw_data <- rtracklayer::import.bw(paste(bigwig_folder, bw, sep="/"))
@@ -57,6 +61,9 @@ norm_bigwig <- foreach(sample=samples) %dopar% {
 	sizeFactor <- size_factors[grep(tolower(sample), tolower(rownames(size_factors))), "SizeFactor"]
 	norn_bw <- denorm_bw
 	norn_bw$score <- denorm_bw$score*(1/sizeFactor)
+	# print(norn_bw)
 	new_bw <- paste0(sample, ".bw")
 	rtracklayer::export.bw(norn_bw, paste(new_bigwig_folder, new_bw, sep="/"))
 }
+
+write.csv(size_factors, file=output_file)

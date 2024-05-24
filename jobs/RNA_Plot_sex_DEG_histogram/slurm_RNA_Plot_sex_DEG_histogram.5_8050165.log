@@ -1,0 +1,2 @@
+SyntaxError in file /work/user/istevant/project/SupportingCRE/Snakefile, line 60:
+Expected name or colon after rule or checkpoint keyword. (Snakefile, line 60)

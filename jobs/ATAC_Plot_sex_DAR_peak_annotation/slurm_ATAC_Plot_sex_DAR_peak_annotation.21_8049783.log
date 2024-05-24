@@ -1,0 +1,17 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, cpus_per_task=12
+Select jobs to execute...
+
+[Thu May 23 14:51:01 2024]
+rule ATAC_Plot_sex_DAR_peak_annotation:
+    input: workflow/data/mm10/gencode.vM25.annotation.gtf.gz, results/processed_data/mm10/ATAC_sig_SexDARs_GR.Robj
+    output: results/processed_data/mm10/ATAC_sig_SexDARs_annotation.Robj, results/graphs/mm10/PDF/ATAC_sig_sex_DARs_annotation.pdf, results/graphs/mm10/PNG/ATAC_sig_sex_DARs_annotation.png
+    jobid: 0
+    reason: Forced execution
+    resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus_per_task=12
+
+Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpwyf034nh.ATAC_peak_annotation_per_sex.R
+slurmstepd: error: *** JOB 8049783 ON n019 CANCELLED AT 2024-05-23T14:51:05 ***

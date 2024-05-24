@@ -19,14 +19,15 @@ RNA_counts: "RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
 RNA_TPM: "RNA_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_TPM.csv"
 RNA_outliers: "E11.5_XX_enh8.mcherry_rep2"
 RNA_minReads: 15
-RNA_minTPM: 2
+RNA_minTPM: 5
 RNA_corr_met: "spearman"
 RNA_adjpval: 0.01
 RNA_log2FC: 0.5
 RNA_sex_double_heatmap_clusters: 8
 RNA_XX_stage_DEG_clusters: 6
 RNA_XY_stage_DEG_clusters: 6
-RNA_bigwig_folder: "/home/istevant/work/data/.../bigwig"
+RNA_bigwig_folder_mm10: "/home/istevant/work/data/.../bigwig"
+RNA_bigwig_folder_mm39: "/home/istevant/work/data/.../bigwig"
 
 
 ATAC_counts: "ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv"
@@ -37,7 +38,9 @@ ATAC_adjpval: 0.01
 ATAC_log2FC: 1
 ATAC_XX_stage_DAR_clusters: 4
 ATAC_XY_stage_DAR_clusters: 4
-ATAC_bigwig_folder: "/home/istevant/work/data/ATACseq/.../bigwig"
+ATAC_bigwig_folder_mm10: "/home/istevant/work/data/ATACseq/240521_XX-enh8_XY-sox9_sub/mapping_nf-core_atacseq_v2.1.2_GRCm38/bwa/merged_library/bigwig"
+ATAC_bigwig_folder_mm39: "/home/istevant/work/data/ATACseq/240521_XX-enh8_XY-sox9_sub/mapping_nf-core_atacseq_v2.1.2_GRCm39/bwa/merged_library/bigwig"
+
 
 MULTI_peak_gene_distance: 500000
 MULTI_peak_gene_min_cor: 0.7

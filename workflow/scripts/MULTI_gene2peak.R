@@ -215,11 +215,11 @@ anno <- annoMergedPeaks(
 #   genome_size = "workflow/data/mm10/chrom.size"
 # )
 
-anno <- annoMergedPeaks(
-  quant_data = "results/processed_data/mm10/ATAC_norm_counts.csv", 
-  cutoff=3000,
-  tss_flank=1000
-)
+# anno <- annoMergedPeaks(
+#   quant_data = "results/processed_data/mm10/ATAC_norm_counts.csv", 
+#   cutoff=3000,
+#   tss_flank=1000
+# )
 
 promoters <- anno[anno$Type=="Proximal",]
 anno_wo_prom <- anno[!anno$Type=="Proximal",]

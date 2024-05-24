@@ -1,0 +1,30 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, cpus_per_task=12
+Select jobs to execute...
+
+[Thu May 23 14:55:37 2024]
+rule RNA_Get_XY_dynamic_DEGs:
+    input: results/processed_data/mm10/RNA_raw_counts.csv, results/processed_data/mm10/RNA_samplesheet.csv
+    output: results/tables/mm10/RNA_XY_DEG_stage.csv, results/processed_data/mm10/RNA_sig_stage_DEGs_XY.Robj
+    jobid: 0
+    reason: Forced execution
+    resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus_per_task=12
+
+Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmp75b5gb1g.RNA_stage_DEG.R
+Warning messages:
+1: replacing previous import ‘S4Arrays::makeNindexFromArrayViewport’ by ‘DelayedArray::makeNindexFromArrayViewport’ when loading ‘SummarizedExperiment’ 
+2: In DESeqDataSet(se, design = design, ignoreRank) :
+  some variables in design formula are characters, converting to factors
+estimating size factors
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+final dispersion estimates
+fitting model and testing
+Not cleaning up /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmp75b5gb1g.RNA_stage_DEG.R
+[Thu May 23 14:56:04 2024]
+Finished job 0.
+1 of 1 steps (100%) done

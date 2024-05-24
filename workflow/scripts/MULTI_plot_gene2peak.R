@@ -20,6 +20,8 @@ suppressPackageStartupMessages({
 
 doParallel::registerDoParallel(cores=12)
 
+options(ucscChromosomeNames=FALSE)
+
 ###########################################
 #                                         #
 #               Functions                 #
@@ -44,7 +46,7 @@ import_bw_files <- function(folder, files, locus, window){
 			gr <- locus
 			gr$score <- 0.1
 		}
-		gr$cond <- rep(paste0(sex, " ", stage), length(gr))
+		gr$cond <- rep(paste("         ", sex, stage), length(gr))
 		return(gr)
 	}
 	sex <- unique(sapply(strsplit(files, "_"), `[`, 2))
@@ -72,7 +74,8 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 		gr_list,
 		function(gr){
 			DataTrack(
-				range = gr, 
+				range = gr,
+				ucscChromosomeNames=FALSE,
 				type = "hist",
 				baseline=0,
 				window=res,
@@ -83,6 +86,7 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 				fill.histogram=color,
 				ylim=c(0, trunc(max_score, digit=4)),
 				yTicksAt=c(0,trunc(max_score, digit=4)),
+				rotation.title=0,
 				lwd=0,
 				alpha=0.8
 			)
@@ -94,7 +98,6 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 
 
 plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, window){
-
 	locus_TSS <- resize(gene_TSS[gene_TSS$name %in% locus,], width=2, fix='start')
 
 	full_locus <- locus_TSS
@@ -220,7 +223,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, wind
 			alpha.axis=1,
 			sizes=c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
 			cex.title=0.9,
-			title.width=1
+			cex.id= 0.5,
+			title.width=1.4
 		)
 
 	} else if(nrow(gene_links)<1) {
@@ -249,7 +253,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, wind
 			alpha.axis=1,
 			sizes=c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
 			cex.title=0.9,
-			title.width=1
+			cex.id= 0.5,
+			title.width=1.4
 		)
 	} else {
 		ht <- HighlightTrack(
@@ -277,7 +282,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, wind
 			alpha.axis=1,
 			sizes=c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
 			cex.title=0.9,
-			title.width=1
+			cex.id= 0.5,
+			title.width=1.4
 		)
 	}
 
@@ -298,7 +304,7 @@ links <- snakemake@input[['linkage']]
 gene_bed <- snakemake@input[['gene_bed']]
 gene_list <- snakemake@input[['gene_list']]
 
-# bw_folder <- "results/processed_data/mm10/bigWig"
+# bw_folder <- "results/processed_data/mm10/ATAC_bigwig"
 # # genome <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
 # genome <- "workflow/data/mm10/gencode.vM25.annotation.gtf.gz"
 # peaks <- "results/processed_data/mm10/ATAC_norm_counts.csv"
@@ -332,8 +338,8 @@ rownames(gene2symbol) <- gene2symbol$gene_id
 TxDb <- GenomicFeatures::makeTxDbFromGFF(genome)
 
 
-pdf(file=snakemake@output[['pdf']], width=6, height=8)
-# pdf(file="test.pdf", width=6, height=8)
+pdf(file=snakemake@output[['pdf']], width=8, height=8)
+# pdf(file="test.pdf", width=7.5, height=7.5)
 
 plot <- lapply(genes, function(gene){
 
@@ -376,7 +382,6 @@ plot <- lapply(genes, function(gene){
 				conditions_color
 			)
 		)
-
 
 	plot <- plot_tracks(
 		peak_gr, 

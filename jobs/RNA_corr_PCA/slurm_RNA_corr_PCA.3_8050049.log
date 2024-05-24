@@ -1,0 +1,20 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, cpus_per_task=12
+Select jobs to execute...
+
+[Thu May 23 14:55:23 2024]
+rule RNA_corr_PCA:
+    input: results/processed_data/mm10/RNA_norm_counts.csv
+    output: results/graphs/mm10/PDF/RNA_corr_pca.pdf, results/graphs/mm10/PNG/RNA_corr_pca.png
+    jobid: 0
+    reason: Forced execution
+    resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus_per_task=12
+
+Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpth4rjxfe.Corr_pca.R
+Not cleaning up /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpth4rjxfe.Corr_pca.R
+[Thu May 23 14:55:40 2024]
+Finished job 0.
+1 of 1 steps (100%) done

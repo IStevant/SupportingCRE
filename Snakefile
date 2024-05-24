@@ -12,8 +12,12 @@ output_tables = f'{config["path_to_tables"]}{config["genome_version"]}'
 
 if config["genome_version"] == "mm10":
 	genome = f'{input_data}/gencode.vM25.annotation.gtf.gz'
+	RNA_bigwig_folder = config["RNA_bigwig_folder_mm10"]
+	ATAC_bigwig_folder = config["ATAC_bigwig_folder_mm10"]
 else :
 	genome = f'{input_data}/gencode.vM34.annotation.gtf.gz'
+	RNA_bigwig_folder = config["RNA_bigwig_folder_mm39"]
+	ATAC_bigwig_folder = config["ATAC_bigwig_folder_mm39"]
 
 # List of output files
 rule_all_input_list = [
@@ -52,7 +56,6 @@ rule install_packages:
 	script:
 		"renv/restore.R"
 
-
 rule RNA_Get_matrices:
 	input:
 		counts=f'{input_data}/{config["RNA_counts"]}',
@@ -69,7 +72,7 @@ rule RNA_Get_matrices:
 		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
 		norm_counts_all=f"{processed_data}/RNA_norm_counts_all.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-		size_factors=f"{processed_data}/ATAC_size_factors.csv"
+		size_factors=f"{processed_data}/RNA_size_factors.csv"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000
@@ -81,7 +84,7 @@ rule RNA_Normalize_bigwig:
 	input:
 		size_factors=f"{processed_data}/RNA_size_factors.csv"
 	params:
-		bigwig_folder=config["RNA_bigwig_folder"],
+		igwig_folder=f"{RNA_bigwig_folder}",
 		new_bigwig_folder=f"{processed_data}/bigwig"
 	resources:
 		cpus_per_task=12,
@@ -323,8 +326,10 @@ rule ATAC_Normalize_bigwig:
 	input:
 		size_factors=f"{processed_data}/ATAC_size_factors.csv"
 	params:
-		bigwig_folder=config["ATAC_bigwig_folder"],
-		new_bigwig_folder=f"{processed_data}/bigwig"
+		bigwig_folder=f"{ATAC_bigwig_folder}",
+		new_bigwig_folder=f"{processed_data}/ATAC_bigwig"
+	output:
+		output_file=f"{processed_data}/ATAC_bigwig/scale/ATAC_size_factors.csv"
 	resources:
 		cpus_per_task=12,
 		mem_mb=16000
@@ -576,7 +581,7 @@ rule MULTI_Plot_gene_peak_correlation:
 		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
 		gene_list=config["gene_peak_examples"],
 	params:
-		bw_folder="results/processed_data/mm10/bigWig"
+		bw_folder="results/processed_data/mm10/ATAC_bigwig"
 	output:
 		pdf=f"{output_pdf}/gene2peak_plots.pdf"
 	resources:

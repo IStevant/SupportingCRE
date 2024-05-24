@@ -95,12 +95,12 @@ promoter <- snakemake@params[['promoter']]
 # Load mouse genome
 genome_file <- snakemake@input[['genome']]
 # genome_file <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
-mm10Genes <- rtracklayer::import(genome_file)
+Genes <- rtracklayer::import(genome_file)
 # the column symbol was present in other version of the script so I add it again but ultimately change the $symbol to $gene_name
-mm10Genes$symbol <- mm10Genes$gene_name
+Genes$symbol <- Genes$gene_name
 
 txdb <- GenomicFeatures::makeTxDbFromGRanges(
-	mm10Genes,
+	Genes,
 	drop.stop.codons=FALSE
 )
 
@@ -110,9 +110,8 @@ txdb <- GenomicFeatures::makeTxDbFromGRanges(
 #                                         #
 ###########################################
 
-XX_peaks <- peak_list[["XX"]]
-
-XY_peaks <- peak_list[["XY"]]
+XX_peaks <- unlist(peak_list[grep("XX", names(peak_list))])
+XY_peaks <- unlist(peak_list[grep("XY", names(peak_list))])
 
 XX_anno <- lapply(
 	XX_peaks, 

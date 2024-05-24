@@ -1,0 +1,42 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, cpus_per_task=12
+Select jobs to execute...
+
+[Thu May 23 14:55:37 2024]
+rule RNA_Get_sex_DEGs:
+    input: results/processed_data/mm10/RNA_raw_counts.csv, results/processed_data/mm10/RNA_samplesheet.csv
+    output: results/processed_data/mm10/RNA_all_SexDEGs.Robj, results/processed_data/mm10/RNA_sig_SexDEGs.Robj
+    jobid: 0
+    reason: Forced execution
+    resources: mem_mb=64000, mem_mib=61036, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus_per_task=12
+
+Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpout17e86.RNA_sex_DEG.R
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+Warning messages:
+1: replacing previous import ‘S4Arrays::makeNindexFromArrayViewport’ by ‘DelayedArray::makeNindexFromArrayViewport’ when loading ‘SummarizedExperiment’ 
+2: In DESeqDataSet(se, design = design, ignoreRank) :
+  some variables in design formula are characters, converting to factors
+estimating size factors
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+final dispersion estimates
+fitting model and testing
+Not cleaning up /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpout17e86.RNA_sex_DEG.R
+[Thu May 23 14:56:12 2024]
+Finished job 0.
+1 of 1 steps (100%) done

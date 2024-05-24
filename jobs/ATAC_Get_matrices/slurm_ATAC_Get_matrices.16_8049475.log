@@ -1,0 +1,45 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, cpus_per_task=4
+Select jobs to execute...
+
+[Thu May 23 14:44:42 2024]
+rule ATAC_Get_matrices:
+    input: workflow/data/mm10/ATAC_XX_Enh8-mCherry_XY_SOX9-IRES-GFP_read_count.csv
+    output: results/processed_data/mm10/ATAC_raw_counts.csv, results/processed_data/mm10/ATAC_norm_counts.csv, results/processed_data/mm10/ATAC_samplesheet.csv, results/processed_data/mm10/ATAC_size_factors.csv
+    jobid: 0
+    reason: Forced execution
+    resources: mem_mb=16000, mem_mib=15259, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus_per_task=4
+
+Rscript --vanilla /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpw56_p83a.ATAC_clean_matrices.R
+converting counts to integer mode
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+Warning messages:
+1: replacing previous import ‘S4Arrays::makeNindexFromArrayViewport’ by ‘DelayedArray::makeNindexFromArrayViewport’ when loading ‘SummarizedExperiment’ 
+2: In DESeqDataSet(se, design = design, ignoreRank) :
+  some variables in design formula are characters, converting to factors
+converting counts to integer mode
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+  Note: levels of factors in the design contain characters other than
+  letters, numbers, '_' and '.'. It is recommended (but not required) to use
+  only letters, numbers, and delimiters '_' or '.', as these are safe characters
+  for column names in R. [This is a message, not a warning or an error]
+Warning message:
+In DESeqDataSet(se, design = design, ignoreRank) :
+  some variables in design formula are characters, converting to factors
+Not cleaning up /work/user/istevant/project/SupportingCRE/.snakemake/scripts/tmpw56_p83a.ATAC_clean_matrices.R
+[Thu May 23 14:45:16 2024]
+Finished job 0.
+1 of 1 steps (100%) done
