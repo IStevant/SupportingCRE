@@ -45,7 +45,7 @@ plot_anno_sex <- function(anno){
 	data <- rbind(data_XX, data_XY)
 
 	labels <- round(data$Frequency, digit=2)
-	labels[labels<3.5] <- 0
+	labels[labels<4] <- 0
 	labels <- paste0(labels, "%")
 	labels[labels=="0%"] <- " "
 
@@ -152,7 +152,7 @@ save_plot(
 	snakemake@output[['pdf']],
 	figures, 
 	base_width=30,
-	base_height=20,
+	base_height=10,
 	units = c("cm"), 
 	dpi=300
 )
@@ -161,7 +161,7 @@ save_plot(
 	snakemake@output[['png']], 
 	figures, 
 	base_width=30,
-	base_height=20,
+	base_height=10,
 	units = c("cm"), 
 	dpi=300
 )

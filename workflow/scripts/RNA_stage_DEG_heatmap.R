@@ -18,6 +18,28 @@ suppressPackageStartupMessages({
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+TF_genes <- snakemake@input[['TF_genes']]
+TF_pheno <- snakemake@input[['TF_pheno']]
+
+
+norm_counts <- read.csv(file=snakemake@input[['norm_counts']], row.names=1)
+load(snakemake@input[['sig_DEGs']])
+samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+
+sex <- snakemake@params[['sex']]
+clusters <- snakemake@params[['clusters']]
+
+names(conditions_color) <- sort(unique(samplesheet$conditions))
+sex_colors <- conditions_color[grepl(sex , names(conditions_color))]
+
+#################################################################################################################################
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -72,20 +94,29 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	cluster_colors <- as.vector(MetBrewer::met.brewer("Hokusai1", n=clusters))
 
 	# Color palette for the heatmap
-	cold <- colorRampPalette(c('#e9f6e6','#e0f3f7','#8ab8d7','#4575b4'))
-	warm <- colorRampPalette(c('#f4fbd2','#feeda3','#fa8a57','#d73027'))
-	mypalette <- c(rev(cold(12)), warm(12))
+	# blue-yellow-red
+	cold <- colorRampPalette(c('#4677b7','#709eca','#9ac4dd','#cce1e3',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8",'#fdd4ab','#fbab70','#e96e33','#d83329'))
+	BYR <- c(cold(12), warm(12))
+	# green-yellow-brown
+	cold <- colorRampPalette(c('#138586','#44aa9b','#74cfb1','#bbe7ce',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8", '#f5da9f','#ebb655','#d18f43','#b56832'))
+	GYB <- c(cold(12), warm(12))
+	# green-yellow-purple
+	cold <- colorRampPalette(c('#138586','#44aa9b','#74cfb1','#bbe7ce',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8", '#f3c2d3','#d981cf','#b452c1','#9030b4'))
+	GYP <- c(cold(12), warm(12))
 
-	# set.seed(654)
+	mypalette <- BYR
 
 	# Top annotation (stages)
 	stage_anno <- HeatmapAnnotation(
-		Stages=conditions,
-		col=list(
-			Stages=col_stage
-		),
-		annotation_name_side = "left",
-		simple_anno_size = unit(0.5, "cm")
+		Stages = anno_block(
+			gp = gpar(fill = col_stage, col = 0), 
+			labels = names(col_stage),
+			labels_gp = gpar(col = "white", fontsize = 12, fontface="bold"),
+			height = unit(5.5, "mm")
+		)
 	)
  
 	# Row annotation (gene clusters)
@@ -139,18 +170,22 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		name = "z-score",
 		top_annotation = stage_anno,
 		left_annotation = cluster_anno,
-		right_annotation = TFs,
 		row_title_rot = 0,
 		row_split = clustering,
+		column_split = conditions,
 		cluster_columns = FALSE,
+		# cluster_rows = FALSE,
 		show_column_names = FALSE,
 		show_row_names = FALSE,
 		show_row_dend = FALSE,
-		cluster_row_slices = FALSE, 
+		cluster_row_slices = FALSE,
 		col = mypalette,
 		heatmap_legend_param = list(direction = "vertical"),
-		row_title=NULL
+		row_title=NULL,
+		column_title = NULL,
+		column_gap=unit(0.4, "mm")
 	)
+	
 	height <- 9
 	width <- 6
 
@@ -161,19 +196,21 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		draw(
 			ht_list,
 			row_title = paste(scales::comma(nrow(matrix)), "differentially expressed genes"),
-			annotation_legend_list=cluster_legend,
+			# annotation_legend_list=cluster_legend,
 			merge_legend = TRUE,
 			use_raster = TRUE, 
 			raster_quality = 5
 		)
 
-		# Add gene cluster annotation as extra-rectangles to avoid bad rasterization (faded colors)
+		# Add peak cluster annotation as extra-rectangles to avoid bad rasterization (faded colors)
 		for(i in 1:length(levels(clustering))) {
 			decorate_annotation(
 				"Clusters", 
 				slice = i, {
-					grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
-					grid.text(x=0.15, levels(clustering)[i], just = "left")
+					# grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
+					grid.rect(x=0.9, width = unit(0.7, "mm"), gp = gpar(fill = "black", col = NA), just = "right")
+					grid.circle(x=0.4, r=unit(2.5, "mm"), gp=gpar(fill="black"))
+					grid.text(x=0.4, levels(clustering)[i], just = "center", gp=gpar(col="white"))
 				}
 			)
 		}
@@ -299,26 +336,6 @@ panel_fix <- function(p = NULL, grob = NULL,
 
 ###########################################
 #                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-TF_genes <- snakemake@input[['TF_genes']]
-TF_pheno <- snakemake@input[['TF_pheno']]
-
-
-norm_counts <- read.csv(file=snakemake@input[['norm_counts']], row.names=1)
-load(snakemake@input[['sig_DEGs']])
-samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
-
-sex <- snakemake@params[['sex']]
-clusters <- snakemake@params[['clusters']]
-
-names(conditions_color) <- sort(unique(samplesheet$conditions))
-sex_colors <- conditions_color[grepl(sex , names(conditions_color))]
-
-###########################################
-#                                         #
 #              Drax heatmap               #
 #                                         #
 ###########################################
@@ -355,6 +372,12 @@ figure <- plot_grid(
 	labels = "AUTO",
 	ncol=2
 )
+
+##########################################
+#                                        #
+#               Save plots               #
+#                                        #
+##########################################
 
 save_plot(
 	snakemake@output[['pdf']], 

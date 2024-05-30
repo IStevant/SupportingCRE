@@ -71,7 +71,7 @@ XX_filtered_StageDEGs <- filtered_StageDEGs
 ###########################################
 XX_spe_genes <- unique(unlist(lapply(filtered_SexDEGs, function(x) rownames(x[x$Diff.Exp. == "Up in XX",]))))
 
-XX_dyn_genes <- XY_filtered_StageDEGs
+XX_dyn_genes <- XX_filtered_StageDEGs
 XX_venn <- draw_venn_sex_dyn(XX_spe_genes, XX_dyn_genes, "XX genes")
 
 XY_spe_genes <- unique(unlist(lapply(filtered_SexDEGs, function(x) rownames(x[x$Diff.Exp. == "Up in XY",]))))

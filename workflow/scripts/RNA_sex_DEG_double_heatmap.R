@@ -72,23 +72,36 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	matrix[matrix<(-2)] <- (-2)
 
 	# Prepare top annotation
-	conditions <-paste(sapply(strsplit(colnames(matrix), "_"), `[`, 2), sapply(strsplit(colnames(matrix), "_"), `[`, 1))
+	conditions <- paste(sapply(strsplit(colnames(matrix), "_"), `[`, 2), sapply(strsplit(colnames(matrix), "_"), `[`, 1))
+	conditions <- factor(conditions, levels=unique(conditions))
 	annotation_col <- data.frame(
 		Stages=conditions
 	)
 	rownames(annotation_col) <- colnames(matrix)
 
 	# Stages palette
-	col_stage <- colors
-	# names(col_stage) <- c(unique(conditions), rev(unique(conditions)))
+	col_stage <- c(colors[4:1], colors[5:8]) 
+	names(col_stage) <-unique(conditions)
 
 	# Gene cluster color palette
 	cluster_colors <- as.vector(MetBrewer::met.brewer("Hokusai1", n=clusters))
 
 	# Color palette for the heatmap
-	cold <- colorRampPalette(c('#e9f6e6','#e0f3f7','#8ab8d7','#4575b4'))
-	warm <- colorRampPalette(c('#f4fbd2','#feeda3','#fa8a57','#d73027'))
-	mypalette <- c(rev(cold(12)), warm(12))
+	# Color palette for the heatmap
+	# blue-yellow-red
+	cold <- colorRampPalette(c('#4677b7','#709eca','#9ac4dd','#cce1e3',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8",'#fdd4ab','#fbab70','#e96e33','#d83329'))
+	BYR <- c(cold(12), warm(12))
+	# green-yellow-brown
+	cold <- colorRampPalette(c('#138586','#44aa9b','#74cfb1','#bbe7ce',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8", '#f5da9f','#ebb655','#d18f43','#b56832'))
+	GYB <- c(cold(12), warm(12))
+	# green-yellow-purple
+	cold <- colorRampPalette(c('#138586','#44aa9b','#74cfb1','#bbe7ce',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8", '#f3c2d3','#d981cf','#b452c1','#9030b4'))
+	GYP <- c(cold(12), warm(12))
+
+	mypalette <- BYR
 
 	# set.seed(654)
 
@@ -96,13 +109,15 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 
 	# Top annotation (stages)
 	stage_anno <- HeatmapAnnotation(
-		Stages=conditions,
-		col=list(
-			Stages=col_stage
-		),
-		annotation_name_side = "left",
-		simple_anno_size = unit(0.5, "cm")
+		Stages = anno_block(
+			gp = gpar(fill = col_stage, col = 0), 
+			labels = names(col_stage),
+			# labels = c("XX", "XY"),
+			labels_gp = gpar(col = "white", fontsize = 10, fontface="bold"),
+			height = unit(5.5, "mm")
+		)
 	)
+
  
 	# Row annotation (gene clusters)
 	cluster_anno <- rowAnnotation(
@@ -133,8 +148,8 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	matrix_TF_indexes <- unlist(lapply(TFs, function(TF) which(rownames(matrix) %in% TF)))
 	# print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
 
-	if(length(matrix_TF_indexes)>30){
-		matrix_TF_indexes <- sample(matrix_TF_indexes,30)
+	if(length(matrix_TF_indexes)>40){
+		matrix_TF_indexes <- sample(matrix_TF_indexes,40)
 	}
 
 	TF_names <- rownames(matrix[matrix_TF_indexes,])
@@ -157,7 +172,7 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		top_annotation = stage_anno,
 		left_annotation = cluster_anno,
 		right_annotation = TFs,
-		column_split = Sex,
+		column_split = conditions,
 		row_title_rot = 0,
 		row_split = clustering,
 		cluster_columns = FALSE,
@@ -167,11 +182,13 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		cluster_row_slices = FALSE, 
 		col = mypalette,
 		heatmap_legend_param = list(direction = "vertical"),
-		row_title=NULL
+		row_title=NULL,
+		column_title = NULL,
+		column_gap=unit(0.4, "mm")
 	)
 
-	height <- 8
-	width <- 6
+	height <- 11
+	width <- 9
 
 	gTree <- grid.grabExpr(
 		{
@@ -180,7 +197,7 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		draw(
 			ht_list,
 			row_title = paste(scales::comma(nrow(matrix)), "differentially expressed genes"),
-			annotation_legend_list=cluster_legend,
+			# annotation_legend_list=cluster_legend,
 			merge_legend = TRUE,
 			use_raster = TRUE, 
 			raster_quality = 5
@@ -191,8 +208,10 @@ plot_double_heatmap <- function(data, de_feature, colors, clusters, res_file){
 			decorate_annotation(
 				"Clusters", 
 				slice = i, {
-					grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
-					grid.text(x=0.15, levels(clustering)[i], just = "left")
+					# grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
+					grid.rect(x=0.9, width = unit(0.7, "mm"), gp = gpar(fill = "black", col = NA), just = "right")
+					grid.circle(x=0.4, r=unit(2.5, "mm"), gp=gpar(fill="black"))
+					grid.text(x=0.4, levels(clustering)[i], just = "center", gp=gpar(col="white"))
 				}
 			)
 		}
@@ -301,8 +320,8 @@ sex_DEG_heatmap <- plot_double_heatmap(
 save_plot(
 	snakemake@output[['pdf']], 
 	sex_DEG_heatmap, 
-	base_width=15,
-	base_height=20.5,
+	base_width=30,
+	base_height=30,
 	units = c("cm"), 
 	dpi=300, 
 	bg = "white"
@@ -311,8 +330,8 @@ save_plot(
 save_plot(
 	snakemake@output[['png']], 
 	sex_DEG_heatmap, 
-	base_width=15,
-	base_height=20.5,
+	base_width=30,
+	base_height=30,
 	units = c("cm"), 
 	dpi=300, 
 	bg = "white"

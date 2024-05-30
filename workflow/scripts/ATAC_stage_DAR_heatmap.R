@@ -31,25 +31,16 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	set.seed(654)
 
 	# Cluster matrix
-	row_dend <- hclust(dist(matrix), method= "ward.D2")
-	clustering <- cutree(row_dend, k=clusters)
+	row_dend <- hclust(dist(matrix), method= "ward.D")
+	clustering <- as.factor(cutree(row_dend, k=clusters))
+	levels(clustering) <- letters[1:clusters]
 
-	# # Order clusters
-	# mean_per_cluster <- lapply(
-	# 	unique(clustering),
-	# 	function(cluster){
-	# 		peaks <- names(clustering[clustering==cluster])
-	# 		matrix_cluster <- matrix[rownames(matrix) %in% peaks,]
-	# 		mean <- as.data.frame(t(matrixStats::colMedians(matrix_cluster)))
-	# 		return(mean)
-	# 	}
-	# )
+	if (sex=="XX"){
+		clustering <- factor(clustering, levels=c("c", "b", "a", "d"))
 
-	# mean_per_cluster <- data.table::rbindlist(mean_per_cluster)
-	# o1 <- seriation::seriate(dist(mean_per_cluster), method="OLO")
-	# levels <- seriation::get_order(o1)
-
-	# clustering <- factor(clustering, levels=levels)
+	} else if (sex=="XY") {
+		clustering <- factor(clustering, levels=c("a", "c", "b", "d"))
+	}
 
 	levels(clustering) <- letters[1:clusters]
 
@@ -75,19 +66,29 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	cluster_colors <- as.vector(MetBrewer::met.brewer("Hokusai1", n=clusters))
 
 	# Color palette for the heatmap
-	cold <- colorRampPalette(c('#e9f6e6','#e0f3f7','#8ab8d7','#4575b4'))
-	warm <- colorRampPalette(c('#f4fbd2','#feeda3','#fa8a57','#d73027'))
-	mypalette <- c(rev(cold(12)), warm(12))
+	# blue-yellow-red
+	cold <- colorRampPalette(c('#4677b7','#709eca','#9ac4dd','#cce1e3',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8",'#fdd4ab','#fbab70','#e96e33','#d83329'))
+	BYR <- c(cold(12), warm(12))
+	# green-yellow-brown
+	cold <- colorRampPalette(c('#138586','#44aa9b','#74cfb1','#bbe7ce',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8", '#f5da9f','#ebb655','#d18f43','#b56832'))
+	GYB <- c(cold(12), warm(12))
+	# green-yellow-purple
+	cold <- colorRampPalette(c('#138586','#44aa9b','#74cfb1','#bbe7ce',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8", '#f3c2d3','#d981cf','#b452c1','#9030b4'))
+	GYP <- c(cold(12), warm(12))
 
+	mypalette <- GYP
 
 	# Top annotation (stages)
 	stage_anno <- HeatmapAnnotation(
-		Stages=conditions,
-		col=list(
-			Stages=col_stage
-		),
-		annotation_name_side = "left",
-		simple_anno_size = unit(0.5, "cm")
+		Stages = anno_block(
+			gp = gpar(fill = col_stage, col = 0), 
+			labels = names(col_stage),
+			labels_gp = gpar(col = "white", fontsize = 12, fontface="bold"),
+			height = unit(5.5, "mm")
+		)
 	)
  
 	# Row annotation (peak clusters)
@@ -99,11 +100,11 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	)
 
 	# Prepare the peak clusters legend manually
-	cluster_legend = Legend(
-		at = levels(clustering), 
-		title = "Clusters", 
-		legend_gp = gpar(fill = cluster_colors)
-	)
+	# cluster_legend = Legend(
+	# 	at = levels(clustering), 
+	# 	title = "Clusters", 
+	# 	legend_gp = gpar(fill = cluster_colors)
+	# )
 
 	# Make the heatmap
 	ht_list <- Heatmap(
@@ -113,15 +114,20 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		left_annotation = cluster_anno,
 		row_title_rot = 0,
 		row_split = clustering,
+		column_split = conditions,
 		cluster_columns = FALSE,
+		# cluster_rows = FALSE,
 		show_column_names = FALSE,
 		show_row_names = FALSE,
 		show_row_dend = FALSE,
-		cluster_row_slices = TRUE,
+		cluster_row_slices = FALSE,
 		col = mypalette,
 		heatmap_legend_param = list(direction = "vertical"),
-		row_title=NULL
+		row_title=NULL,
+		column_title = NULL,
+		column_gap=unit(0.4, "mm")
 	)
+
 	height <- 9
 	width <- 6
 
@@ -132,7 +138,7 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		draw(
 			ht_list,
 			row_title = paste(scales::comma(nrow(matrix)), "differentially accessible regions"),
-			annotation_legend_list=cluster_legend,
+			# annotation_legend_list=cluster_legend,
 			merge_legend = TRUE,
 			use_raster = TRUE, 
 			raster_quality = 5
@@ -143,8 +149,10 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 			decorate_annotation(
 				"Clusters", 
 				slice = i, {
-					grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
-					grid.text(x=0.15, levels(clustering)[i], just = "left")
+					# grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
+					grid.rect(x=0.9, width = unit(0.7, "mm"), gp = gpar(fill = "black", col = NA), just = "right")
+					grid.circle(x=0.4, r=unit(2.5, "mm"), gp=gpar(fill="black"))
+					grid.text(x=0.4, levels(clustering)[i], just = "center", gp=gpar(col="white"))
 				}
 			)
 		}

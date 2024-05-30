@@ -3,6 +3,20 @@ source(".Rprofile")
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
+samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+adj.pval <- snakemake@params[['adjpval']]
+log2FC <- snakemake@params[['log2FC']]
+save_folder <- snakemake@params[['save_folder']]
+
+#################################################################################################################################
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -35,20 +49,6 @@ get_sex_DEG_per_stage <- function(dds, stage, p.adj, log2FC){
 
 ###########################################
 #                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
-samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
-
-adj.pval <- snakemake@params[['adjpval']]
-log2FC <- snakemake@params[['log2FC']]
-
-save_folder <- snakemake@params[['save_folder']]
-
-###########################################
-#                                         #
 #     DESeq2 analysis sex per stages      #
 #                                         #
 ###########################################
@@ -61,17 +61,22 @@ SexDEGs <- DESeq2::DESeqDataSetFromMatrix(
 
 SexDEGs <- DESeq2::DESeq(SexDEGs)
 
-# Save the Robj of the results for reuse
-save(SexDEGs, file=snakemake@output[['all_DEGs']])
-
 # Get embryonic stages
 stages <- unique(samplesheet$stages)
 
 # For each stages, extract significant DEGs
 filtered_SexDEGs <- lapply(stages, function(stg) get_sex_DEG_per_stage(SexDEGs, stg, adj.pval, log2FC))
 
+##########################################
+#                                        #
+#               Save files               #
+#                                        #
+##########################################
+
 # For each stages, write DEG results into separated files
 export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0(save_folder, "/RNA_DEG_sex_", stages[stg], ".csv")))
 
+# Save the Robj of the results for reuse
+save(SexDEGs, file=snakemake@output[['all_DEGs']])
 names(filtered_SexDEGs) <- stages
 save(filtered_SexDEGs, file=snakemake@output[['sig_DEGs']])

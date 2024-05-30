@@ -110,7 +110,7 @@ plotMotifHeatmaps_exp <- function(x,
 							  maxEnr = NULL,
 							  maxSig = NULL,
 							  highlight = NULL,
-							  cluster = FALSE,
+							  cluster = TRUE,
 							  show_dendrogram = FALSE,
 							  show_motif_GC = FALSE,
 							  show_seqlogo = FALSE,
@@ -153,7 +153,7 @@ plotMotifHeatmaps_exp <- function(x,
 			x <- x[!allNA, ]
 			clAssay <- clAssay[!allNA, ]
 		}
-		clres <- hclust(dist(clAssay))
+		clres <- hclust(dist(clAssay), method="ward.D")
 	} else if (identical(cluster, FALSE)) {
 		clres <- FALSE
 	} else if (is(cluster, "hclust")) {
@@ -262,17 +262,17 @@ plotMotifHeatmaps_exp <- function(x,
 	invisible(ret)
 }
 
-get_enriched_TFs <- function(stg, save_folder){
-	# stg <- "E11.5"
+get_enriched_TFs <- function(save_folder){
+	# sx <- "E11.5"
 	# save_folder <- "."
 	# Select the genes expressed at a specific stage for both sexes
-	genes <- TPM[,grep(stg, colnames(TPM))]
+	genes <- TPM
 	# genes <- TPM[,grep("XX", colnames(genes))]
 	# Discard lowly expressed genes
 	genes <- run_filter_low_counts(genes, minTPM)
 	genes <- rownames(genes[rowSums(genes)>0,])
 	# Select only the TFs
-	stg_TFs <- genes[which(genes %in% TFs)]
+	# stg_TFs <- genes[which(genes %in% TFs)]
 
 	pwms <- TFBSTools::getMatrixSet(
 		JASPAR,
@@ -283,22 +283,26 @@ get_enriched_TFs <- function(stg, save_folder){
 		)
 	)
 
-	sex_peaks <- filtered_SexDARs[[stg]]
+	peaks <- filtered_StageDARs
+	clusters <-peaks$x
 
 	# generate GRanges objects
-	female <- GenomicRanges::GRanges(rownames(sex_peaks[sex_peaks$Diff.Acc.=="More in XX",]))
-	male <- GenomicRanges::GRanges(rownames(sex_peaks[sex_peaks$Diff.Acc.=="More in XY",]))
-	all <- c(female, male)
+	peak_gr <- GRanges(rownames(peaks)) 
 
 	# Get the peak sequences
 	if (genome_version=="mm10"){
-		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, all)
+		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, peak_gr)
 	} else {
-		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm39, all)
+		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm39, peak_gr)
 	}
 
+	# # generate GRanges objects
+	# female <- GenomicRanges::GRanges(rownames(peaks[peaks$Diff.Acc.=="More in XX",]))
+	# male <- GenomicRanges::GRanges(rownames(peaks[peaks$Diff.Acc.=="More in XY",]))
+	# all <- c(female, male)
+
 	# Define which sequences are male or female specific
-	bins <- rep(c("XX", "XY"), c(length(female), length(male)))
+	bins <- clusters
 	bins <- factor(bins)
 	table(bins)
 
@@ -339,120 +343,120 @@ get_enriched_TFs <- function(stg, save_folder){
 	}
 
 	# Get gene expression of the TFs
-	TF_names <- tolower(as.vector(rowData(se2)$motif.name))
-	names(TF_names) <- rowData(se2)$motif.id
-	genes <- TPM[,grep(stg, colnames(TPM))]
-	rownames(genes) <- tolower(rownames(genes))
+	# TF_names <- tolower(as.vector(rowData(se2)$motif.name))
+	# names(TF_names) <- rowData(se2)$motif.id
+	# genes <- TPM[,grep(stg, colnames(TPM))]
+	# rownames(genes) <- tolower(rownames(genes))
 
-	TF_exp <- matrix(0, nrow=length(TF_names), ncol=ncol(genes))
-	rownames(TF_exp) <- TF_names
-	colnames(TF_exp) <- colnames(genes)
+	# TF_exp <- matrix(0, nrow=length(TF_names), ncol=ncol(genes))
+	# rownames(TF_exp) <- TF_names
+	# colnames(TF_exp) <- colnames(genes)
 
-	for (TF in TF_names) {
-		if (TF %in% rownames(genes)){
-			TF_exp[TF,] <- unlist(genes[TF,])
-		}
-	}
+	# for (TF in TF_names) {
+	# 	if (TF %in% rownames(genes)){
+	# 		TF_exp[TF,] <- unlist(genes[TF,])
+	# 	}
+	# }
 
-	TF_expression <- data.frame(
-		XX=rowMeans(TF_exp[,grep("XX",colnames(TF_exp))]),
-		XY=rowMeans(TF_exp[,grep("XY",colnames(TF_exp))])
-	)
+	# TF_expression <- data.frame(
+	# 	XX=rowMeans(TF_exp[,grep("XX",colnames(TF_exp))]),
+	# 	XY=rowMeans(TF_exp[,grep("XY",colnames(TF_exp))])
+	# )
 
-	rownames(TF_expression) <- rownames(SummarizedExperiment::assay(se2, "negLog10Padj"))
+	# rownames(TF_expression) <- rownames(SummarizedExperiment::assay(se2, "negLog10Padj"))
 
-	assays(se2)$expr <- TF_expression
+	# assays(se2)$expr <- TF_expression
 
 	# Select the motifs enriched with a -Log10Padj > 10
 	sel2 <- apply(SummarizedExperiment::assay(se2, "negLog10Padj"), 1, 
 				function(x) max(abs(x), 0, na.rm = TRUE)) > 10.0
 	seSel <- se2[sel2, ]
 
-	sel2 <- apply(SummarizedExperiment::assay(seSel, "expr"), 1, 
-			function(x) max(x, 0, na.rm = TRUE)) > 5
-	seSel <- seSel[sel2, ]
-	seSel@elementMetadata$motif.name <- toupper(seSel@elementMetadata$motif.name)
-	assays(seSel)$expr <- log10(assays(seSel)$expr)
+	# sel2 <- apply(SummarizedExperiment::assay(seSel, "expr"), 1, 
+	# 		function(x) max(x, 0, na.rm = TRUE)) > 5
+	# seSel <- seSel[sel2, ]
+	# seSel@elementMetadata$motif.name <- toupper(seSel@elementMetadata$motif.name)
+	# assays(seSel)$expr <- log10(assays(seSel)$expr)
 
 	TF_summary <- data.frame(
-		SummarizedExperiment::assay(seSel),
+		SummarizedExperiment::assay(seSel, "log2enr"),
 		TF.name=seSel@elementMetadata$motif.name
 	)
 
-	write.csv(TF_summary, file=paste0(save_folder, "/ATAC_sex_DAR_TF_", stg, "_", background,"_bg.csv"))
+	write.csv(TF_summary, file=paste0(save_folder, "/ATAC_stage_DAR_TF_", sex, "_", background,"_bg.csv"))
 
-
-	top_XX <- names(sort(assays(seSel)$negLog10Padj[,"XX"], decreasing=TRUE)[1:nbTFs])
-	top_XX <- names(assays(seSel[top_XX,])$log2enr[,"XX"][assays(seSel[top_XX,])$log2enr[,"XX"] > 0])
-
-	top_XY <- names(sort(assays(seSel)$negLog10Padj[,"XY"], decreasing=TRUE)[1:nbTFs])
-	top_XY <- names(assays(seSel[top_XY,])$log2enr[,"XY"][assays(seSel[top_XY,])$log2enr[,"XY"] > 0])
-
-	tops <- unique(c(top_XX, top_XY))
-
-	seSel <- seSel[tops,]
 
 	return(seSel)
 }
 
-plot_TF_heatmap <- function(seSel, stg){
+plot_TF_heatmap <- function(seSel){
+	clusters <-filtered_StageDARs$x
+
+	top_enr_cluster <- lapply(unique(clusters), function(cluster){
+		# print(cluster)
+		top <- names(sort(assays(seSel)$negLog10Padj[,cluster], decreasing=TRUE)[1:nbTFs])
+		top <- names(assays(seSel[top,])$log2enr[,cluster][assays(seSel[top,])$log2enr[,cluster] > 0])
+	})
+
+	tops <- unique(unlist(top_enr_cluster))
+
+	seSel <- seSel[tops,]
+
 	# Cluster the motifs by similarity
-	SimMatSel <- motifSimilarity(SummarizedExperiment::rowData(seSel)$motif.pfm)
-	hcl <- hclust(as.dist(1 - SimMatSel), method = "ward.D2")
+	# SimMatSel <- motifSimilarity(SummarizedExperiment::rowData(seSel)$motif.pfm)
+	# hcl <- hclust(as.dist(1 - SimMatSel), method = "ward.D2")
 	# hcl <- hclust(dist(assays(seSel)$log2enr), method = "ward.D2")
 
-	bincols <- c(
-		XX=XX_colors[grep(stg, names(XX_colors))],
-		XY=XY_colors[grep(stg, names(XY_colors))]
-	)
-	names(bincols) <- c("XX", "XY")
+	bincols <- c('#f5da9f','#ebb655','#d18f43','#b56832')
+	names(bincols) <- letters[1:4]
 
 	# If the logo is TRUE, print the heatmaps in a pfd, one heatmap per page
 	# If the logo is FALSE, print the heatmap side by side using cowplot
 	if (logos=="TRUE") {
 		# pdf(file=snakemake@output[['pdf']], width = 20,  height = nbTFs,  units = "cm")
-		heatmap <- grid.grabExpr(
+		figure <- grid.grabExpr(
 			plotMotifHeatmaps_exp(
 				x = seSel,
-					bincols = bincols,
-				which.plots = c("log2enr", "expr"), 
-				# which.plots = c("log2enr"),
+				bincols = bincols,
+				# which.plots = c("log2enr", "expr"), 
+				which.plots = c("log2enr"),
 				show_seqlogo = TRUE,
 				width = 1.3, 
-				cluster = hcl,
+				# cluster = hcl,
 				maxEnr = 1.5, 
 				maxSig = 100,
 				width.seqlogo = 1.8
 			),
 			wrap.grobs = TRUE
 		)
-		figure <- plot_grid(
-			heatmap,
-			labels = stg,
-			ncol=1
-		)
-		return(figure)
+		# figure <- plot_grid(
+		# 	heatmap,
+		# 	labels = stg,
+		# 	ncol=1
+		# )
+		# return(figure)
 	} else {
-		heatmap <- grid.grabExpr(
+		figure <- grid.grabExpr(
 			plotMotifHeatmaps_exp(
 				x = seSel,
 				bincols = bincols,
-				which.plots = c("log2enr", "expr"), 
-				# which.plots = c("log2enr"),
+				# which.plots = c("log2enr", "expr"), 
+				which.plots = c("log2enr"),
 				width = 1.3, 
-				cluster = hcl,
+				# cluster = hcl,
 				maxEnr = 1.5, 
 				maxSig = 100
 			),
 			wrap.grobs = TRUE
 		)
-		figure <- plot_grid(
-			heatmap,
-			labels = stg,
-			ncol=1
-		)
-		return(figure)	
+		# figure <- plot_grid(
+		# 	heatmap,
+		# 	labels = stg,
+		# 	ncol=1
+		# )
+		# 	
 	}
+	return(figure)
 }
 #################################################################################################################################
 
@@ -462,54 +466,54 @@ plot_TF_heatmap <- function(seSel, stg){
 #                                         #
 ###########################################
 
-# filtered_SexDARs
-load(snakemake@input[['sig_DARs']])
-# load("results/processed_data/mm10/ATAC_sig_SexDARs.Robj")
-
+# filtered_StageDARs
+filtered_StageDARs <- read.csv(file=snakemake@input[['sig_DARs']], header=TRUE, row.names=1)
 # Load RNA-seq TPM matrix to filter the TFs that are expressed in the gonads
 TPM <- read.csv(file=snakemake@input[['TPM']], header=TRUE, row.names=1)
-# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
-
 # Load the mouse TFs list
 TFs <- as.vector(read.csv(snakemake@input[['TF_genes']], header=FALSE)[,1])
-# TFs <- as.vector(read.csv("workflow/data/mouse_transcription_factors.txt", header=FALSE)[,1])
-
 # Minimum TPM value to considere a gene expressed
 minTPM <- snakemake@params[['minTPM']]
-# minTPM <- 2
-
 # Run analysis using the genome bakground or calculating the enrichment compared to the conditions
 background <- snakemake@params[['background']]
-# background <- "conditions"
-# background <- "genome"
-
-
 save_folder <- snakemake@params[['save_folder']]
-# save_folder <- "."
-
 # Print the logos of the TFs on the heatmap
 logos <- snakemake@params[['logos']]
-# logos <- TRUE
-
 genome_version <- snakemake@params[['genome']]
-# genome_version <- "mm10"
-
-if (logos=="TRUE") {
-	width <- 70
-} else {
-	width <- 50
-}
-
 # Nb of top TFs per sex to print 
 nbTFs <- snakemake@params[['nbTFs']]
-# nbTFs <- 40
+sex <- snakemake@params[['sex']]
+
+
+
+# filtered_StageDARs <- read.csv(file="results/tables/mm10/ATAC_XX_DAR_stage_heatmap_clusters.csv", header=TRUE, row.names=1)
+# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
+# TFs <- as.vector(read.csv("workflow/data/mouse_transcription_factors.txt", header=FALSE)[,1])
+# minTPM <- 5
+# background <- "conditions"
+# background <- "genome"
+# save_folder <- "."
+# logos <- TRUE
+# genome_version <- "mm10"
+# nbTFs <- 5
+# sex="XX"
+
+
+# if (logos=="TRUE") {
+# 	width <- 70
+# } else {
+# 	width <- 50
+# }
 
 stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
-sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
+sx <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
 conditions <- unique(paste(sex, stage, sep=" "))
 names(conditions_color) <- conditions[order(conditions)]
 XX_colors <- conditions_color[grepl("XX" , names(conditions_color))]
 XY_colors <- conditions_color[grepl("XY" , names(conditions_color))]
+
+TPM <- TPM[,grep(sex,colnames(TPM))]
+conditions_color <- conditions_color[grep(sex, names(conditions_color))]
 
 # Load Jaspar 2024 database
 JASPAR <- JASPAR2020::JASPAR2020
@@ -521,31 +525,31 @@ JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 #                                         #
 ###########################################
 
-stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
+stages <- unique(stage)
+sexes <- unique(sex)
 # stages <- "E11.5"
 
 # For each stage, get TFBS motif enrichments
-enrichments <- foreach(stg=stages) %dopar% {
-	get_enriched_TFs(stg, save_folder)
-}
+enrichments <- get_enriched_TFs(save_folder)
+
 
 # stg <- "E15.5"
 # enrichments <- list(get_enriched_TFs(stg))
 
-heatmap_list <- lapply(seq_along(enrichments), function(i) plot_TF_heatmap(enrichments[[i]], stages[i]))
+figure <- plot_TF_heatmap(enrichments)
 
-figure <- plot_grid(
-	plotlist=heatmap_list,
-	labels = "AUTO",
-	ncol=4
-)
+# figure <- plot_grid(
+# 	plotlist=heatmap_list,
+# 	labels = "AUTO",
+# 	ncol=4
+# )
 
 save_plot(
 	snakemake@output[['pdf']],
 	# "test.pdf",
 	figure,
-	base_width=width,
-	base_height=nbTFs*1.2,
+	base_width=20,
+	base_height=nbTFs*2,
 	units = c("cm"), 
 	dpi=300
 )
@@ -553,9 +557,8 @@ save_plot(
 save_plot(
 	snakemake@output[['png']],
 	figure,
-	base_width=width,
-	base_height=nbTFs*1.2,
+	base_width=20,
+	base_height=nbTFs*2,
 	units = c("cm"), 
-	dpi=300, 
-	bg = "white"
+	dpi=300
 )
