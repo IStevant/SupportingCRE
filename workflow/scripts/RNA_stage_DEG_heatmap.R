@@ -25,7 +25,6 @@ suppressPackageStartupMessages({
 TF_genes <- snakemake@input[['TF_genes']]
 TF_pheno <- snakemake@input[['TF_pheno']]
 
-
 norm_counts <- read.csv(file=snakemake@input[['norm_counts']], row.names=1)
 load(snakemake@input[['sig_DEGs']])
 samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
@@ -34,7 +33,7 @@ sex <- snakemake@params[['sex']]
 clusters <- snakemake@params[['clusters']]
 
 names(conditions_color) <- sort(unique(samplesheet$conditions))
-sex_colors <- conditions_color[grepl(sex , names(conditions_color))]
+sex_colors <- conditions_color[grepl(sex, names(conditions_color))]
 
 #################################################################################################################################
 
@@ -44,16 +43,20 @@ sex_colors <- conditions_color[grepl(sex , names(conditions_color))]
 #                                         #
 ###########################################
 
-plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
+#' Draw the heatmap of the z-scores from the genes differentially expressed along developmental stages
+#' @param data Full expression matrix (TPM or normalized counts).
+#' @param de_feature Vector containing the names of the genes found as differentially expressed.
+#' @param colors Vector containing the hexadecimal colours corresponding to each conditions.
+#' @param clusters Number of clusters to separate on the heatmap (k for k-mean clustering).
+#' @param res_file Name of the output file containing the list of genes per cluster.
+#' @return Pheatmap object.
+draw_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	matrix_DEG <- data[rownames(data) %in% de_feature, ]
-
 	# Calculate z-scores
 	matrix <- t(scale(t(matrix_DEG)))
-
 	# Cluster matrix
 	row_dend <- hclust(dist(matrix), method= "ward.D2")
 	clustering <- cutree(row_dend, k=clusters)
-
 	# Order clusters
 	mean_per_cluster <- lapply(
 		unique(clustering),
@@ -64,35 +67,28 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 			return(mean)
 		}
 	)
-
 	mean_per_cluster <- data.table::rbindlist(mean_per_cluster)
 	o1 <- seriation::seriate(dist(mean_per_cluster), method="GW")
 	levels <- seriation::get_order(o1)
-
 	clustering <- factor(clustering, levels=levels)
 	levels(clustering) <- letters[1:clusters]
-
 	# Save clustering
 	write.csv(clustering, file=res_file, quote=FALSE)
 
 	# Limit zscore to |2|
 	matrix[matrix>2] <- 2
 	matrix[matrix<(-2)] <- (-2)
- 
-	# Prepare top annotation
+ 	# Prepare top annotation
 	conditions <-sapply(strsplit(colnames(matrix), "_"), `[`, 1)
 	annotation_col <- data.frame(
 		Stages=conditions
 	)
 	rownames(annotation_col) <- colnames(matrix)
-
 	# Stages palette
 	col_stage <- colors
 	names(col_stage) <- unique(conditions)
-
 	# Gene cluster color palette
 	cluster_colors <- as.vector(MetBrewer::met.brewer("Hokusai1", n=clusters))
-
 	# Color palette for the heatmap
 	# blue-yellow-red
 	cold <- colorRampPalette(c('#4677b7','#709eca','#9ac4dd','#cce1e3',"#fffee8"))
@@ -108,25 +104,22 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	GYP <- c(cold(12), warm(12))
 
 	mypalette <- BYR
-
 	# Top annotation (stages)
 	stage_anno <- HeatmapAnnotation(
 		Stages = anno_block(
 			gp = gpar(fill = col_stage, col = 0), 
 			labels = names(col_stage),
-			labels_gp = gpar(col = "white", fontsize = 12, fontface="bold"),
-			height = unit(5.5, "mm")
+			labels_gp = gpar(col = "white", fontsize = 17, fontface="bold"),
+			height = unit(6.5, "mm")
 		)
 	)
- 
-	# Row annotation (gene clusters)
+ 	# Row annotation (gene clusters)
 	cluster_anno <- rowAnnotation(
 		Clusters = anno_empty(
 			border = FALSE,
 			width = unit(10, "mm")
 		)
 	)
-
 	# Prepare the gene clusters legend manually
 	cluster_legend = Legend(
 		at = levels(clustering), 
@@ -136,40 +129,33 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 
 	TF_list <- read.csv(TF_genes, header=FALSE)
 	gonad_pheno_genes <- read.csv(TF_pheno, header=FALSE)
-
 	TF_list <- as.vector(TF_list[,1])
 	total_TFs <- unlist(lapply(TF_list, function(TF) which(rownames(matrix) %in% TF)))
 	print(paste(length(total_TFs), "TFs found in total."))
-
 	gonad_pheno_genes <- as.vector(gonad_pheno_genes[,1])
-
 	TFs <- TF_list[TF_list %in% gonad_pheno_genes]
-
 	matrix_TF_indexes <- unlist(lapply(TFs, function(TF) which(rownames(matrix) %in% TF)))
 	print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
-
-	if(length(matrix_TF_indexes)>30){
-		matrix_TF_indexes <- sample(matrix_TF_indexes,30)
+	if(length(matrix_TF_indexes)>20){
+		matrix_TF_indexes <- sample(matrix_TF_indexes,20)
 	}
-
 	TF_names <- rownames(matrix)[matrix_TF_indexes]
-
 	# Show transcription factors
 	TFs = rowAnnotation(
 		TFs = anno_mark(
 			at = matrix_TF_indexes, # TF row indexes
 			labels = TF_names,    # Gene names
-			labels_gp = gpar(fontsize=10, fontface = "italic"),
+			labels_gp = gpar(fontsize=17, fontface = "italic"),
 			padding=unit(2, "mm")
 		)
 	)
-
 	# Make the heatmap
 	ht_list <- Heatmap(
 		matrix, 
 		name = "z-score",
 		top_annotation = stage_anno,
 		left_annotation = cluster_anno,
+		right_annotation = TFs,
 		row_title_rot = 0,
 		row_split = clustering,
 		column_split = conditions,
@@ -185,50 +171,48 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		column_title = NULL,
 		column_gap=unit(0.4, "mm")
 	)
-	
 	height <- 9
-	width <- 6
+	width <- 7
 
 	gTree <- grid.grabExpr(
 		{
-
 		# Draw the heatmap
 		draw(
 			ht_list,
 			row_title = paste(scales::comma(nrow(matrix)), "differentially expressed genes"),
+			row_title_gp = gpar(fontsize = 19),
 			# annotation_legend_list=cluster_legend,
 			merge_legend = TRUE,
 			use_raster = TRUE, 
 			raster_quality = 5
 		)
 
-		# Add peak cluster annotation as extra-rectangles to avoid bad rasterization (faded colors)
+		# Add gene cluster annotation as a black line, white letters over a black circle
 		for(i in 1:length(levels(clustering))) {
 			decorate_annotation(
 				"Clusters", 
 				slice = i, {
-					# grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
 					grid.rect(x=0.9, width = unit(0.7, "mm"), gp = gpar(fill = "black", col = NA), just = "right")
-					grid.circle(x=0.4, r=unit(2.5, "mm"), gp=gpar(fill="black"))
-					grid.text(x=0.4, levels(clustering)[i], just = "center", gp=gpar(col="white"))
+					grid.circle(x=0.3, r=unit(3.8, "mm"), gp=gpar(fill="black"))
+					grid.text(x=0.3, levels(clustering)[i], just = "center", gp=gpar(fontsize=17, col="white"))
 				}
 			)
 		}
-
 	},
 		height = height,
 		width = width
 	)
 
-
 	p_fix <- panel_fix(plot_grid(gTree), width = width, height = height, units="inch")
 	p <- plot_grid(p_fix)
-
 	return(p_fix)
 }
 
+#' Get enriched Biological Process GO terms and simplify them to avoid term redundancy.
+#' @param de_genes Vector containing the names of the genes found as differentially expressed.
+#' @param res_file Name of the output file containing the list of genes per cluster.
+#' @return Pheatmap object.
 GO_term_per_cluster <- function(de_genes, res_file){
-
 	print("Calculate GO term over-representation...")
 	formula_res <- compareCluster(
 		gene~cluster, 
@@ -343,35 +327,37 @@ matrix <- norm_counts[, grep(sex, colnames(norm_counts))]
 sex_colors <- conditions_color[grepl(sex , names(conditions_color))]
 
 
-dynamic_genes <- plot_simple_heatmap(
+dynamic_genes <- draw_heatmap(
 	matrix, 
 	filtered_StageDEGs,
 	sex_colors, 
 	clusters,
-	snakemake@output[['clusters']]
+	snakemake@output[['cluster_file']]
 )
 
-de_genes <- read.csv(snakemake@output[['clusters']])
+de_genes <- read.csv(snakemake@output[['cluster_file']])
 colnames(de_genes) <- c("gene", "cluster")
 
-go_analysis <- GO_term_per_cluster(
-	de_genes, 
-	snakemake@output[['GO']]
-)
+# go_analysis <- GO_term_per_cluster(
+# 	de_genes, 
+# 	snakemake@output[['GO']]
+# )
 
-go_plot <- go_plot(go_analysis, nb_terms=4)
+# go_plot <- go_plot(go_analysis, nb_terms=4)
 
-go_plot <- go_plot + 
-	theme(
-		axis.text.y=element_text(size=10), 
-		axis.text.x=element_text(size=10)
-	)
+# go_plot <- go_plot + 
+# 	theme(
+# 		axis.text.y=element_text(size=10), 
+# 		axis.text.x=element_text(size=10)
+# 	)
 
-figure <- plot_grid(
-	dynamic_genes, go_plot,
-	labels = "AUTO",
-	ncol=2
-)
+# figure <- plot_grid(
+# 	dynamic_genes, go_plot,
+# 	labels = "AUTO",
+# 	ncol=2
+# )
+
+figure <- dynamic_genes
 
 ##########################################
 #                                        #

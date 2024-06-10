@@ -151,12 +151,13 @@ TPM <- TPM[,-1]
 ##########################################
 
 # Plot expression of the marker genes
-plot_list <- plot_expression_scatter(TPM, markerGenes)
+plot_genes <- plot_expression_scatter(TPM, markerGenes)
 
 figure <- plot_grid(
-	plotlist=plot_list,
+	plotlist=plot_genes,
 	labels = "AUTO",
-	ncol=1
+	ncol=1,
+	align="v"
 )
 
 ##########################################

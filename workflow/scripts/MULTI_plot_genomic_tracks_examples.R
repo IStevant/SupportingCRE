@@ -86,7 +86,7 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors){
 				col.histogram=0,
 				fill.histogram=color,
 				ylim=c(0, trunc(max_score, digit=4)),
-				yTicksAt=c(0,trunc(max_score, digit=4)),
+				yTicksAt=c(trunc(max_score, digit=4)),
 				rotation.title=0,
 				lwd=0,
 				alpha=0.8
@@ -181,6 +181,7 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol,  plot_list, locus, window){
 		sizes=c(rep(0.4, length(plot_list)), 0.3, 0.4, 0.3),
 		cex.title=0.9,
 		cex.id= 0.5,
+		cex.axis=0.7,
 		title.width=1.4
 	)
 
@@ -279,7 +280,7 @@ plot <- foreach(gene=genes) %dopar% {
 			)
 		)
 	
-	png(file=paste0(save_folder, "/", gene,"_peak_tracks.png"), width=7.5, height=5, units = 'in', res=150)
+	png(file=paste0(save_folder, "/", gene,"_peak_tracks.png"), width=6.5, height=3.7, units = 'in', res=150)
 
 	print(paste("Plot", gene))
 	plot <- plot_tracks(

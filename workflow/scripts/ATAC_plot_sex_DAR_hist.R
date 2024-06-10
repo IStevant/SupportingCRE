@@ -27,8 +27,8 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors){
 	axis_margin <- 5.5
 	xx_sex_dar <- dar[dar$sex=="XX",]
 	p1 <- ggplot(xx_sex_dar, aes(x=DA, y=stage)) +
-		geom_col(fill=XX_colors) +
-		geom_text(aes(label = scales::comma(abs(DA))), x=-4000, size=4.5, color="white") +
+		geom_col(fill=alpha(XX_colors, 0.8), color=XX_colors) +
+		geom_text(aes(label = scales::comma(abs(DA))), x=-4000, size=4.5, color=c("#333333", rep("white", 3))) +
 		scale_x_reverse(labels = scales::comma, limits=c(max(dar$DA)+150,0)) +
 		scale_y_discrete(position = "right", limits=rev) +
 		ggtitle("Regions more accessible in XX") +
@@ -38,7 +38,7 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors){
 			axis.text.y = element_blank(),
 			axis.title.y = element_blank(),
 			plot.margin = margin(axis_margin, 0, axis_margin, axis_margin),
-			plot.title = element_text(size=12, hjust = 0.5, face="bold"),
+			plot.title = element_text(size=12, hjust = 0.5, color="#333333"),
 			axis.text=element_text(size=12),
 			axis.title=element_text(size=12),
 			aspect.ratio=0.5
@@ -46,8 +46,8 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors){
 
 	xy_sex_dar <- dar[dar$sex=="XY",]
 	p2 <- ggplot(xy_sex_dar, aes(x=DA, y=stage)) +
-		geom_col(fill=XY_colors) +
-		geom_text(aes(label = scales::comma(abs(DA))), x=4000, size=4.5, color="white") +
+		geom_col(fill=alpha(XY_colors, 0.8), color=XY_colors) +
+		geom_text(aes(label = scales::comma(abs(DA))), x=4000, size=4.5, color=c("#333333", rep("white", 3))) +
 		scale_x_continuous(labels = scales::comma, limits=c(0,max(dar$DA)+150)) +
 		scale_y_discrete(limits=rev) +
 		ggtitle("Regions more accessible in XY") +
@@ -57,7 +57,7 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors){
 			axis.title.y = element_blank(),
 			plot.margin = margin(axis_margin, axis_margin, axis_margin, 0),
 			axis.text.y.left = element_text(margin = margin(0, 9, 0, 0)),
-			plot.title = element_text(size=12, hjust = 0.5, face="bold"),
+			plot.title = element_text(size=12, hjust = 0.5, color="#333333"),
 			axis.text=element_text(size=12),
 			axis.title=element_text(size=12),
 			aspect.ratio=0.5

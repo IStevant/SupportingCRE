@@ -46,7 +46,8 @@ rule_all_input_list = [
 	f"{output_pdf}/gene2peak_plots.pdf",
 	f"{processed_data}/plot_example_1.log",
 	f"{processed_data}/plot_example_2.log",
-	f"{processed_data}/plot_example_3.log"
+	f"{processed_data}/plot_example_3.log",
+	f"{processed_data}/plot_example_4.log"
 ]
 
 # If there is no outliers, do not run the analysis that discard the
@@ -279,8 +280,8 @@ rule RNA_Plot_heatmap_GO_XX:
 		sex="XX",
 		clusters=config["RNA_XX_stage_DEG_clusters"]
 	output:
-		GO=f"{output_tables}/RNA_XX_GO_DEG_stage.csv",
-		clusters=f"{output_tables}/RNA_XX_DEG_stage_heatmap_clusters.csv",
+		# GO=f"{output_tables}/RNA_XX_GO_DEG_stage.csv",
+		cluster_file=f"{output_tables}/RNA_XX_DEG_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/RNA_XX_DEG_stage_heatmap.pdf",
 		png=f"{output_png}/RNA_XX_DEG_stage_heatmap.png"
 	resources:
@@ -300,8 +301,8 @@ rule RNA_Plot_heatmap_GO_XY:
 		sex="XY",
 		clusters=config["RNA_XY_stage_DEG_clusters"]
 	output:
-		GO=f"{output_tables}/RNA_XY_GO_DEG_stage.csv",
-		clusters=f"{output_tables}/RNA_XY_DEG_stage_heatmap_clusters.csv",
+		# GO=f"{output_tables}/RNA_XY_GO_DEG_stage.csv",
+		cluster_file=f"{output_tables}/RNA_XY_DEG_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/RNA_XY_DEG_stage_heatmap.pdf",
 		png=f"{output_png}/RNA_XY_DEG_stage_heatmap.png"
 	resources:
@@ -473,7 +474,7 @@ rule ATAC_Plot_sex_DAR_upset:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_upset.pdf",
 		png=f"{output_png}/ATAC_sex_DAR_upset.png"
 	resources:
-		cpus_per_task=12,
+		cpus_per_task=24,
 		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_sex_DAR_upset.R"
@@ -486,15 +487,13 @@ rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="genome",
-		logos="TRUE",
-		nbTFs=15,
 		genome=config["genome_version"],
 		save_folder=f"{output_tables}"
 	output:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
 		png=f"{output_png}/ATAC_sex_DAR_TF_motifs_rdm_bg.png"
 	resources:
-		cpus_per_task=12,
+		cpus_per_task=24,
 		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
@@ -507,8 +506,6 @@ rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
-		logos="TRUE",
-		nbTFs=15,
 		genome=config["genome_version"],
 		save_folder=f"{output_tables}"
 	output:
