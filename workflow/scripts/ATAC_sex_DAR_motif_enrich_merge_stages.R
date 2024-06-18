@@ -29,6 +29,53 @@ suppressPackageStartupMessages({
 
 doParallel::registerDoParallel(cores=12)
 
+#################################################################################################################################
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+# filtered_SexDARs
+load(snakemake@input[['sig_DARs']])
+# load("results/processed_data/mm10/ATAC_sig_SexDARs.Robj")
+
+# Load RNA-seq TPM matrix to filter the TFs that are expressed in the gonads
+TPM <- read.csv(file=snakemake@input[['TPM']], header=TRUE, row.names=1)
+# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
+
+# Load the mouse TFs list
+TFs <- as.vector(read.csv(snakemake@input[['TF_genes']], header=FALSE)[,1])
+# TFs <- as.vector(read.csv("workflow/data/mouse_transcription_factors.txt", header=FALSE)[,1])
+
+# Minimum TPM value to considere a gene expressed
+minTPM <- snakemake@params[['minTPM']]
+# minTPM <- 5
+
+# Run analysis using the genome bakground or calculating the enrichment compared to the conditions
+background <- snakemake@params[['background']]
+# background <- "conditions"
+# background <- "genome"
+
+
+save_folder <- snakemake@params[['save_folder']]
+# save_folder <- "."
+
+genome_version <- snakemake@params[['genome']]
+# genome_version <- "mm10"
+
+stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
+sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
+conditions <- unique(paste(sex, stage, sep=" "))
+names(conditions_color) <- conditions[order(conditions)]
+XX_colors <- conditions_color[grepl("XX" , names(conditions_color))]
+XY_colors <- conditions_color[grepl("XY" , names(conditions_color))]
+
+# Load Jaspar 2024 database
+JASPAR <- JASPAR2020::JASPAR2020
+JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
+
 ###########################################
 #                                         #
 #               Functions                 #
@@ -53,48 +100,48 @@ filter_low_counts <- function(row, col_names, minExp) {
 }
 
 get_enriched_TFs <- function(save_folder){
-	# sx <- "E11.5"
-	# save_folder <- "."
 	# Select the genes expressed at a specific stage for both sexes
 	genes <- TPM
-	# genes <- TPM[,grep("XX", colnames(genes))]
-	# Discard lowly expressed genes
-	genes <- run_filter_low_counts(genes, minTPM)
-	genes <- rownames(genes[rowSums(genes)>0,])
 	# Select only the TFs
-	# stg_TFs <- genes[which(genes %in% TFs)]
+	stg_TFs <- genes[which(genes %in% TFs)]
 
+	# Get all vertebrate TF matrices
 	pwms <- TFBSTools::getMatrixSet(
 		JASPAR,
 		opts = list(
 			matrixtype = "PWM",
 			tax_group = "vertebrates"
-			# species = "Mus musculus"
 		)
 	)
 
-	peaks <- filtered_StageDARs
-	clusters <-peaks$x
+	# sex_peaks <- filtered_SexDARs[[stg]]
+
+	SexDARs <- lapply(filtered_SexDARs, function(sexDARs){
+		sexDARs <- data.frame(
+			sexDARs,
+			coord = rownames(sexDARs)
+			)
+	})
+
+	sex_peaks <- do.call(rbind, SexDARs)
+
 
 	# generate GRanges objects
-	peak_gr <- GRanges(rownames(peaks)) 
+	female <- unique(GenomicRanges::GRanges(sex_peaks[sex_peaks$Diff.Acc.=="More in XX", "coord"]))
+	male <- unique(GenomicRanges::GRanges(sex_peaks[sex_peaks$Diff.Acc.=="More in XY", "coord"]))
+	all <- c(female, male)
 
 	# Get the peak sequences
 	if (genome_version=="mm10"){
-		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, peak_gr)
+		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, all)
 	} else {
-		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm39, peak_gr)
+		sequences <-  Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm39, all)
 	}
 
-	# # generate GRanges objects
-	# female <- GenomicRanges::GRanges(rownames(peaks[peaks$Diff.Acc.=="More in XX",]))
-	# male <- GenomicRanges::GRanges(rownames(peaks[peaks$Diff.Acc.=="More in XY",]))
-	# all <- c(female, male)
-
 	# Define which sequences are male or female specific
-	bins <- clusters
+	bins <- rep(c("XX", "XY"), c(length(female), length(male)))
 	bins <- factor(bins)
-	table(bins)
+	# table(bins)
 
 	# Calculate motif enrichments
 	# If background is "genome", run the analysis against radom genomic regions
@@ -135,8 +182,7 @@ get_enriched_TFs <- function(save_folder){
 	# Get gene expression of the TFs
 	TF_names <- tolower(as.vector(rowData(se2)$motif.name))
 	names(TF_names) <- rowData(se2)$motif.id
-	genes <- TPM[,grep(sex,colnames(TPM))]
-	genes <- run_filter_low_counts(genes, minExp=5)
+	genes <- TPM
 	rownames(genes) <- tolower(rownames(genes))
 
 	TF_exp <- matrix(0, nrow=length(TF_names), ncol=ncol(genes))
@@ -150,10 +196,8 @@ get_enriched_TFs <- function(save_folder){
 	}
 
 	TF_expression <- data.frame(
-		a=rowMeans(TF_exp[,grep(sex,colnames(TF_exp))]),
-		b=rowMeans(TF_exp[,grep(sex,colnames(TF_exp))]),
-		c=rowMeans(TF_exp[,grep(sex,colnames(TF_exp))]),
-		d=rowMeans(TF_exp[,grep(sex,colnames(TF_exp))])
+		XX=rowMeans(TF_exp[,grep("XX",colnames(TF_exp))]),
+		XY=rowMeans(TF_exp[,grep("XY",colnames(TF_exp))])
 	)
 
 	rownames(TF_expression) <- rownames(SummarizedExperiment::assay(se2, "negLog10Padj"))
@@ -165,59 +209,53 @@ get_enriched_TFs <- function(save_folder){
 				function(x) max(abs(x), 0, na.rm = TRUE)) > 10.0
 	seSel <- se2[sel2, ]
 
-	# Select TFs that are expressed
+	# Select the motif of the TFs expressed with at least 5 TPM
 	sel2 <- apply(SummarizedExperiment::assay(seSel, "expr"), 1, 
-			function(x) max(x, 0, na.rm = TRUE)) > 5
+			function(x) max(x, 0, na.rm = TRUE)) > 0
 	seSel <- seSel[sel2, ]
 
+	# Make TF names upper case
+	seSel@elementMetadata$motif.name <- toupper(seSel@elementMetadata$motif.name)
 
-	# sel2 <- apply(SummarizedExperiment::assay(seSel, "expr"), 1, 
-	# 		function(x) max(x, 0, na.rm = TRUE)) > 5
-	# seSel <- seSel[sel2, ]
-	# seSel@elementMetadata$motif.name <- toupper(seSel@elementMetadata$motif.name)
-	# assays(seSel)$expr <- log10(assays(seSel)$expr)
+	# Transform expression into log10
+	assays(seSel)$expr <- log10(assays(seSel)$expr)
 
 	TF_summary <- data.frame(
 		SummarizedExperiment::assay(seSel, "log2enr"),
 		TF.name=seSel@elementMetadata$motif.name
 	)
 
-	write.csv(TF_summary, file=paste0(save_folder, "/ATAC_stage_DAR_TF_", sex, "_", background,"_bg.csv"))
-
-
+	write.csv(TF_summary, file=paste0(save_folder, "/ATAC_sex_DAR_TF_", background,"_bg.csv"))
 	return(seSel)
 }
 
 
 merge_TF_motifs <- function(seSel){
-	# seSel <- enrichments
 	# Cluster motifs by enrichment
 	TF_enrichment <- SummarizedExperiment::assay(seSel, "log2enr")
 	# rownames(TF_enrichment) <- seSel@elementMetadata$motif.name
-
-	nbCluster=4
+	if(background=="genome"){
+		nbCluster=4
+	} else {
+		nbCluster=2
+	}
 
 	hcl <- hclust(dist(TF_enrichment))
 	clustering <- cutree(hcl, k=nbCluster)
 
 	motif_sig <- lapply(1:nbCluster, function(cl){
 		TFs <- names(clustering[clustering==cl])
+		# TFs <- names(clustering[clustering==cl])
 		# print(TFs)
-		if(length(TFs)>1){
-			# TFs <- names(clustering[clustering==cl])
-			# print(TFs)
-			matrices <- seSel@elementMetadata$motif.pfm[TFs]
-			# print(length(matrices))
-			pfms <- universalmotif::convert_motifs(matrices, class="motifStack-pcm")
-			hc <- motifStack::clusterMotifs(pfms)
-			phylog <- ade4::hclust2phylog(hc)
-			# extract the motif signatures
-			motifSig <- motifSignature(pfms, phylog, cutoffPval = 0.005, min.freq=1)
-			## get the signatures from object of motifSignature
-			sig <- signatures(motifSig)	
-		} else {
-			sig <- universalmotif::convert_motifs(seSel@elementMetadata$motif.pfm[TFs], class="motifStack-pcm")
-		}
+		matrices <- seSel@elementMetadata$motif.pfm[TFs]
+		# print(length(matrices))
+		pfms <- universalmotif::convert_motifs(matrices, class="motifStack-pcm")
+		hc <- motifStack::clusterMotifs(pfms)
+		phylog <- ade4::hclust2phylog(hc)
+		# extract the motif signatures
+		motifSig <- motifSignature(pfms, phylog, cutoffPval = 0.005, min.freq=1)
+		## get the signatures from object of motifSignature
+		sig <- signatures(motifSig)
 		return(sig)
 	})
 
@@ -285,17 +323,6 @@ merge_TF_motifs <- function(seSel){
 	merged_pfms <- do.call("c", do.call("c", do.call("c",motif_sig)))
 	names(merged_pfms) <- unlist(lapply(merged_pfms, function(mat) mat@name))
 
-# }
-
-# stg <- "E15.5"
-
-# plot_heatmap <- function(enrichment, merged_pfms, stg){
-
-	# if(background=="genome"){
-	# 	nbCluster=3
-	# } else {
-	# 	nbCluster=2
-	# }
 
 	motifs <- merged_pfms[enrichment$mat_names]
 	motifs_pfms <- universalmotif::convert_motifs(motifs, class="TFBSTools-PFMatrix")
@@ -306,7 +333,7 @@ merge_TF_motifs <- function(seSel){
 
 	names(grobL) <- rownames(enrichment)
 
-	matrix <- enrichment[,-5]
+	matrix <- enrichment[,-3]
 	matrix[matrix>1] <- 1
 	matrix[matrix<(-1)] <- (-1)
 
@@ -321,15 +348,18 @@ merge_TF_motifs <- function(seSel){
 		which = "row"
 	)
 
-	bincols <- rep("black", ncol(matrix))
-	names(bincols) <- colnames(matrix)
-	conditions <- colnames(matrix)
+	bincols <- c(
+		XX="#FFB100",
+		XY="#339989"
+	)
+	names(bincols) <- c("Gran.", "Sert.")
+	conditions <- c("Gran.", "Sert.")
 
 	stage_anno <- HeatmapAnnotation(
 		Stages = anno_block(
 			gp = gpar(fill = bincols, col = 0), 
 			labels = names(bincols),
-			labels_gp = gpar(col = "white", fontsize = 14),
+			labels_gp = gpar(col = "white", fontsize = 14, fontface="bold"),
 			height = unit(7, "mm")
 		)
 	)
@@ -363,75 +393,15 @@ merge_TF_motifs <- function(seSel){
 
 	ht_list_2 <- grid.grabExpr(draw(ht_list, heatmap_legend_side = "bottom"), wrap.grobs = TRUE)
 
-	# pdf("test.pdf", height=5, width=15)
-	# 	plot(ht_list)
+	# pdf("test.pdf", height=10, width=10)
+	# 	# plot(ht_list_2)
+	# 	draw(ht_list, heatmap_legend_side = "bottom")
 	# dev.off()
 
 	return(ht_list_2)
 }
 
-
-
 #################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-# filtered_StageDARs
-filtered_StageDARs <- read.csv(file=snakemake@input[['sig_DARs']], header=TRUE, row.names=1)
-# Load RNA-seq TPM matrix to filter the TFs that are expressed in the gonads
-TPM <- read.csv(file=snakemake@input[['TPM']], header=TRUE, row.names=1)
-# Load the mouse TFs list
-TFs <- as.vector(read.csv(snakemake@input[['TF_genes']], header=FALSE)[,1])
-# Minimum TPM value to considere a gene expressed
-minTPM <- snakemake@params[['minTPM']]
-# Run analysis using the genome bakground or calculating the enrichment compared to the conditions
-background <- snakemake@params[['background']]
-save_folder <- snakemake@params[['save_folder']]
-# Print the logos of the TFs on the heatmap
-logos <- snakemake@params[['logos']]
-genome_version <- snakemake@params[['genome']]
-# Nb of top TFs per sex to print 
-nbTFs <- snakemake@params[['nbTFs']]
-sex <- snakemake@params[['sex']]
-
-
-
-# filtered_StageDARs <- read.csv(file="results/tables/mm10/ATAC_XX_DAR_stage_heatmap_clusters.csv", header=TRUE, row.names=1)
-# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
-# TFs <- as.vector(read.csv("workflow/data/mouse_transcription_factors.txt", header=FALSE)[,1])
-# minTPM <- 5
-# background <- "conditions"
-# # background <- "conditions"
-# save_folder <- "."
-# logos <- TRUE
-# genome_version <- "mm10"
-# nbTFs <- 5
-# sex="XX"
-
-
-# if (logos=="TRUE") {
-# 	width <- 70
-# } else {
-# 	width <- 50
-# }
-
-stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
-sx <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
-conditions <- unique(paste(sex, stage, sep=" "))
-names(conditions_color) <- conditions[order(conditions)]
-XX_colors <- conditions_color[grepl("XX" , names(conditions_color))]
-XY_colors <- conditions_color[grepl("XY" , names(conditions_color))]
-
-TPM <- TPM[,grep(sex,colnames(TPM))]
-conditions_color <- conditions_color[grep(sex, names(conditions_color))]
-
-# Load Jaspar 2024 database
-JASPAR <- JASPAR2020::JASPAR2020
-JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 
 ###########################################
 #                                         #
@@ -439,29 +409,16 @@ JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 #                                         #
 ###########################################
 
-stages <- unique(stage)
-sexes <- unique(sex)
-# stages <- "E11.5"
+stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
 
-# For each stage, get TFBS motif enrichments
 enrichments <- get_enriched_TFs(save_folder)
 
-
-# stg <- "E15.5"
-# enrichments <- list(get_enriched_TFs(stg))
-
-figure <- merge_TF_motifs(enrichments)
-
-# figure <- plot_grid(
-# 	plotlist=heatmap_list,
-# 	labels = "AUTO",
-# 	ncol=4
-# )
+heatmap_list <- merge_TF_motifs(enrichments)
 
 save_plot(
 	snakemake@output[['pdf']],
 	# "test.pdf",
-	figure,
+	heatmap_list,
 	base_width=30,
 	base_height=22,
 	units = c("cm"), 
@@ -470,7 +427,7 @@ save_plot(
 
 save_plot(
 	snakemake@output[['png']],
-	figure,
+	heatmap_list,
 	base_width=30,
 	base_height=22,
 	units = c("cm"), 

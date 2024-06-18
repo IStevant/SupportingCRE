@@ -39,11 +39,14 @@ rule_all_input_list = [
 	f"{output_png}/ATAC_sex_DAR_upset.png",
 	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
 	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
+	f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
 	f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
 	f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
 	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
 	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
 	f"{output_pdf}/gene2peak_plots.pdf",
+	f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
+	f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
 	f"{processed_data}/plot_example_1.log",
 	f"{processed_data}/plot_example_2.log",
 	f"{processed_data}/plot_example_3.log",
@@ -517,6 +520,26 @@ rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 	script:
 		"workflow/scripts/ATAC_sex_DAR_motif_enrich.R"
 
+rule ATAC_TFBS_motifs_sex_DAR_merged_stages:
+	input:
+		TF_genes=config["TF_genes"],
+		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
+		TPM=f"{processed_data}/RNA_TPM.csv"
+	params:
+		minTPM=config["RNA_minTPM"],
+		background="conditions",
+		genome=config["genome_version"],
+		save_folder=f"{output_tables}"
+	output:
+		pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_merged.pdf",
+		png=f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png"
+	resources:
+		cpus_per_task=24,
+		mem_mb=64000
+	script:
+		"workflow/scripts/ATAC_sex_DAR_motif_enrich_merge_stages.R"
+
+
 rule ATAC_Get_XX_dynamic_DARs:
 	input:
 		counts=f"{processed_data}/ATAC_raw_counts.csv",
@@ -709,4 +732,40 @@ rule MULTI_Plot_gene_peak_correlation:
 	script:
 		"workflow/scripts/MULTI_plot_gene2peak.R"
 
+rule MULTI_TFBS_motifs_peak_XX_genes:
+	input:
+		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+		sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
+		TPM=f"{processed_data}/RNA_TPM.csv"
+	params:
+		background="conditions",
+		genome=config["genome_version"],
+		save_folder=f"{output_tables}",
+		sex="XX"
+	output:
+		pdf=f"{output_pdf}/MULTI_TFBS_motifs_peak_XX_genes.pdf",
+		png=f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
+	script:
+		"workflow/scripts/MULTI_linked_OCR_motif_enrichment.R"
 
+rule MULTI_TFBS_motifs_peak_XY_genes:
+	input:
+		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+		sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
+		TPM=f"{processed_data}/RNA_TPM.csv"
+	params:
+		background="conditions",
+		genome=config["genome_version"],
+		save_folder=f"{output_tables}",
+		sex="XY"
+	output:
+		pdf=f"{output_pdf}/MULTI_TFBS_motifs_peak_XY_genes.pdf",
+		png=f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
+	script:
+		"workflow/scripts/MULTI_linked_OCR_motif_enrichment.R"

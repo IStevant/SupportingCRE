@@ -86,8 +86,8 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		Stages = anno_block(
 			gp = gpar(fill = col_stage, col = 0), 
 			labels = names(col_stage),
-			labels_gp = gpar(col = "white", fontsize = 12, fontface="bold"),
-			height = unit(5.5, "mm")
+			labels_gp = gpar(col = "white", fontsize = 17, fontface="bold"),
+			height = unit(6.5, "mm")
 		)
 	)
  
@@ -129,7 +129,7 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	)
 
 	height <- 9
-	width <- 6
+	width <- 5
 
 	gTree <- grid.grabExpr(
 		{
@@ -138,6 +138,7 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 		draw(
 			ht_list,
 			row_title = paste(scales::comma(nrow(matrix)), "differentially accessible regions"),
+			row_title_gp = gpar(fontsize = 19),
 			# annotation_legend_list=cluster_legend,
 			merge_legend = TRUE,
 			use_raster = TRUE, 
@@ -149,10 +150,9 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file){
 			decorate_annotation(
 				"Clusters", 
 				slice = i, {
-					# grid.rect(x=1, width = unit(3, "mm"), gp = gpar(fill = cluster_colors[i], col = NA), just = "right")
 					grid.rect(x=0.9, width = unit(0.7, "mm"), gp = gpar(fill = "black", col = NA), just = "right")
-					grid.circle(x=0.4, r=unit(2.5, "mm"), gp=gpar(fill="black"))
-					grid.text(x=0.4, levels(clustering)[i], just = "center", gp=gpar(col="white"))
+					grid.circle(x=0.3, r=unit(3.8, "mm"), gp=gpar(fill="black"))
+					grid.text(x=0.3, levels(clustering)[i], just = "center", gp=gpar(fontsize=17, col="white"))
 				}
 			)
 		}
