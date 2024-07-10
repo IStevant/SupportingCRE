@@ -53,7 +53,7 @@ rule_all_input_list = [
 	f"{processed_data}/plot_example_4.log"
 ]
 
-# If there is no outliers, do not run the analysis that discard the
+# If there is no outliers, do not run the analysis that discard them
 if len(config["RNA_outliers"])<1:
 	rule_all_input_list.remove(f"{output_png}/RNA_corr_pca_all_samples.png")
 
@@ -135,8 +135,10 @@ rule RNA_Plot_marker_genes:
 		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',
 		tpm=f"{processed_data}/RNA_TPM.csv"
 	output:
-		pdf=f"{output_pdf}/RNA_marker_genes.pdf",
-		png=f"{output_png}/RNA_marker_genes.png"
+		pdf1=f"{output_pdf}/RNA_marker_genes.pdf",
+		png1=f"{output_png}/RNA_marker_genes.png",
+		pdf2=f"{output_pdf}/RNA_XX_mCherry_marker_genes.pdf",
+		png2=f"{output_png}/RNA_XX_mCherry_marker_genes.png"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000
