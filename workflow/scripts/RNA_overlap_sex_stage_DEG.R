@@ -16,14 +16,19 @@ suppressPackageStartupMessages({
 #                                         #
 ###########################################
 
-draw_venn_sex_dyn <- function(sex, dyn, title) {
+draw_venn_sex_dyn <- function(sexID, sex, dyn, title) {
 	data <- c(
 		sex=length(setdiff(sex,dyn)),
 		dyn=length(setdiff(dyn,sex)),
 		"sex&dyn"=length(intersect(sex,dyn))
 	)
 
-	colours <- c( "#FCBF49", "#D62828")
+	if (sexID=="XX"){
+		colours <- c( "#FCBF49", "#D62828")
+	} else {
+		colours <- c( "#94d574", "#1e8bd1")
+	}
+
 	venn <- eulerr::euler(data)
 	title <- title
 	venn_plot <- plot(
@@ -72,11 +77,11 @@ XX_filtered_StageDEGs <- filtered_StageDEGs
 XX_spe_genes <- unique(unlist(lapply(filtered_SexDEGs, function(x) rownames(x[x$Diff.Exp. == "Up in XX",]))))
 
 XX_dyn_genes <- XX_filtered_StageDEGs
-XX_venn <- draw_venn_sex_dyn(XX_spe_genes, XX_dyn_genes, "XX genes")
+XX_venn <- draw_venn_sex_dyn(sexID="XX", XX_spe_genes, XX_dyn_genes, "XX genes")
 
 XY_spe_genes <- unique(unlist(lapply(filtered_SexDEGs, function(x) rownames(x[x$Diff.Exp. == "Up in XY",]))))
 XY_dyn_genes <- XY_filtered_StageDEGs
-XY_venn <- draw_venn_sex_dyn(XY_spe_genes, XY_dyn_genes, "XY genes")
+XY_venn <- draw_venn_sex_dyn(sexID="XY", XY_spe_genes, XY_dyn_genes, "XY genes")
 
 
 figure <- plot_grid(
