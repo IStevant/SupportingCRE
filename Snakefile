@@ -24,6 +24,7 @@ rule_all_input_list = [
 	f"{output_png}/RNA_corr_pca_all_samples.png",
 	f"{output_png}/RNA_corr_pca.png",
 	f"{output_png}/RNA_marker_genes.png",
+	f"{output_png}/RNA_marker_genes_enrichment.png",
 	f"{output_png}/RNA_sex_DEG_histograms.png",
 	f"{output_png}/RNA_sex_DEG_volcano.png",
 	f"{output_png}/RNA_sex_DEG_double_heatmap.png",
@@ -137,8 +138,8 @@ rule RNA_Plot_marker_genes:
 	output:
 		pdf1=f"{output_pdf}/RNA_marker_genes.pdf",
 		png1=f"{output_png}/RNA_marker_genes.png",
-		pdf2=f"{output_pdf}/RNA_XX_mCherry_marker_genes.pdf",
-		png2=f"{output_png}/RNA_XX_mCherry_marker_genes.png"
+		pdf2=f"{output_pdf}/RNA_marker_genes_enrichment.pdf",
+		png2=f"{output_png}/RNA_marker_genes_enrichment.png"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000
@@ -285,7 +286,7 @@ rule RNA_Plot_heatmap_GO_XX:
 		sex="XX",
 		clusters=config["RNA_XX_stage_DEG_clusters"]
 	output:
-		# GO=f"{output_tables}/RNA_XX_GO_DEG_stage.csv",
+		GO=f"{output_tables}/RNA_XX_GO_DEG_stage.csv",
 		cluster_file=f"{output_tables}/RNA_XX_DEG_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/RNA_XX_DEG_stage_heatmap.pdf",
 		png=f"{output_png}/RNA_XX_DEG_stage_heatmap.png"
@@ -306,7 +307,7 @@ rule RNA_Plot_heatmap_GO_XY:
 		sex="XY",
 		clusters=config["RNA_XY_stage_DEG_clusters"]
 	output:
-		# GO=f"{output_tables}/RNA_XY_GO_DEG_stage.csv",
+		GO=f"{output_tables}/RNA_XY_GO_DEG_stage.csv",
 		cluster_file=f"{output_tables}/RNA_XY_DEG_stage_heatmap_clusters.csv",
 		pdf=f"{output_pdf}/RNA_XY_DEG_stage_heatmap.pdf",
 		png=f"{output_png}/RNA_XY_DEG_stage_heatmap.png"

@@ -22,6 +22,10 @@ draw_venn_sex_dyn <- function(sexID, sex, dyn, title) {
 		dyn=length(setdiff(dyn,sex)),
 		"sex&dyn"=length(intersect(sex,dyn))
 	)
+	write.csv(setdiff(sex,dyn), file=paste0(sexID,"_sex_only_DE_genes.csv"))
+	write.csv(setdiff(dyn,sex), file=paste0(sexID,"_dyn_only_DE_genes.csv"))
+	write.csv(intersect(dyn,sex), file=paste0(sexID,"_both_DE_genes.csv"))
+
 
 	if (sexID=="XX"){
 		colours <- c( "#FCBF49", "#D62828")

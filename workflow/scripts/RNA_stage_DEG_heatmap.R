@@ -136,6 +136,7 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	TFs <- TF_list[TF_list %in% gonad_pheno_genes]
 	matrix_TF_indexes <- unlist(lapply(TFs, function(TF) which(rownames(matrix) %in% TF)))
 	print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
+	write.csv(rownames(matrix)[matrix_TF_indexes], file=paste0("dyn_pheno_TFs_", sex, ".csv"))
 	if(length(matrix_TF_indexes)>20){
 		matrix_TF_indexes <- sample(matrix_TF_indexes,20)
 	}
@@ -235,7 +236,7 @@ GO_term_per_cluster <- function(de_genes, res_file){
 		select_fun=min
 	)
 
-	write.csv(lineage1_ego, file=res_file, quote=FALSE)
+	write.table(lineage1_ego, file=res_file, quote=FALSE, sep="\t")
 	
 	return(lineage1_ego)
 }
@@ -338,26 +339,26 @@ dynamic_genes <- draw_heatmap(
 de_genes <- read.csv(snakemake@output[['cluster_file']])
 colnames(de_genes) <- c("gene", "cluster")
 
-# go_analysis <- GO_term_per_cluster(
-# 	de_genes, 
-# 	snakemake@output[['GO']]
-# )
+go_analysis <- GO_term_per_cluster(
+	de_genes, 
+	snakemake@output[['GO']]
+)
 
-# go_plot <- go_plot(go_analysis, nb_terms=4)
+go_plot <- go_plot(go_analysis, nb_terms=4)
 
-# go_plot <- go_plot + 
-# 	theme(
-# 		axis.text.y=element_text(size=10), 
-# 		axis.text.x=element_text(size=10)
-# 	)
+go_plot <- go_plot + 
+	theme(
+		axis.text.y=element_text(size=10), 
+		axis.text.x=element_text(size=10)
+	)
 
-# figure <- plot_grid(
-# 	dynamic_genes, go_plot,
-# 	labels = "AUTO",
-# 	ncol=2
-# )
+figure <- plot_grid(
+	dynamic_genes, go_plot,
+	labels = "AUTO",
+	ncol=2
+)
 
-figure <- dynamic_genes
+# figure <- dynamic_genes
 
 ##########################################
 #                                        #
@@ -368,7 +369,7 @@ figure <- dynamic_genes
 save_plot(
 	snakemake@output[['pdf']], 
 	figure, 
-	base_width=33,
+	base_width=43,
 	base_height=23.2,
 	units = c("cm"), 
 	dpi=300, 
@@ -378,7 +379,7 @@ save_plot(
 save_plot(
 	snakemake@output[['png']], 
 	figure, 
-	base_width=33,
+	base_width=43,
 	base_height=23.2,
 	units = c("cm"), 
 	dpi=300, 

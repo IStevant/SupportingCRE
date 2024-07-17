@@ -128,16 +128,21 @@ gene_exp <- function(genes, TPM, title){
 	return(plots)
 }
 
-mCherry_dotplot <- function(TPM){
-
-	genes <- c("Nr5a1", "Wt1", "Gata4", "Foxl2", "Fst", "Lgr5", "Runx1", "Irx3", "Wnt4", "Wnt6", "Amhr2", "Bmp2", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")
-	expr_XX <- TPM[genes ,grep("XX", colnames(TPM))]
-	stages <- unique(sapply(strsplit(grep("whole",colnames(expr_XX), value=TRUE), "_"), `[`, 2))
+mCherry_dotplot <- function(TPM, sex){
+	if(sex=="XX"){
+		genes <- c("Nr5a1", "Wt1", "Gata4", "Foxl2", "Fst", "Lgr5", "Runx1", "Irx3", "Wnt4", "Wnt6", "Amhr2", "Bmp2", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")
+		title <- "Enrichment of gonadal cell marker genes in Enh8-mCherry+ cells\ncompared to whole gonads"
+	} else {
+		genes <- c("Nr5a1", "Wt1", "Gata4", "Sry", "Gadd45g", "Nr0b1", "Sox9", "Fgf9", "Ptgds", "Amh", "Dmrt1", "Amhr2", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")	
+		title <- "Enrichment of gonadal cell marker genes in Sox9-IRES-GFP+ cells\ncompared to whole gonads"
+	}
+	expr_sex <- TPM[genes ,grep(sex, colnames(TPM))]
+	stages <- unique(sapply(strsplit(grep("whole",colnames(expr_sex), value=TRUE), "_"), `[`, 2))
 	mean_expr <- lapply(stages, function(stg){
-		stage <- rep(stg, nrow(expr_XX))
-		mCherry <- expr_XX[, grep("supporting", colnames(expr_XX))]
+		stage <- rep(stg, nrow(expr_sex))
+		mCherry <- expr_sex[, grep("supporting", colnames(expr_sex))]
 		median_expr_mCherry <- matrixStats::rowMedians(as.matrix(mCherry[, grep(stg, colnames(mCherry))]))
-		whole <- expr_XX[, grep("whole", colnames(expr_XX))]
+		whole <- expr_sex[, grep("whole", colnames(expr_sex))]
 		median_expr_Zhao <- matrixStats::rowMedians(as.matrix(whole[, grep(stg, colnames(whole))]))
 
 		ratio_expr <- log10(median_expr_mCherry/median_expr_Zhao)
@@ -164,7 +169,7 @@ mCherry_dotplot <- function(TPM){
 		scale_y_discrete(limits=rev) +
 		labs(size = "Expression (TPM)", fill="Enrichment") +
 		# facet_wrap(~cellTypes, nrow=1) +
-		ggtitle("Enrichment of gonadal cell marker genes in Enh8-mCherry+ cells\ncompared to whole gonads") +
+		ggtitle(title) +
 		theme_light() +
 			theme(
 			strip.text.x = element_text(size = 14, face="bold"),
@@ -217,10 +222,18 @@ TPM <- TPM[,-1]
 # Plot expression of the marker genes
 plot_genes <- plot_expression_scatter(TPM, markerGenes)
 
-plot_mCherry <- mCherry_dotplot(TPM)
+plot_mCherry_XX <- mCherry_dotplot(TPM, "XX")
+plot_mCherry_XY <- mCherry_dotplot(TPM, "XY")
 
 figure <- plot_grid(
 	plotlist=plot_genes,
+	labels = "AUTO",
+	ncol=1,
+	align="v"
+)
+
+figure2 <- plot_grid(
+	plotlist=list(plot_mCherry_XX, plot_mCherry_XY),
 	labels = "AUTO",
 	ncol=1,
 	align="v"
@@ -245,9 +258,9 @@ save_plot(
 
 save_plot(
 	snakemake@output[['pdf2']], 
-	plot_mCherry, 
+	figure2, 
 	base_width=20,
-	base_height=10,
+	base_height=22,
 	units = c("cm"), 
 	dpi=300, 
 	bg = "white"
@@ -266,9 +279,9 @@ save_plot(
 
 save_plot(
 	snakemake@output[['png2']], 
-	plot_mCherry, 
+	figure2, 
 	base_width=20,
-	base_height=10,
+	base_height=22,
 	units = c("cm"), 
 	dpi=300, 
 	bg = "white"
