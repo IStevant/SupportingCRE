@@ -10,7 +10,7 @@ path_to_graphs: "results/graphs/"
 protein_genes: "workflow/data/mart_prot_coding_genes.txt"
 marker_genes: "workflow/data/gonad_marker_genes.csv"
 TF_genes: "workflow/data/mouse_transcription_factors.txt"
-TF_pheno: "workflow/data/genes_gonad_asociated_pheno_MGI.txt"
+TF_pheno: "workflow/data/TF_gonad_pheno.tsv"
 peak_examples: "workflow/data/gTrack_gene_examples.tsv"
 gene_peak_examples: "workflow/data/peak2gene_query.tsv"
 

@@ -166,6 +166,8 @@ rule RNA_Get_sex_DEGs:
 	input:
 		counts=f"{processed_data}/RNA_raw_counts.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
+		TF_genes=config["TF_genes"],
+		TF_pheno=config["TF_pheno"]
 	params:
 		adjpval=config["RNA_adjpval"],
 		log2FC=config["RNA_log2FC"],
@@ -244,13 +246,15 @@ rule RNA_Plot_sex_DEG_upset:
 rule RNA_Get_XX_dynamic_DEGs:
 	input:
 		counts=f"{processed_data}/RNA_raw_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
+		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
+		TF_genes=config["TF_genes"],
+		TF_pheno=config["TF_pheno"]
 	params:
 		adjpval=config["RNA_adjpval"],
 		log2FC=config["RNA_log2FC"],
 		sex="XX"
 	output:
-		csv=f"{output_tables}/RNA_XX_DEG_stage.csv",
+		tsv=f"{output_tables}/RNA_XX_DEG_stage.tsv",
 		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XX.Robj"
 	resources:
 		cpus_per_task=12,
@@ -261,13 +265,15 @@ rule RNA_Get_XX_dynamic_DEGs:
 rule RNA_Get_XY_dynamic_DEGs:
 	input:
 		counts=f"{processed_data}/RNA_raw_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
+		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
+		TF_genes=config["TF_genes"],
+		TF_pheno=config["TF_pheno"]
 	params:
 		adjpval=config["RNA_adjpval"],
 		log2FC=config["RNA_log2FC"],
 		sex="XY"
 	output:
-		csv=f"{output_tables}/RNA_XY_DEG_stage.csv",
+		tsv=f"{output_tables}/RNA_XY_DEG_stage.tsv",
 		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XY.Robj"
 	resources:
 		cpus_per_task=12,

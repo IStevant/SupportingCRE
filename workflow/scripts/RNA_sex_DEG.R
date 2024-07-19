@@ -9,6 +9,8 @@ source(".Rprofile")
 
 raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
 samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+TF_list <- read.csv(file=snakemake@input[['TF_genes']], header=FALSE)$V1
+pheno_TFs <- read.table(file=snakemake@input[['TF_pheno']], header=FALSE, sep="\t")
 adj.pval <- snakemake@params[['adjpval']]
 log2FC <- snakemake@params[['log2FC']]
 save_folder <- snakemake@params[['save_folder']]
@@ -67,6 +69,27 @@ stages <- unique(samplesheet$stages)
 # For each stages, extract significant DEGs
 filtered_SexDEGs <- lapply(stages, function(stg) get_sex_DEG_per_stage(SexDEGs, stg, adj.pval, log2FC))
 
+filtered_SexDEGs <- lapply(
+	filtered_SexDEGs, 
+	function(filtered) filtered[,!colnames(filtered) %in% c("lfcSE","stat")]
+)
+
+filtered_SexDEGs <- lapply(filtered_SexDEGs, function(filtered) {
+	filtered <- data.frame(
+		filtered,
+		is.TF = ifelse(rownames(filtered) %in% TF_list, "Yes", "-")
+	)
+
+	rownames(pheno_TFs) <- pheno_TFs[,1]
+	colnames(pheno_TFs) <- c("genes", "Phenotype")
+	merged_filtered <- merge(filtered, pheno_TFs[,2, drop=FALSE], by = 0, all.x=TRUE)
+	merged_filtered[is.na(merged_filtered)] <- "-"
+	names(merged_filtered)[names(merged_filtered) == 'Row.names'] <- 'Genes'
+	rownames(merged_filtered) <- merged_filtered$Genes
+	return(merged_filtered)
+
+})
+
 ##########################################
 #                                        #
 #               Save files               #
@@ -74,7 +97,7 @@ filtered_SexDEGs <- lapply(stages, function(stg) get_sex_DEG_per_stage(SexDEGs, 
 ##########################################
 
 # For each stages, write DEG results into separated files
-export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDEGs[stg], paste0(save_folder, "/RNA_DEG_sex_", stages[stg], ".csv")))
+export <- lapply(seq_along(stages), function(stg) write.table(filtered_SexDEGs[stg], paste0(save_folder, "/RNA_DEG_sex_", stages[stg], ".tsv"), quote=FALSE, row.names=FALSE, sep="\t"))
 
 # Save the Robj of the results for reuse
 save(SexDEGs, file=snakemake@output[['all_DEGs']])

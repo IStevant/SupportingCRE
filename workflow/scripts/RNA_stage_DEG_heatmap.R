@@ -128,15 +128,15 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	)
 
 	TF_list <- read.csv(TF_genes, header=FALSE)
-	gonad_pheno_genes <- read.csv(TF_pheno, header=FALSE)
+	gonad_pheno_genes <- read.table(TF_pheno, header=FALSE, sep="\t")
 	TF_list <- as.vector(TF_list[,1])
 	total_TFs <- unlist(lapply(TF_list, function(TF) which(rownames(matrix) %in% TF)))
-	print(paste(length(total_TFs), "TFs found in total."))
+	# print(paste(length(total_TFs), "TFs found in total."))
 	gonad_pheno_genes <- as.vector(gonad_pheno_genes[,1])
 	TFs <- TF_list[TF_list %in% gonad_pheno_genes]
 	matrix_TF_indexes <- unlist(lapply(TFs, function(TF) which(rownames(matrix) %in% TF)))
-	print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
-	write.csv(rownames(matrix)[matrix_TF_indexes], file=paste0("dyn_pheno_TFs_", sex, ".csv"))
+	# print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
+	# write.csv(rownames(matrix)[matrix_TF_indexes], file=paste0("dyn_pheno_TFs_", sex, ".csv"))
 	if(length(matrix_TF_indexes)>20){
 		matrix_TF_indexes <- sample(matrix_TF_indexes,20)
 	}
