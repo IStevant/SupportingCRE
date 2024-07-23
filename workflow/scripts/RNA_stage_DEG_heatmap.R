@@ -14,6 +14,7 @@ suppressPackageStartupMessages({
 	library("grid")
 	library("ggplot2")
 	library('clusterProfiler')
+	library("JLutils")
 })
 
 ###########################################
@@ -54,9 +55,15 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	matrix_DEG <- data[rownames(data) %in% de_feature, ]
 	# Calculate z-scores
 	matrix <- t(scale(t(matrix_DEG)))
+
 	# Cluster matrix
 	row_dend <- hclust(dist(matrix), method= "ward.D2")
+
+	# Calculate the optimal number of clusters
+	clusters <- best.cutree(row_dend, min = 7, max = 15)
+
 	clustering <- cutree(row_dend, k=clusters)
+
 	# Order clusters
 	mean_per_cluster <- lapply(
 		unique(clustering),
@@ -231,13 +238,30 @@ GO_term_per_cluster <- function(de_genes, res_file){
 	print("Calculate GO term semantic similarities...")
 	lineage1_ego <- simplify(
 		formula_res, 
-		cutoff=0.6,
+		cutoff=0.7,
 		by="p.adjust", 
 		select_fun=min
 	)
 
 	write.table(lineage1_ego, file=res_file, quote=FALSE, sep="\t")
-	
+
+	# # KEGG pathway enrichment
+	# entrez_genes <- bitr(de_genes$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db")
+	# de_gene_clusters <- de_genes[de_genes$gene %in% entrez_genes$SYMBOL,c("gene", "cluster")]
+	# de_gene_clusters <- data.frame(
+	# 	ENTREZID=entrez_genes$ENTREZID[which(entrez_genes$SYMBOL==de_gene_clusters$gene)],
+	# 	cluster=de_gene_clusters$cluster
+	# )
+
+	# formula_res <- compareCluster(
+	# 	ENTREZID~cluster, 
+	# 	data=de_gene_clusters, 
+	# 	fun="enrichKEGG",
+	# 	pAdjustMethod = "BH",
+	# 	pvalueCutoff  = 0.01,
+	# 	qvalueCutoff  = 0.05
+	# )
+
 	return(lineage1_ego)
 }
 
@@ -369,7 +393,7 @@ figure <- plot_grid(
 save_plot(
 	snakemake@output[['pdf']], 
 	figure, 
-	base_width=43,
+	base_width=39,
 	base_height=23.2,
 	units = c("cm"), 
 	dpi=300, 
@@ -379,7 +403,7 @@ save_plot(
 save_plot(
 	snakemake@output[['png']], 
 	figure, 
-	base_width=43,
+	base_width=39,
 	base_height=23.2,
 	units = c("cm"), 
 	dpi=300, 

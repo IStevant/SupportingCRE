@@ -163,6 +163,12 @@ plot_DEG <- function(dds, stage, p.adj, log2FC, colors, path){
 	res_file2 <- paste0(path,"/RNA_", stage, "_reduced_GO_sex_DEG.csv")
 	GO_terms <- GO_term_per_cluster(de_genes, res_file1, res_file2)
 	go_term_plot <- go_plot(GO_terms, nb_terms=5)
+	# KEGG_terms <- KEGG_term_per_cluster(de_genes)
+	# if (!is.null(KEGG_terms)){
+	# 	KEGG_term_plot <- kegg_plot(KEGG_terms, nb_terms=5)
+	# } else {
+	# 	KEGG_term_plot <- NULL
+	# }
 
 	figure <- plot_grid(plotlist=list(volcano, go_term_plot), ncol=2)
 
@@ -200,6 +206,32 @@ GO_term_per_cluster <- function(de_genes, res_file1, res_file2){
 	return(lineage1_ego)
 }
 
+KEGG_term_per_cluster <- function(de_genes){
+
+	print("Calculate KEGG term over-representation...")
+
+	# KEGG pathway enrichment
+	entrez_genes <- bitr(de_genes$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db")
+	de_gene_clusters <- de_genes[de_genes$gene %in% entrez_genes$SYMBOL,c("gene", "cluster")]
+	de_gene_clusters <- data.frame(
+		ENTREZID=entrez_genes$ENTREZID[which(entrez_genes$SYMBOL==de_gene_clusters$gene)],
+		cluster=de_gene_clusters$cluster
+	)
+
+	formula_res <- compareCluster(
+		ENTREZID~cluster, 
+		data=de_gene_clusters, 
+		fun="enrichKEGG",
+		pAdjustMethod = "BH",
+		pvalueCutoff  = 0.01,
+		qvalueCutoff  = 0.05
+	)
+
+	# write.table(formula_res, file=res_file1, quote=FALSE, sep="\t")
+	
+	return(formula_res)
+}
+
 go_plot <- function(go_res, nb_terms=5){
 	# Make the first GO term letter as capital letter
 	go_res@compareClusterResult[,4] <- gsub("^([a-z])", "\\U\\1", go_res[,4], perl=TRUE)
@@ -221,7 +253,27 @@ go_plot <- function(go_res, nb_terms=5){
 	return(plot)
 }
 
-
+kegg_plot <- function(kegg_res, nb_terms=5){
+	plot <- dotplot(kegg_res)
+	# # Make the first GO term letter as capital letter
+	# go_res@compareClusterResult[,4] <- gsub("^([a-z])", "\\U\\1", go_res[,4], perl=TRUE)
+	# options(enrichplot.colours = c("#77BFA3", "#98C9A3", "#BFD8BD", "#DDE7C7", "#EDEEC9"))
+	# plot <- clusterProfiler::dotplot(go_res, showCategory=nb_terms)
+	# x_labels <-  levels(as.data.frame(go_res)$Cluster)
+	# # Reload ggplot2 to apply new theme
+	# library(ggplot2)
+	# plot <- plot +
+	# 	geom_point(shape=21) +
+	# 	ggtitle(paste0("Enriched biological process GO terms (Top ", nb_terms, ")")) +
+	# 	scale_x_discrete(labels=x_labels) +
+	# 	labs(color = "Adj. p-value", size="Gene ratio") +
+	# 	guides(color = guide_colorbar(reverse=TRUE), size = guide_legend(reverse=TRUE)) +
+	# 	theme(
+	# 		plot.title = element_text(size=12, hjust = 0.5, face="bold"),
+	# 		axis.title.x = element_blank()
+	# 	)
+	return(plot)
+}
 #################################################################################################################################
 
 ###########################################
