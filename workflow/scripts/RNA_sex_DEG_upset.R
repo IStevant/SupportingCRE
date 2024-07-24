@@ -10,6 +10,16 @@ suppressPackageStartupMessages({
 	library("ggplot2")
 })
 
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+# filtered_SexDEGs
+load(snakemake@input[['sig_DEGs']])
+
+#################################################################################################################################
 
 ###########################################
 #                                         #
@@ -17,8 +27,11 @@ suppressPackageStartupMessages({
 #                                         #
 ###########################################
 
+#' Draw upset plot.
+#' @param DEGs Sex DESeq2 analysis result table
+#' @param sex Genetic sex of the cells, either "XX" or "XY".
+#' @return Grig object.
 upset_plots_sex <- function(DEGs, sex){
-
 	current_sex <- paste("Up in", sex)
 	filtered_SexDEGs <- lapply(DEGs, function(DEG) rownames(DEG[DEG$Diff.Exp.==current_sex,,drop=FALSE]))
 	venn <- eulerr::euler(filtered_SexDEGs)
@@ -51,7 +64,6 @@ upset_plots_sex <- function(DEGs, sex){
 		sort_sets='ascending',
 		stripes=alpha('white', 0),
 		set_sizes=FALSE,
-		# wrap=TRUE
 		base_annotations=list(
 			'Intersection size'=ComplexUpset::intersection_size(
 				text_colors=text_col,
@@ -78,15 +90,6 @@ upset_plots_sex <- function(DEGs, sex){
 	return(plot)
 }
 #################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-# filtered_SexDEGs
-load(snakemake@input[['sig_DEGs']])
 
 ###########################################
 #                                         #
