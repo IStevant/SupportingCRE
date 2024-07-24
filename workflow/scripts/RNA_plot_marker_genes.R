@@ -21,10 +21,6 @@ TPM <- read.csv(file=snakemake@input[['tpm']], row.names=1)
 markerGenes <- read.csv(file=snakemake@input[['marker_genes']])
 whole_gonad <- read.csv(file=snakemake@input[['whole_gonad']])
 
-# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", row.names=1)
-# markerGenes <- read.csv(file="workflow/data/gonad_marker_genes.csv")
-# whole_gonad <- read.csv(file="workflow/data/mm10/Zhao_tpm_matrix_for_analysis.csv")
-
 #################################################################################################################################
 
 ###########################################
@@ -128,6 +124,10 @@ gene_exp <- function(genes, TPM, title){
 	return(plots)
 }
 
+#' Draw a dotplot with the enrich$ent and expression level of marketr genes in sorted cells compated to whole gonads
+#' @param TPM TPM expression matrix.
+#' @param sex Genetic sex of the cells, either "XX" or "XY".
+#' @return Ggplot object.
 mCherry_dotplot <- function(TPM, sex){
 	if(sex=="XX"){
 		genes <- c("Nr5a1", "Wt1", "Gata4", "Foxl2", "Fst", "Lgr5", "Runx1", "Irx3", "Wnt4", "Wnt6", "Amhr2", "Bmp2", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")
@@ -147,7 +147,6 @@ mCherry_dotplot <- function(TPM, sex){
 
 		ratio_expr <- log10(median_expr_mCherry/median_expr_Zhao)
 
-		# cell_types <- genes$Cell_type
 		data <- data.frame(
 			stage = stage,
 			genes = names(median_expr_mCherry),
@@ -163,12 +162,9 @@ mCherry_dotplot <- function(TPM, sex){
 	plot <- ggplot(data, aes(genes, stage, size=exp)) +
 		geom_point(shape = 21, aes(fill=Enrichment), color="#666666") +
 		scale_fill_gradient2(low = "#6987C9", mid = "white", high = "#F64740") +
-		# scale_fill_gradient2(low = "#017071", mid = "white", high = "#ba6b0d") +
-		# scale_colour_distiller(type = "div", rescaler = ~ scales::rescale_mid(.x, mid = 0)) +
 		scale_size(range=c(0, 10)) +
 		scale_y_discrete(limits=rev) +
 		labs(size = "Expression (TPM)", fill="Enrichment") +
-		# facet_wrap(~cellTypes, nrow=1) +
 		ggtitle(title) +
 		theme_light() +
 			theme(
@@ -179,15 +175,12 @@ mCherry_dotplot <- function(TPM, sex){
 			axis.title=element_blank(),
 			legend.title=element_text(size=11, face="bold"),
 			legend.text=element_text(size=11, margin = margin(r = 10, unit = "pt")),
-			# aspect.ratio=0.30,
 			legend.position="bottom"
 		) +
 		guides(
 			size = guide_legend(title.position="top", title.hjust = 0.5),
 			fill = guide_colourbar(title.position="top", title.hjust = 0.5)
 		)
-
-		# ggsave(plot, file="test.png", width=8, height=5)
 
 		return(plot)
 

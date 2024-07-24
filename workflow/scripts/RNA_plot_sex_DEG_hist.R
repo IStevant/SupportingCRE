@@ -14,6 +14,23 @@ suppressPackageStartupMessages({
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+load(snakemake@input[['sig_DEGs']])
+samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+stages <- unique(samplesheet$stages)
+
+
+names(conditions_color) <- sort(unique(samplesheet$conditions))
+XX_colors <- conditions_color[grepl("XX" , names(conditions_color))]
+XY_colors <- conditions_color[grepl("XY" , names(conditions_color))]
+
+#################################################################################################################################
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -80,21 +97,6 @@ plot_dymorphic_genes <- function(de_genes, XX_colors, XY_colors){
 }
 
 #################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-load(snakemake@input[['sig_DEGs']])
-samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
-stages <- unique(samplesheet$stages)
-
-
-names(conditions_color) <- sort(unique(samplesheet$conditions))
-XX_colors <- conditions_color[grepl("XX" , names(conditions_color))]
-XY_colors <- conditions_color[grepl("XY" , names(conditions_color))]
 
 ###########################################
 #                                         #

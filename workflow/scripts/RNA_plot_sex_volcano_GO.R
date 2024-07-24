@@ -1,12 +1,5 @@
 source(".Rprofile")
-# source("scripts/00.functions.R")
 source("workflow/scripts/00.color_palettes.R")
-
-# install.packages('doParallel', repos="https://mirror.ibcp.fr/pub/CRAN/")
-# install.packages('foreach', repos="https://mirror.ibcp.fr/pub/CRAN/")
-# BiocManager::install('org.Mm.eg.db')
-
-# renv::snapshot()
 
 ###########################################
 #                                         #
@@ -26,16 +19,39 @@ suppressPackageStartupMessages({
 
 doParallel::registerDoParallel(cores=4)
 
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+load(snakemake@input[['all_DEGs']])
+samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+stages <- unique(samplesheet$stages)
+names(conditions_color) <- sort(unique(samplesheet$conditions))
+
+adj.pval <- snakemake@params[['adjpval']]
+log2FC <- snakemake@params[['log2FC']]
+path <- snakemake@params[['path']]
+
+#################################################################################################################################
+
 ###########################################
 #                                         #
 #               Functions                 #
 #                                         #
 ###########################################
 
+#' Prepare the volcano plot.
+#' @param dds DESeq2 analysis result object.
+#' @param stage Embryonic stage.
+#' @param p.adj adjusted p-value threshold used in the DE analysis.
+#' @param log2FC Log2(Fold change) threshold used in the DE analysis.
+#' @param colors Vector of hexadecimal stage colors for the current embryonic stage.
+#' @return Ggplot object.
 plot_volcano_sex <- function(dds, stage, p.adj, log2FC, colors){
-
 	colors <- conditions_color[grep(stage, names(conditions_color))]
-
 	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
 	de_res <- as.data.frame(res)
 
@@ -136,7 +152,14 @@ plot_volcano_sex <- function(dds, stage, p.adj, log2FC, colors){
 }
 
 
-
+#' Prepare the volcano plot.
+#' @param dds DESeq2 analysis result object.
+#' @param stage Embryonic stage.
+#' @param p.adj adjusted p-value threshold used in the DE analysis.
+#' @param log2FC Log2(Fold change) threshold used in the DE analysis.
+#' @param colors Vector of hexadecimal stage colors for the current embryonic stage.
+#' @param path Path to the GO term result table file.
+#' @return Ggplot object.
 plot_DEG <- function(dds, stage, p.adj, log2FC, colors, path){
 	volcano <- plot_volcano_sex(dds, stage, p.adj, log2FC, colors)
 
@@ -174,9 +197,11 @@ plot_DEG <- function(dds, stage, p.adj, log2FC, colors, path){
 	return(figure)
 }
 
-
+#' Get GO term enrichment.
+#' @param de_genes Vector of gene names.
+#' @param res_file Path and name of the result file.
+#' @return dataframe.
 GO_term_per_cluster <- function(de_genes, res_file){
-
 	print("Calculate GO term over-representation...")
 	formula_res <- compareCluster(
 		gene~cluster, 
@@ -190,7 +215,6 @@ GO_term_per_cluster <- function(de_genes, res_file){
 		qvalueCutoff  = 0.05,
 		readable = TRUE
 	)
-	# write.table(formula_res, file=res_file1, quote=FALSE, sep="\t")
 
 	print("Calculate GO term semantic similarities...")
 	lineage1_ego <- simplify(
@@ -205,11 +229,11 @@ GO_term_per_cluster <- function(de_genes, res_file){
 	return(lineage1_ego)
 }
 
+#' Get KEGG pathway enrichment.
+#' @param de_genes Vector of gene names.
+#' @return dataframe.
 KEGG_term_per_cluster <- function(de_genes){
-
 	print("Calculate KEGG term over-representation...")
-
-	# KEGG pathway enrichment
 	entrez_genes <- bitr(de_genes$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db")
 	de_gene_clusters <- de_genes[de_genes$gene %in% entrez_genes$SYMBOL,c("gene", "cluster")]
 	de_gene_clusters <- data.frame(
@@ -225,19 +249,20 @@ KEGG_term_per_cluster <- function(de_genes){
 		pvalueCutoff  = 0.01,
 		qvalueCutoff  = 0.05
 	)
-
-	# write.table(formula_res, file=res_file1, quote=FALSE, sep="\t")
-	
 	return(formula_res)
 }
 
+#' Plot GO term enrichment.
+#' @param go_res Dataframe containing the GO term enrichment result.
+#' @param nb_terms Number of top GO term per cluster to show.
+#' @return Ggplot object
 go_plot <- function(go_res, nb_terms=5){
 	# Make the first GO term letter as capital letter
 	go_res@compareClusterResult[,4] <- gsub("^([a-z])", "\\U\\1", go_res[,4], perl=TRUE)
 	options(enrichplot.colours = c("#77BFA3", "#98C9A3", "#BFD8BD", "#DDE7C7", "#EDEEC9"))
 	plot <- clusterProfiler::dotplot(go_res, showCategory=nb_terms)
 	x_labels <-  levels(as.data.frame(go_res)$Cluster)
-	# Reload ggplot2 to apply new theme
+	# Important: Reload ggplot2 to apply new theme
 	library(ggplot2)
 	plot <- plot +
 		geom_point(shape=21) +
@@ -252,43 +277,14 @@ go_plot <- function(go_res, nb_terms=5){
 	return(plot)
 }
 
+#' Plot GO term enrichment.
+#' @param kegg_res Dataframe containing the KEGG enrichment result.
+#' @return Ggplot object
 kegg_plot <- function(kegg_res, nb_terms=5){
 	plot <- dotplot(kegg_res)
-	# # Make the first GO term letter as capital letter
-	# go_res@compareClusterResult[,4] <- gsub("^([a-z])", "\\U\\1", go_res[,4], perl=TRUE)
-	# options(enrichplot.colours = c("#77BFA3", "#98C9A3", "#BFD8BD", "#DDE7C7", "#EDEEC9"))
-	# plot <- clusterProfiler::dotplot(go_res, showCategory=nb_terms)
-	# x_labels <-  levels(as.data.frame(go_res)$Cluster)
-	# # Reload ggplot2 to apply new theme
-	# library(ggplot2)
-	# plot <- plot +
-	# 	geom_point(shape=21) +
-	# 	ggtitle(paste0("Enriched biological process GO terms (Top ", nb_terms, ")")) +
-	# 	scale_x_discrete(labels=x_labels) +
-	# 	labs(color = "Adj. p-value", size="Gene ratio") +
-	# 	guides(color = guide_colorbar(reverse=TRUE), size = guide_legend(reverse=TRUE)) +
-	# 	theme(
-	# 		plot.title = element_text(size=12, hjust = 0.5, face="bold"),
-	# 		axis.title.x = element_blank()
-	# 	)
 	return(plot)
 }
 #################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-load(snakemake@input[['all_DEGs']])
-samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
-stages <- unique(samplesheet$stages)
-names(conditions_color) <- sort(unique(samplesheet$conditions))
-
-adj.pval <- snakemake@params[['adjpval']]
-log2FC <- snakemake@params[['log2FC']]
-path <- snakemake@params[['path']]
 
 ###########################################
 #                                         #
