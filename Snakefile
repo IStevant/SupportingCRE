@@ -27,7 +27,6 @@ rule_all_input_list = [
 	f"{output_png}/RNA_marker_genes_enrichment.png",
 	f"{output_png}/RNA_sex_DEG_histograms.png",
 	f"{output_png}/RNA_sex_DEG_volcano.png",
-	f"{output_png}/RNA_sex_DEG_double_heatmap.png",
 	f"{output_png}/RNA_sex_DEG_upset.png",
 	f"{output_png}/RNA_XX_DEG_stage_heatmap.png",
 	f"{output_png}/RNA_XY_DEG_stage_heatmap.png",
@@ -132,22 +131,6 @@ rule RNA_Plot_marker_genes:
 	script:
 		"workflow/scripts/RNA_plot_marker_genes.R"
 
-rule RNA_Plot_peak_examples:
-	input:
-		genome=f"{genome}",
-		gene_bed=f"{input_data}/gene_standard.bed",
-		gene_list=config["peak_examples"],
-	params:
-		bw_folder="results/processed_data/mm10/RNA_bigwig",
-		save_folder=f"{output_png}"
-	output: 
-		log= f"{processed_data}/plot_example_4.log"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_plot_genomic_tracks_examples.R"
-
 rule RNA_Get_sex_DEGs:
 	input:
 		counts=f"{processed_data}/RNA_raw_counts.csv",
@@ -196,26 +179,6 @@ rule RNA_Plot_sex_DEG_volcano_GO:
 		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_plot_sex_volcano_GO.R"
-
-rule RNA_Plot_sex_DEG_double_heatmap:
-	input:
-		TF_genes=config["TF_genes"],
-		TF_pheno=config["TF_pheno"],
-		sig_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	params:
-		clusters=config["RNA_sex_double_heatmap_clusters"]
-	output:
-		pdf=f"{output_pdf}/RNA_sex_DEG_double_heatmap.pdf",
-		png=f"{output_png}/RNA_sex_DEG_double_heatmap.png",
-		clusters=f"{output_tables}/RNA_sex_DEG_double_heatmap_clustering.csv"
-		# TFs=f"{output_tables}/RNA_sex_DEG_double_heatmap_TFs.csv"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_sex_DEG_double_heatmap.R"
 
 rule RNA_Plot_sex_DEG_upset:
 	input:
