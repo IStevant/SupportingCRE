@@ -144,8 +144,11 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file){
 	matrix_TF_indexes <- unlist(lapply(TFs, function(TF) which(rownames(matrix) %in% TF)))
 	# print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
 	# write.csv(rownames(matrix)[matrix_TF_indexes], file=paste0("dyn_pheno_TFs_", sex, ".csv"))
-	if(length(matrix_TF_indexes)>20){
-		matrix_TF_indexes <- sample(matrix_TF_indexes,20)
+	if(length(matrix_TF_indexes)>25){
+		split_indexes <- split(matrix_TF_indexes, cut(seq_along(matrix_TF_indexes), 25, labels=FALSE))
+		set.seed(123)
+		matrix_TF_indexes <- unlist(lapply(split_indexes, function(x) sample(x,1)))
+		# matrix_TF_indexes <- sample(matrix_TF_indexes,20)
 	}
 	TF_names <- rownames(matrix)[matrix_TF_indexes]
 	# Show transcription factors
@@ -243,7 +246,7 @@ GO_term_per_cluster <- function(de_genes, res_file){
 		select_fun=min
 	)
 
-	write.table(lineage1_ego, file=res_file, quote=FALSE, sep="\t")
+	write.table(lineage1_ego, file=res_file, quote=FALSE, sep="\t", row.names=FALSE)
 
 	# # KEGG pathway enrichment
 	# entrez_genes <- bitr(de_genes$gene, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Mm.eg.db")
@@ -271,7 +274,7 @@ go_plot <- function(go_res, nb_terms=5){
 	go_res@compareClusterResult[,4] <- gsub("^([a-z])", "\\U\\1", go_res[,4], perl=TRUE)
 	options(enrichplot.colours = c("#77BFA3", "#98C9A3", "#BFD8BD", "#DDE7C7", "#EDEEC9"))
 	plot <- clusterProfiler::dotplot(go_res, showCategory=nb_terms)
-	x_labels <-  levels(as.data.frame(go_res)$Cluster)
+	x_labels <-  unique(as.data.frame(go_res)$Cluster)
 	# Reload ggplot2 to apply new theme
 	library(ggplot2)
 	plot <- plot +

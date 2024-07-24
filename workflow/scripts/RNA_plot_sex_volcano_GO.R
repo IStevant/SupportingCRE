@@ -159,9 +159,8 @@ plot_DEG <- function(dds, stage, p.adj, log2FC, colors, path){
 		cluster=sig.DE$Diff.Exp.
 	)
 
-	res_file1 <- paste0(path,"/RNA_", stage, "_GO_sex_DEG.csv")
-	res_file2 <- paste0(path,"/RNA_", stage, "_reduced_GO_sex_DEG.csv")
-	GO_terms <- GO_term_per_cluster(de_genes, res_file1, res_file2)
+	res_file <- paste0(path,"/RNA_", stage, "_GO_sex_DEG.csv")
+	GO_terms <- GO_term_per_cluster(de_genes, res_file)
 	go_term_plot <- go_plot(GO_terms, nb_terms=5)
 	# KEGG_terms <- KEGG_term_per_cluster(de_genes)
 	# if (!is.null(KEGG_terms)){
@@ -176,7 +175,7 @@ plot_DEG <- function(dds, stage, p.adj, log2FC, colors, path){
 }
 
 
-GO_term_per_cluster <- function(de_genes, res_file1, res_file2){
+GO_term_per_cluster <- function(de_genes, res_file){
 
 	print("Calculate GO term over-representation...")
 	formula_res <- compareCluster(
@@ -191,7 +190,7 @@ GO_term_per_cluster <- function(de_genes, res_file1, res_file2){
 		qvalueCutoff  = 0.05,
 		readable = TRUE
 	)
-	write.table(formula_res, file=res_file1, quote=FALSE, sep="\t")
+	# write.table(formula_res, file=res_file1, quote=FALSE, sep="\t")
 
 	print("Calculate GO term semantic similarities...")
 	lineage1_ego <- simplify(
@@ -201,7 +200,7 @@ GO_term_per_cluster <- function(de_genes, res_file1, res_file2){
 		select_fun=min
 	)
 
-	write.table(lineage1_ego, file=res_file2, quote=FALSE, sep="\t")
+	write.table(lineage1_ego, file=res_file, quote=FALSE, sep="\t", row.names=FALSE)
 	
 	return(lineage1_ego)
 }

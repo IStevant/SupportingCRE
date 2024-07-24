@@ -73,27 +73,6 @@ get_normalized_counts <- function(raw_counts, samplesheet){
 	return(norm_counts)
 }
 
-#' Extract the size factor normalization from DESeq2 to later normalize the bigwig files
-#' @param raw_counts Read count matrix.
-#' @param samplesheet Samplesheet for DESeq2.
-#' @return Return a dataframe.
-get_size_factors <- function(raw_counts, samplesheet){
-	dds <- DESeq2::DESeqDataSetFromMatrix(
-		countData = raw_counts,
-		colData = samplesheet,
-		design = ~conditions
-	)
-	dds <- DESeq2::estimateSizeFactors(dds)
-	size_factors <- DESeq2::sizeFactors(dds)
-	# norm_counts <- DESeq2::counts(dds, normalized=TRUE)
-	# norm_counts <- SummarizedExperiment::assay(DESeq2::vst(dds, blind=FALSE))
-	size_factors <- data.frame(
-		sample = names(size_factors),
-		SizeFactor = size_factors
-	)
-	return(size_factors)
-}
-
 #' When the maximum expression value (TPM or read count) of a gene between samples is under a certain threshold, we considere it is not properly expressed and the expression values are set to 0.
 #' @param row Current gene expression data.
 #' @param col_names Save sample names to keep the colnames in the final dataframe.
@@ -175,7 +154,7 @@ if(length(outlierSamples)>0){
 #                                         #
 ###########################################
 
-# Generate the reduced samplesheet whith all samples
+# Generate the samplesheet whith all samples
 stage <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 1)
 sex <- sapply(strsplit(colnames(raw_counts), "_"), `[`, 2)
 conditions <- paste(sex, stage, sep=" ")
@@ -243,12 +222,6 @@ if(length(outlierSamples)>0){
 	)
 }
 
-# Extract the size factors used for the normalization
-size_factors <- get_size_factors(
-	raw_counts, 
-	samplesheet
-)
-
 ###########################################
 #                                         #
 #               Save files                #
@@ -266,4 +239,3 @@ write.csv(TPM, snakemake@output[['tpm']])
 write.csv(raw_counts, snakemake@output[['counts']])
 write.csv(norm_counts, snakemake@output[['norm_counts']])
 write.csv(samplesheet, snakemake@output[['samplesheet']])
-write.csv(size_factors, snakemake@output[['size_factors']])

@@ -81,26 +81,12 @@ rule RNA_Get_matrices:
 		counts=f"{processed_data}/RNA_raw_counts.csv",
 		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
 		norm_counts_all=f"{processed_data}/RNA_norm_counts_all.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-		size_factors=f"{processed_data}/RNA_size_factors.csv"
+		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000
 	script:
 		"workflow/scripts/RNA_clean_matrices.R"
-
-# Force the execution if you need to re-normalize the bigwig files
-rule RNA_Normalize_bigwig:
-	input:
-		size_factors=f"{processed_data}/RNA_size_factors.csv"
-	params:
-		bigwig_folder=f"{RNA_bigwig_folder}",
-		new_bigwig_folder=f"{processed_data}/RNA_bigwig"
-	resources:
-		cpus_per_task=12,
-		mem_mb=16000
-	script:
-		"workflow/scripts/RNA_norm_bigwig.R"
 
 rule RNA_corr_PCA_with outliers:
 	input:
