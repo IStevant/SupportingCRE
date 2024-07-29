@@ -9,6 +9,7 @@ source(".Rprofile")
 suppressPackageStartupMessages({
 	library("cowplot")
 	library("ggplot2")
+	library("ComplexHeatmap")
 })
 
 ###########################################
@@ -161,10 +162,10 @@ mCherry_dotplot <- function(TPM, sex){
 
 	plot <- ggplot(data, aes(genes, stage, size=exp)) +
 		geom_point(shape = 21, aes(fill=Enrichment), color="#666666") +
-		scale_fill_gradient2(low = "#6987C9", mid = "white", high = "#F64740") +
+		scale_fill_gradient2(low = "#04bbc6", mid = "#fffee8", high = "#eb2d62") +
 		scale_size(range=c(0, 10)) +
 		scale_y_discrete(limits=rev) +
-		labs(size = "Expression (TPM)", fill="Enrichment") +
+		labs(size = "Expression (TPM)", fill="Log2 enrichment") +
 		ggtitle(title) +
 		theme_light() +
 			theme(

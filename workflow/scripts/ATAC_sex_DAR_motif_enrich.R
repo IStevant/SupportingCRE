@@ -225,14 +225,11 @@ get_enriched_TFs <- function(stg, save_folder){
 }
 
 
-# seSel <- enrichments[[3]]
-
 merge_TF_motifs <- function(seSel, stg){
 	# Cluster motifs by enrichment
 	TF_enrichment <- SummarizedExperiment::assay(seSel, "log2enr")
-	# rownames(TF_enrichment) <- seSel@elementMetadata$motif.name
 	if(background=="genome"){
-		nbCluster=4
+		nbCluster=1
 	} else {
 		nbCluster=2
 	}
@@ -242,16 +239,13 @@ merge_TF_motifs <- function(seSel, stg){
 
 	motif_sig <- lapply(1:nbCluster, function(cl){
 		TFs <- names(clustering[clustering==cl])
-		# TFs <- names(clustering[clustering==cl])
-		# print(TFs)
 		matrices <- seSel@elementMetadata$motif.pfm[TFs]
-		# print(length(matrices))
 		pfms <- universalmotif::convert_motifs(matrices, class="motifStack-pcm")
 		hc <- motifStack::clusterMotifs(pfms)
 		phylog <- ade4::hclust2phylog(hc)
 		# extract the motif signatures
 		motifSig <- motifSignature(pfms, phylog, cutoffPval = 0.005, min.freq=1)
-		## get the signatures from object of motifSignature
+		# get the signatures from object of motifSignature
 		sig <- signatures(motifSig)
 		return(sig)
 	})
@@ -282,19 +276,17 @@ merge_TF_motifs <- function(seSel, stg){
 
 					new_tf_vector <- sapply(grouped_genes, function(gene_group) {
 						common_prefix <- extract_prefix(gene_group[1])
-						# if(common_prefix!="HOX"){
+						if(common_prefix!="HOX"){
 							suffixes <- gsub(paste0("^", common_prefix), "", gene_group)
 							numeric_suffixes <- sort(as.numeric(suffixes[grepl("^\\d+$", suffixes)]), na.last = TRUE)
 							non_numeric_suffixes <- sort(suffixes[!grepl("^\\d+$", suffixes)])
 							all_suffixes <- c(non_numeric_suffixes, numeric_suffixes)
 							concatenated_suffixes <- paste(all_suffixes, collapse = "/")
 							paste0(common_prefix, concatenated_suffixes)
-						# } else {
-						# 	paste0(common_prefix,"s")
-						# }
-
+						} else {
+							paste0(common_prefix,"s")
+						}
 					})
-
 					new_tf_vector <- new_tf_vector[order(new_tf_vector)]
 					paste(new_tf_vector, collapse=";")
 					tf_names <- paste(new_tf_vector, collapse=";")
@@ -303,12 +295,10 @@ merge_TF_motifs <- function(seSel, stg){
 					colnames(tf_enrichment) <- tf_names
 					tf_enrichment <- as.data.frame(t(tf_enrichment))
 					tf_enrichment$mat_names <- TF	
-					# print(tf_enrichment)
 				} else {
 					tf_enrichment <- as.data.frame(tf_enrichment)
 					tf_enrichment$mat_names <- TF
 				}
-
 				return(tf_enrichment)
 			})
 		})
@@ -319,18 +309,6 @@ merge_TF_motifs <- function(seSel, stg){
 	
 	merged_pfms <- do.call("c", do.call("c", do.call("c",motif_sig)))
 	names(merged_pfms) <- unlist(lapply(merged_pfms, function(mat) mat@name))
-
-# }
-
-# stg <- "E15.5"
-
-# plot_heatmap <- function(enrichment, merged_pfms, stg){
-
-	# if(background=="genome"){
-	# 	nbCluster=3
-	# } else {
-	# 	nbCluster=2
-	# }
 
 	motifs <- merged_pfms[enrichment$mat_names]
 	motifs_pfms <- universalmotif::convert_motifs(motifs, class="TFBSTools-PFMatrix")
@@ -373,38 +351,33 @@ merge_TF_motifs <- function(seSel, stg){
 		)
 	)
 
-	cold <- colorRampPalette(c('#4677b7','#709eca','#9ac4dd','#cce1e3',"#fffee8"))
-	warm <- colorRampPalette(c("#fffee8",'#fdd4ab','#fbab70','#e96e33','#d83329'))
-	BYR <- c(cold(12), warm(12))
+	cold <- colorRampPalette(c('#04bbc6','#52d0cf','#8addd8','#c1f0e0',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8",'#ffd9cb','#ffb1ad','#f5808d','#eb2d62'))
+	TYP <- c(cold(12), warm(12))
 
 	mypalette <- colorRamp2(breaks = seq(-1, 1, length.out = 24),
-							 colors = BYR)
+							 colors = TYP)
 
 	ht_list <-	Heatmap(
 			matrix,
-			clustering_method_rows = 'ward.D',
-			name = "Enrichment",
-			row_km = nbCluster,
+			clustering_method_rows = 'ward.D2',
+			name = "Log2 enrichment",
 			right_annotation = hmSeqlogo,
 			top_annotation = stage_anno,
 			column_split = conditions,
 			show_column_names = FALSE,
 			show_row_dend = FALSE,
-			# cluster_row_slices = FALSE,
 			cluster_columns = FALSE,
 			column_title = NULL,
 			row_title = NULL,
 			col = mypalette,
-			width = ncol(enrichment)*unit(15, "mm"),
+			width = ncol(matrix)*unit(20, "mm"),
+			# height = nrow(matrix)*unit(5, "mm"),
 			row_names_max_width = unit(14, "cm"),
 			heatmap_legend_param = list(direction = "horizontal")
 		)
 
 	ht_list_2 <- grid.grabExpr(draw(ht_list, heatmap_legend_side = "bottom"), wrap.grobs = TRUE)
-
-	# pdf(paste(stg, "_test.pdf"), height=10, width=10)
-	# 	plot(ht_list)
-	# dev.off()
 
 	return(ht_list_2)
 }
@@ -418,19 +391,12 @@ merge_TF_motifs <- function(seSel, stg){
 ###########################################
 
 stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
-# stages <- "E15.5"
 
 # For each stage, get TFBS motif enrichments
 enrichments <- lapply(stages, function(stg) {
-				# foreach(stg=stages) %dopar% {
 	get_enriched_TFs(stg, save_folder)
 })
 
-# heatmap_list <- lapply(4, function(i) {
-# 	print(stages[i])
-# 	htm <- merge_TF_motifs(enrichments[[i]], stages[i])
-# 	return(htm)
-# })
 
 heatmap_list <- lapply(seq_along(enrichments), function(i) {
 	htm <- merge_TF_motifs(enrichments[[i]], stages[i])
@@ -441,14 +407,11 @@ figure <- plot_grid(
 	plotlist=heatmap_list,
 	labels = "AUTO",
 	ncol=2,
-	# align= "hv",
-	# axis = "l" 
 	greedy = FALSE
 )
 
 save_plot(
 	snakemake@output[['pdf']],
-	# "test.pdf",
 	figure,
 	base_width=50,
 	base_height=42,

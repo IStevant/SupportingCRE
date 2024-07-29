@@ -285,16 +285,16 @@ merge_TF_motifs <- function(seSel){
 
 					new_tf_vector <- sapply(grouped_genes, function(gene_group) {
 						common_prefix <- extract_prefix(gene_group[1])
-						# if(common_prefix!="HOX"){
+						if(common_prefix!="HOX"){
 							suffixes <- gsub(paste0("^", common_prefix), "", gene_group)
 							numeric_suffixes <- sort(as.numeric(suffixes[grepl("^\\d+$", suffixes)]), na.last = TRUE)
 							non_numeric_suffixes <- sort(suffixes[!grepl("^\\d+$", suffixes)])
 							all_suffixes <- c(non_numeric_suffixes, numeric_suffixes)
 							concatenated_suffixes <- paste(all_suffixes, collapse = "/")
 							paste0(common_prefix, concatenated_suffixes)
-						# } else {
-						# 	paste0(common_prefix,"s")
-						# }
+						} else {
+							paste0(common_prefix,"s")
+						}
 
 					})
 
@@ -352,8 +352,8 @@ merge_TF_motifs <- function(seSel){
 		XX="#FFB100",
 		XY="#339989"
 	)
-	names(bincols) <- c("Gran.", "Sert.")
-	conditions <- c("Gran.", "Sert.")
+	names(bincols) <- c("Pre-gr.", "Sert.")
+	conditions <- c("Pre-gr.", "Sert.")
 
 	stage_anno <- HeatmapAnnotation(
 		Stages = anno_block(
@@ -364,18 +364,20 @@ merge_TF_motifs <- function(seSel){
 		)
 	)
 
-	cold <- colorRampPalette(c('#4677b7','#709eca','#9ac4dd','#cce1e3',"#fffee8"))
-	warm <- colorRampPalette(c("#fffee8",'#fdd4ab','#fbab70','#e96e33','#d83329'))
-	BYR <- c(cold(12), warm(12))
+	cold <- colorRampPalette(c('#04bbc6','#52d0cf','#8addd8','#c1f0e0',"#fffee8"))
+	warm <- colorRampPalette(c("#fffee8",'#ffd9cb','#ffb1ad','#f5808d','#eb2d62'))
+	TYP <- c(cold(12), warm(12))
 
 	mypalette <- colorRamp2(breaks = seq(-1, 1, length.out = 24),
-							 colors = BYR)
+							 colors = TYP)
+
+	# mypalette <- RColorBrewer::brewer.pal(11,"BuPu")
 
 	ht_list <-	Heatmap(
 			matrix,
 			clustering_method_rows = 'ward.D2',
 			name = "Log2 enrichment",
-			row_km = nbCluster,
+			# row_km = nbCluster,
 			right_annotation = hmSeqlogo,
 			top_annotation = stage_anno,
 			column_split = conditions,
@@ -386,8 +388,9 @@ merge_TF_motifs <- function(seSel){
 			column_title = NULL,
 			row_title = NULL,
 			col = mypalette,
-			width = ncol(enrichment)*unit(15, "mm"),
-			row_names_max_width = unit(14, "cm"),
+			width = ncol(matrix)*unit(20, "mm"),
+			height = nrow(matrix)*unit(5, "mm"),
+			row_names_max_width = unit(17, "cm"),
 			heatmap_legend_param = list(direction = "horizontal")
 		)
 

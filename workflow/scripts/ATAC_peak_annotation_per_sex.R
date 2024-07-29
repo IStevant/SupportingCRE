@@ -31,7 +31,7 @@ plot_anno_sex <- function(anno){
 		}
 	)
 	data_XX <- data.table::rbindlist(anno_anno_XX)
-	data_XX$Sex <- rep("XX", nrow(data_XX))
+	data_XX$Sex <- rep("Pre-gran.", nrow(data_XX))
 
 	anno_anno_XY <- lapply(1:length(anno_XY), function(x) {
 		stat <- anno_XY[[x]]@annoStat
@@ -40,7 +40,7 @@ plot_anno_sex <- function(anno){
 		}
 	)
 	data_XY <- data.table::rbindlist(anno_anno_XY)
-	data_XY$Sex <- rep("XY", nrow(data_XY))
+	data_XY$Sex <- rep("Sertoli", nrow(data_XY))
 
 	data <- rbind(data_XX, data_XY)
 
@@ -49,14 +49,23 @@ plot_anno_sex <- function(anno){
 	labels <- paste0(labels, "%")
 	labels[labels=="0%"] <- " "
 
+	colors <- c(
+		"#f8777c",
+		"#0e1b47",
+		"#4461a8",
+		"#21a3ea",
+		"#3bc9d6",
+		"#b886da"
+	)
+
 	plot <- ggplot(data, aes(fill=Feature, x=Sex, y=Frequency)) + 
 		geom_bar(stat="identity") +
 		geom_text(aes(label=labels, color=Feature), size = 5, position = position_stack(vjust = 0.5)) +
 		# geom_text(aes(label = scales::comma(after_stat(y)), group = stage), size = 4, stat = 'summary', fun = sum, vjust = -0.3) +
 		scale_y_continuous(labels = scales::comma) + 
 		# scale_fill_paletteer_d("MetBrewer::Hiroshige") +
-		scale_fill_manual(values=alpha(rev(MetBrewer::met.brewer("Hiroshige", n=length(unique(data$Feature)))), 0.8)) +
-		scale_color_manual(values=c(rep("white", 3), rep("black", 8)), guide="none") +
+		scale_fill_manual(values=alpha(colors, 0.8)) +
+		scale_color_manual(values=c("black", "white", "white", "black", "black", "black"), guide="none") +
 		# ggtitle("Genomic features overlapped by expressed TEs") +
 		facet_wrap(~stage, nrow=1) +
 		theme_light() +
@@ -104,6 +113,13 @@ txdb <- GenomicFeatures::makeTxDbFromGRanges(
 	drop.stop.codons=FALSE
 )
 
+
+# Ignore unnecessary annotation
+options(ChIPseeker.ignore_1st_exon = TRUE)
+options(ChIPseeker.ignore_1st_intron = TRUE)
+options(ChIPseeker.ignore_downstream = TRUE)
+options(ChIPseeker.ignore_promoter_subcategory = TRUE)
+
 ###########################################
 #                                         #
 #           Get peak annotation           #
@@ -116,7 +132,11 @@ XY_peaks <- unlist(peak_list[grep("XY", names(peak_list))])
 XX_anno <- lapply(
 	XX_peaks, 
 	function(stage) 
-		ChIPseeker::annotatePeak(stage, tssRegion=c(-promoter, promoter), TxDb=txdb)
+		ChIPseeker::annotatePeak(
+			stage, 
+			tssRegion=c(-promoter, promoter), 
+			TxDb=txdb
+		)
 )
 
 names(XX_anno) <- sapply(strsplit(names(XX_peaks), "_"), `[`, 1)
@@ -124,7 +144,11 @@ names(XX_anno) <- sapply(strsplit(names(XX_peaks), "_"), `[`, 1)
 XY_anno <- lapply(
 	XY_peaks, 
 	function(stage) 
-		ChIPseeker::annotatePeak(stage, tssRegion=c(-promoter, promoter), TxDb=txdb)
+		ChIPseeker::annotatePeak(
+			stage, 
+			tssRegion=c(-promoter, promoter), 
+			TxDb=txdb
+		)
 )
 
 names(XY_anno) <- sapply(strsplit(names(XY_peaks), "_"), `[`, 1)
