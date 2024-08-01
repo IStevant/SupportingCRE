@@ -244,7 +244,7 @@ merge_TF_motifs <- function(seSel, stg){
 		hc <- motifStack::clusterMotifs(pfms)
 		phylog <- ade4::hclust2phylog(hc)
 		# extract the motif signatures
-		motifSig <- motifSignature(pfms, phylog, cutoffPval = 0.005, min.freq=1)
+		motifSig <- motifSignature(pfms, phylog, cutoffPval = 0.001, min.freq=1)
 		# get the signatures from object of motifSignature
 		sig <- signatures(motifSig)
 		return(sig)

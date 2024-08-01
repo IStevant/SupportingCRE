@@ -44,13 +44,14 @@ rule_all_input_list = [
 	f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
 	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
 	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
+	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
+	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png",
 	f"{output_pdf}/gene2peak_plots.pdf",
 	f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
 	f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
 	f"{processed_data}/plot_example_1.log",
 	f"{processed_data}/plot_example_2.log",
-	f"{processed_data}/plot_example_3.log",
-	f"{processed_data}/plot_example_4.log"
+	f"{processed_data}/plot_example_3.log"
 ]
 
 # If there is no outliers, do not run the analysis that discard them
@@ -650,6 +651,51 @@ rule ATAC_XY_TFBS_motifs_stage_cond_bg_DAR:
 		mem_mb=64000
 	script:
 		"workflow/scripts/ATAC_stage_DAR_motif_enrich.R"
+
+rule ATAC_XX_TFBS_motifs_stage_rand_bg_DAR:
+	input:
+		TF_genes=config["TF_genes"],
+		sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
+		TPM=f"{processed_data}/RNA_TPM.csv"
+	params:
+		minTPM=config["RNA_minTPM"],
+		background="genome",
+		logos="TRUE",
+		nbTFs=8,
+		genome=config["genome_version"],
+		save_folder=f"{output_tables}",
+		sex="XX"
+	output:
+		pdf=f"{output_pdf}/ATAC_XX_stage_DAR_TF_motifs_random_bg.pdf",
+		png=f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
+	script:
+		"workflow/scripts/ATAC_stage_DAR_motif_enrich.R"
+
+rule ATAC_XY_TFBS_motifs_stage_rand_bg_DAR:
+	input:
+		TF_genes=config["TF_genes"],
+		sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
+		TPM=f"{processed_data}/RNA_TPM.csv"
+	params:
+		minTPM=config["RNA_minTPM"],
+		background="genome",
+		logos="TRUE",
+		nbTFs=8,
+		genome=config["genome_version"],
+		save_folder=f"{output_tables}",
+		sex="XY"
+	output:
+		pdf=f"{output_pdf}/ATAC_XY_stage_DAR_TF_motifs_random_bg.pdf",
+		png=f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png"
+	resources:
+		cpus_per_task=12,
+		mem_mb=64000
+	script:
+		"workflow/scripts/ATAC_stage_DAR_motif_enrich.R"
+
 ################################################################################################
 rule MULTI_Get_all_gene_peak_correlation:
 	input:
