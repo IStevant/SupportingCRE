@@ -3,6 +3,28 @@ source(".Rprofile")
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
+samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
+gtf <- snakemake@input[['gtf']]
+
+genome_gtf <- rtracklayer::import(gtf)
+gene2symbol <- GenomicRanges::mcols(genome_gtf)[,c("gene_id","gene_name")]
+gene2symbol <- unique(gene2symbol)
+rownames(gene2symbol) <- gene2symbol$gene_id
+
+adj.pval <- snakemake@params[['adjpval']]
+log2FC <- snakemake@params[['log2FC']]
+
+save_folder <- snakemake@params[['save_folder']]
+
+#################################################################################################################################
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -13,7 +35,7 @@ source(".Rprofile")
 #' @param p.adj Maximal adjusted p-value threshold.
 #' @param log2FC Minimal log2FoldChange threshold.
 #' @return Return a datatable.
-get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC){
+get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC, gtf){
 	res <- DESeq2::results(dds, contrast=c("conditions", paste("XX", stage), paste("XY", stage)))
 
 	da_res <- as.data.frame(res)
@@ -27,6 +49,28 @@ get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC){
 	)
 	sig.DA <- subset(res, padj < p.adj)
 	sig.DA <- subset(sig.DA, abs(log2FoldChange) > log2FC)
+
+	DAR_GR <- GenomicRanges::GRanges(rownames(sig.DA))
+
+	TxDb <- GenomicFeatures::makeTxDbFromGFF(gtf)
+
+	DA_anno <- as.data.frame(
+			ChIPseeker::annotatePeak(
+			DAR_GR,
+			TxDb = TxDb,
+			level = "gene",
+			overlap = "all"
+		)
+	)
+
+	DA_anno$geneId <- gene2symbol[DA_anno$geneId, "gene_name"]
+
+	sig.DA <- data.frame(
+		sig.DA[,-c(3:4)],
+		annotation=DA_anno$annotation,
+		nearest.gene=DA_anno$geneId,
+		distanceToTSS=DA_anno$distanceToTSS
+	)
 
 	return(sig.DA)
 }
@@ -59,20 +103,6 @@ get_GR <- function(dataframe){
 
 ###########################################
 #                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
-samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
-
-adj.pval <- snakemake@params[['adjpval']]
-log2FC <- snakemake@params[['log2FC']]
-
-save_folder <- snakemake@params[['save_folder']]
-
-###########################################
-#                                         #
 #     DESeq2 analysis sex per stages      #
 #                                         #
 ###########################################
@@ -89,10 +119,10 @@ SexDARs <- DESeq2::DESeq(SexDARs)
 stages <- unique(samplesheet$stages)
 
 # For each stages, extract significant DARs
-filtered_SexDARs <- lapply(stages, function(stg) get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC))
+filtered_SexDARs <- lapply(stages, function(stg) get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC, gtf))
 
 # For each stages, write DAR results into separated files
-export <- lapply(seq_along(stages), function(stg) write.csv(filtered_SexDARs[stg], paste0(save_folder, "/ATAC_DAR_sex_", stages[stg], ".csv")))
+export <- lapply(seq_along(stages), function(stg) write.table(filtered_SexDARs[stg], paste0(save_folder, "/ATAC_DAR_sex_", stages[stg], ".tsv"), quote=FALSE, sep="\t"))
 
 names(filtered_SexDARs) <- stages
 save(filtered_SexDARs, file=snakemake@output[['sig_DARs']])

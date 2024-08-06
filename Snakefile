@@ -387,6 +387,7 @@ rule ATAC_Get_sex_DARs:
 	input:
 		counts=f"{processed_data}/ATAC_raw_counts.csv",
 		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
+		gtf=f"{genome}"
 	params:
 		adjpval=config["ATAC_adjpval"],
 		log2FC=config["ATAC_log2FC"],
