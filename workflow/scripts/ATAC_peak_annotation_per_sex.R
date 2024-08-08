@@ -133,9 +133,11 @@ XX_anno <- lapply(
 	XX_peaks, 
 	function(stage) 
 		ChIPseeker::annotatePeak(
-			stage, 
-			tssRegion=c(-promoter, promoter), 
-			TxDb=txdb
+			stage,
+			# genomicAnnotationPriority = c( "Intergenic", "Promoter", "5UTR",  "Exon", "Intron", "3UTR"),
+			tssRegion=c(-promoter, 0), 
+			TxDb=txdb,
+			overlap = "all"
 		)
 )
 

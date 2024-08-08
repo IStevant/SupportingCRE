@@ -391,6 +391,7 @@ rule ATAC_Get_sex_DARs:
 	params:
 		adjpval=config["ATAC_adjpval"],
 		log2FC=config["ATAC_log2FC"],
+		promoter=config["ATAC_promoter_distance"],
 		save_folder=f"{output_tables}"
 	output:
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",

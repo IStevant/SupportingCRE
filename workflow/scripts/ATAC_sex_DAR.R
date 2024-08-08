@@ -11,6 +11,9 @@ raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
 samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
 gtf <- snakemake@input[['gtf']]
 
+# Promoter region, i.e. distance to TSS
+promoter <- snakemake@params[['promoter']]
+
 genome_gtf <- rtracklayer::import(gtf)
 gene2symbol <- GenomicRanges::mcols(genome_gtf)[,c("gene_id","gene_name")]
 gene2symbol <- unique(gene2symbol)
@@ -57,6 +60,8 @@ get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC, gtf){
 	DA_anno <- as.data.frame(
 			ChIPseeker::annotatePeak(
 			DAR_GR,
+			genomicAnnotationPriority = c( "Promoter", "5UTR",  "Exon", "Intron", "3UTR",  "Downstream","Intergenic"),
+			tssRegion=c(-promoter, 0), 
 			TxDb = TxDb,
 			level = "gene",
 			overlap = "all"
