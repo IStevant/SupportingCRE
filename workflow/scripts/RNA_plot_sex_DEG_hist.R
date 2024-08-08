@@ -27,8 +27,6 @@ names(conditions_color) <- sort(unique(samplesheet$conditions))
 XX_colors <- conditions_color[grepl("XX", names(conditions_color))]
 XY_colors <- conditions_color[grepl("XY", names(conditions_color))]
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Functions                 #
@@ -95,8 +93,6 @@ plot_dymorphic_genes <- function(de_genes, XX_colors, XY_colors) {
   return(plot)
 }
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #           Histogram sex DEGs            #
@@ -115,14 +111,19 @@ sex_de_genes <- data.frame(
 
 sex_dymorphic_plot <- plot_dymorphic_genes(sex_de_genes, XX_colors, XY_colors)
 
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
+
 save_plot(
   snakemake@output[["pdf"]],
   sex_dymorphic_plot,
   base_width = 20,
   base_height = 8,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(

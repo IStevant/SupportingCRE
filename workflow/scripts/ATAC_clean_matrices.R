@@ -1,5 +1,13 @@
 source(".Rprofile")
 
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+count_file <- snakemake@input[["counts"]]
+minReads <- snakemake@params[["minReads"]]
 
 ###########################################
 #                                         #
@@ -55,6 +63,10 @@ get_normalized_counts <- function(raw_counts, samplesheet) {
   return(norm_counts)
 }
 
+#' Get the size factor from Deseq2. It is used to normanize the bigwig files.
+#' @param raw_counts Read count matrix.
+#' @param samplesheet Samplesheet for DESeq2.
+#' @return Return a dataframe.
 get_size_factors <- function(raw_counts, samplesheet) {
   dds <- DESeq2::DESeqDataSetFromMatrix(
     countData = raw_counts,
@@ -63,16 +75,12 @@ get_size_factors <- function(raw_counts, samplesheet) {
   )
   dds <- DESeq2::estimateSizeFactors(dds)
   size_factors <- DESeq2::sizeFactors(dds)
-  # norm_counts <- DESeq2::counts(dds, normalized=TRUE)
-  # norm_counts <- SummarizedExperiment::assay(DESeq2::vst(dds, blind=FALSE))
   size_factors <- data.frame(
     sample = names(size_factors),
     SizeFactor = size_factors
   )
   return(size_factors)
 }
-
-
 
 #' When the maximum value (read count) of a peak between samples is under a certain threshold, we considere it is not relevant and the values are set to 0.
 #' @param data Read count matrix.
@@ -93,18 +101,6 @@ filter_low_counts <- function(row, col_names, minExp) {
   }
 }
 
-#################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-count_file <- snakemake@input[["counts"]]
-
-minReads <- snakemake@params[["minReads"]]
-
 ###########################################
 #                                         #
 #              Get matrices               #
@@ -114,12 +110,6 @@ minReads <- snakemake@params[["minReads"]]
 raw_counts <- get_peak_matrix(
   count_file
 )
-
-###########################################
-#                                         #
-#             Filter low peaks            #
-#                                         #
-###########################################
 
 # Remove peaks if max value < x reads
 raw_counts <- run_filter_low_counts(raw_counts, minReads)

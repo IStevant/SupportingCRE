@@ -16,10 +16,46 @@ suppressPackageStartupMessages({
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+# peak_list
+load(file = snakemake@input[["peak_list"]])
+
+# Promoter region, i.e. distance to TSS
+promoter <- snakemake@params[["promoter"]]
+
+# Load mouse genome
+genome_file <- snakemake@input[["genome"]]
+Genes <- rtracklayer::import(genome_file)
+
+txdb <- GenomicFeatures::makeTxDbFromGRanges(
+  Genes,
+  drop.stop.codons = FALSE
+)
+
+###########################################
+#                                         #
+#          ChIPseeker options             #
+#                                         #
+###########################################
+
+# Ignore unnecessary annotation
+options(ChIPseeker.ignore_1st_exon = TRUE)
+options(ChIPseeker.ignore_1st_intron = TRUE)
+options(ChIPseeker.ignore_downstream = TRUE)
+options(ChIPseeker.ignore_promoter_subcategory = TRUE)
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
 
+#' Generate the read count matrix
+#' @param anno annotation list containing outputs from ChIPseeker::annotatePeak.
+#' @return Return a dataframe.
 plot_anno_sex <- function(anno) {
   anno_XX <- anno[["XX"]]
   anno_XY <- anno[["XY"]]
@@ -59,12 +95,9 @@ plot_anno_sex <- function(anno) {
   plot <- ggplot(data, aes(fill = Feature, x = Sex, y = Frequency)) +
     geom_bar(stat = "identity") +
     geom_text(aes(label = labels, color = Feature), size = 5, position = position_stack(vjust = 0.5)) +
-    # geom_text(aes(label = scales::comma(after_stat(y)), group = stage), size = 4, stat = 'summary', fun = sum, vjust = -0.3) +
     scale_y_continuous(labels = scales::comma) +
-    # scale_fill_paletteer_d("MetBrewer::Hiroshige") +
     scale_fill_manual(values = alpha(colors, 0.8)) +
     scale_color_manual(values = c("black", "white", "white", "black", "black", "black"), guide = "none") +
-    # ggtitle("Genomic features overlapped by expressed TEs") +
     facet_wrap(~stage, nrow = 1) +
     theme_light() +
     theme(
@@ -73,50 +106,11 @@ plot_anno_sex <- function(anno) {
       axis.title = element_text(size = 14),
       legend.title = element_blank(),
       legend.text = element_text(size = 14, margin = margin(r = 10, unit = "pt")),
-      # legend.position="bottom",
-      # aspect.ratio=1.75,
       strip.text.x = element_text(size = 14, face = "bold"),
       legend.box.spacing = unit(0, "mm"),
     )
   return(plot)
 }
-
-
-
-#################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-# peak_list
-load(file = snakemake@input[["peak_list"]])
-# load(file="workflow/data/mm10/ATAC_all_consensus_peaks_2rep_list.Robj")
-
-# Promoter region, i.e. distance to TSS
-promoter <- snakemake@params[["promoter"]]
-# promoter <- 3000
-
-# Load mouse genome
-genome_file <- snakemake@input[["genome"]]
-# genome_file <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
-Genes <- rtracklayer::import(genome_file)
-# the column symbol was present in other version of the script so I add it again but ultimately change the $symbol to $gene_name
-Genes$symbol <- Genes$gene_name
-
-txdb <- GenomicFeatures::makeTxDbFromGRanges(
-  Genes,
-  drop.stop.codons = FALSE
-)
-
-
-# Ignore unnecessary annotation
-options(ChIPseeker.ignore_1st_exon = TRUE)
-options(ChIPseeker.ignore_1st_intron = TRUE)
-options(ChIPseeker.ignore_downstream = TRUE)
-options(ChIPseeker.ignore_promoter_subcategory = TRUE)
 
 ###########################################
 #                                         #
@@ -132,7 +126,6 @@ XX_anno <- lapply(
   function(stage) {
     ChIPseeker::annotatePeak(
       stage,
-      # genomicAnnotationPriority = c( "Intergenic", "Promoter", "5UTR",  "Exon", "Intron", "3UTR"),
       tssRegion = c(-promoter, 0),
       TxDb = txdb,
       overlap = "all"
@@ -147,7 +140,7 @@ XY_anno <- lapply(
   function(stage) {
     ChIPseeker::annotatePeak(
       stage,
-      tssRegion = c(-promoter, promoter),
+      tssRegion = c(-promoter,0),
       TxDb = txdb
     )
   }
@@ -174,6 +167,12 @@ figures <- plot_grid(
   plotlist = list(plot_list)
 )
 
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
+
 save_plot(
   snakemake@output[["pdf"]],
   figures,
@@ -189,5 +188,6 @@ save_plot(
   base_width = 30,
   base_height = 10,
   units = c("cm"),
-  dpi = 300
+  dpi = 300,
+  bg = "white"
 )

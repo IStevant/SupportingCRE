@@ -36,8 +36,6 @@ clusters <- snakemake@params[["clusters"]]
 names(conditions_color) <- sort(unique(samplesheet$conditions))
 sex_colors <- conditions_color[grepl(sex, names(conditions_color))]
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Functions                 #
@@ -138,17 +136,15 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file) {
   gonad_pheno_genes <- read.table(TF_pheno, header = FALSE, sep = "\t")
   TF_list <- as.vector(TF_list[, 1])
   total_TFs <- unlist(lapply(TF_list, function(TF) which(rownames(matrix) %in% TF)))
-  # print(paste(length(total_TFs), "TFs found in total."))
+
   gonad_pheno_genes <- as.vector(gonad_pheno_genes[, 1])
   TFs <- TF_list[TF_list %in% gonad_pheno_genes]
   matrix_TF_indexes <- unlist(lapply(TFs, function(TF) which(rownames(matrix) %in% TF)))
-  # print(paste(length(matrix_TF_indexes), "TFs found associated with gonadal phenoypes."))
-  # write.csv(rownames(matrix)[matrix_TF_indexes], file=paste0("dyn_pheno_TFs_", sex, ".csv"))
+
   if (length(matrix_TF_indexes) > 25) {
     split_indexes <- split(matrix_TF_indexes, cut(seq_along(matrix_TF_indexes), 25, labels = FALSE))
     set.seed(123)
     matrix_TF_indexes <- unlist(lapply(split_indexes, function(x) sample(x, 1)))
-    # matrix_TF_indexes <- sample(matrix_TF_indexes,20)
   }
   TF_names <- rownames(matrix)[matrix_TF_indexes]
   # Show transcription factors
@@ -171,7 +167,6 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file) {
     row_split = clustering,
     column_split = conditions,
     cluster_columns = FALSE,
-    # cluster_rows = FALSE,
     show_column_names = FALSE,
     show_row_names = FALSE,
     show_row_dend = FALSE,
@@ -192,7 +187,6 @@ draw_heatmap <- function(data, de_feature, colors, clusters, res_file) {
         ht_list,
         row_title = paste(scales::comma(nrow(matrix)), "differentially expressed genes"),
         row_title_gp = gpar(fontsize = 19),
-        # annotation_legend_list=cluster_legend,
         merge_legend = TRUE,
         use_raster = TRUE,
         raster_quality = 5
@@ -269,7 +263,10 @@ GO_term_per_cluster <- function(de_genes, res_file) {
   return(lineage1_ego)
 }
 
-
+#' Plot the top enriched GO terms.
+#' @param go_res GO term enrichment results dataframe from GO_term_per_cluster().
+#' @param nb_terms Number of top GO terms to plot per condition.
+#' @return Pheatmap object.
 go_plot <- function(go_res, nb_terms = 5) {
   # Make the first GO term letter as capital letter
   go_res@compareClusterResult[, 4] <- gsub("^([a-z])", "\\U\\1", go_res[, 4], perl = TRUE)
@@ -345,8 +342,6 @@ panel_fix <- function(p = NULL, grob = NULL,
 }
 
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #              Drax heatmap               #
@@ -386,8 +381,6 @@ figure <- plot_grid(
   ncol = 2
 )
 
-# figure <- dynamic_genes
-
 ##########################################
 #                                        #
 #               Save plots               #
@@ -400,8 +393,7 @@ save_plot(
   base_width = 39,
   base_height = 23.2,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(

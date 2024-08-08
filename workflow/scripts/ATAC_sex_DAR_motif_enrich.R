@@ -29,8 +29,6 @@ suppressPackageStartupMessages({
 
 doParallel::registerDoParallel(cores = 12)
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Load data                 #
@@ -39,31 +37,16 @@ doParallel::registerDoParallel(cores = 12)
 
 # filtered_SexDARs
 load(snakemake@input[["sig_DARs"]])
-# load("results/processed_data/mm10/ATAC_sig_SexDARs.Robj")
-
 # Load RNA-seq TPM matrix to filter the TFs that are expressed in the gonads
 TPM <- read.csv(file = snakemake@input[["TPM"]], header = TRUE, row.names = 1)
-# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
-
 # Load the mouse TFs list
 TFs <- as.vector(read.csv(snakemake@input[["TF_genes"]], header = FALSE)[, 1])
-# TFs <- as.vector(read.csv("workflow/data/mouse_transcription_factors.txt", header=FALSE)[,1])
-
 # Minimum TPM value to considere a gene expressed
 minTPM <- snakemake@params[["minTPM"]]
-# minTPM <- 5
-
 # Run analysis using the genome bakground or calculating the enrichment compared to the conditions
 background <- snakemake@params[["background"]]
-# background <- "conditions"
-# background <- "genome"
-
-
 save_folder <- snakemake@params[["save_folder"]]
-# save_folder <- "."
-
 genome_version <- snakemake@params[["genome"]]
-# genome_version <- "mm10"
 
 stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
 sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
@@ -99,9 +82,14 @@ filter_low_counts <- function(row, col_names, minExp) {
   }
 }
 
-get_enriched_TFs <- function(stg, save_folder) {
-  # stg <- "E15.5"
-  # save_folder <- "."
+#' Get TFBS motifs enrichment using the monaLisa package.
+#' @param DARs Table of the differentially accessible regions, with the peak coordinates as rownames.
+#' @param stg String, current embryonic stage.
+#' @param TPM Read count matrix.
+#' @param minTPM Minimal expression value.
+#' @param save_folder Minimum value. Default is 5.
+#' @return Return a monaLisa enrichment object.
+get_enriched_TFs <- function(DARs, stg, TPM, minTPM, save_folder) {
   # Select the genes expressed at a specific stage for both sexes
   genes <- TPM[, grep(stg, colnames(TPM))]
   # Discard lowly expressed genes
@@ -109,7 +97,6 @@ get_enriched_TFs <- function(stg, save_folder) {
   genes <- rownames(genes[rowSums(genes) > 0, ])
   # Select only the TFs
   stg_TFs <- genes[which(genes %in% TFs)]
-
   # Get all vertebrate TF matrices
   pwms <- TFBSTools::getMatrixSet(
     JASPAR,
@@ -119,7 +106,7 @@ get_enriched_TFs <- function(stg, save_folder) {
     )
   )
 
-  sex_peaks <- filtered_SexDARs[[stg]]
+  sex_peaks <- DARs[[stg]]
 
   # generate GRanges objects
   female <- GenomicRanges::GRanges(rownames(sex_peaks[sex_peaks$Diff.Acc. == "More in XX", ]))
@@ -136,7 +123,6 @@ get_enriched_TFs <- function(stg, save_folder) {
   # Define which sequences are male or female specific
   bins <- rep(c("XX", "XY"), c(length(female), length(male)))
   bins <- factor(bins)
-  # table(bins)
 
   # Calculate motif enrichments
   # If background is "genome", run the analysis against radom genomic regions
@@ -228,7 +214,9 @@ get_enriched_TFs <- function(stg, save_folder) {
   return(seSel)
 }
 
-
+#' Merge the enrichment result by TFBS motif similarity and plot the results as heatmap.
+#' @param seSel monaLisa enrichment object.
+#' @return Return a grid object.
 merge_TF_motifs <- function(seSel, stg) {
   # Cluster motifs by enrichment
   TF_enrichment <- SummarizedExperiment::assay(seSel, "log2enr")
@@ -377,7 +365,6 @@ merge_TF_motifs <- function(seSel, stg) {
     row_title = NULL,
     col = mypalette,
     width = ncol(matrix) * unit(20, "mm"),
-    # height = nrow(matrix)*unit(5, "mm"),
     row_names_max_width = unit(14, "cm"),
     heatmap_legend_param = list(direction = "horizontal")
   )
@@ -386,8 +373,6 @@ merge_TF_motifs <- function(seSel, stg) {
 
   return(ht_list_2)
 }
-
-#################################################################################################################################
 
 ###########################################
 #                                         #
@@ -399,7 +384,7 @@ stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
 
 # For each stage, get TFBS motif enrichments
 enrichments <- lapply(stages, function(stg) {
-  get_enriched_TFs(stg, save_folder)
+  get_enriched_TFs(filtered_SexDARs, stg, TPM, minTPM, save_folder)
 })
 
 
@@ -414,6 +399,12 @@ figure <- plot_grid(
   ncol = 2,
   greedy = FALSE
 )
+
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
 
 save_plot(
   snakemake@output[["pdf"]],
@@ -430,5 +421,6 @@ save_plot(
   base_width = 50,
   base_height = 42,
   units = c("cm"),
-  dpi = 300
+  dpi = 300,
+  bg = "white"
 )

@@ -24,10 +24,29 @@ options(ucscChromosomeNames = FALSE)
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+bw_folder <- snakemake@params[["bw_folder"]]
+genome <- snakemake@input[["genome"]]
+peaks <- snakemake@input[["peaks"]]
+links <- snakemake@input[["linkage"]]
+gene_bed <- snakemake@input[["gene_bed"]]
+gene_list <- snakemake@input[["gene_list"]]
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
 
+#' Import the coverage data for a given genomic locus from bigwig files.
+#' @param folder Path to the bigwig files.
+#' @param files Bigwig file names.
+#' @param locus GRanges coordinate of the locus of interest.
+#' @param window Up- and downstream distance from the locus to show on the plot.
+#' @return Return a list of GRanges objects.
 import_bw_files <- function(folder, files, locus, window) {
   locus <- resize(gene_TSS[gene_TSS$name %in% locus, ], width = 2, fix = "start")
   full_locus <- locus
@@ -62,7 +81,13 @@ import_bw_files <- function(folder, files, locus, window) {
   return(gr_list)
 }
 
-generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors) {
+#' Create the coverage tracks with replicates overlay.
+#' @param gr_list List containing the extended locus coverage per condition.
+#' @param locus GRanges object with the coordinate of the locus of interest.
+#' @param max_score Maximal score to set the Y axis limit.
+#' @param colors vector of hexadecimal colors.
+#' @return Return a Gviz object.
+generate_genomic_tracks <- function(gr_list, locus, max_score, colors) {
   locus <- resize(gene_TSS[gene_TSS$name %in% locus, ], width = 2, fix = "start")
 
   cond <- stringr::str_extract(names(gr_list), "^.{8}")
@@ -94,7 +119,15 @@ generate_genomic_tracks <- function(gr_list, locus, window, max_score, colors) {
   return(track)
 }
 
-
+#' Plot the genomic tracks with the peaks and the genome annotation.
+#' @param peak_gr GRanges object with the coordinate of the ATAC peaks.
+#' @param TxDb Genome annotation.
+#' @param gene2symbol Data frame containing the conversion of the Ensembl gene IDs to gene symbols.
+#' @param link Dataframe with the link coordinates.
+#' @param plot_list Gviz objects generated using generate_genomic_tracks().
+#' @param locus GRanges coordinate of the locus of interest.
+#' @param window Up- and downstream distance from the locus to show on the plot.
+#' @return Return a Gviz plot.
 plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, window) {
   locus_TSS <- resize(gene_TSS[gene_TSS$name %in% locus, ], width = 2, fix = "start")
 
@@ -129,19 +162,12 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, wind
         negative = link_peak_gr[link_peak_gr$type == "Negative", ]
       )
     )
-    # interactions$correlation <- gene_links$correlations
     interaction_track <- InteractionTrack(interactions, name = "Links")
 
     displayPars(interaction_track) <- list(
       plot.anchors = FALSE,
-      # col.interactions="red",
-      # interaction.measure = "counts",
-      # interaction.dimension="width",
-      # plot.trans=FALSE,
       plot.outside = TRUE,
-      # plot.outside = FALSE,
       col.interaction.types = c("positive-distal" = "#EF6351", "negative-distal" = "#2191FB"),
-      # col.outside="grey",
       rotation.title = 0,
       legend = TRUE
     )
@@ -167,13 +193,11 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, wind
     col = NULL,
     col.line = NULL,
     fill = "#585858",
-    # lwd=0.3,
     fontcolor.group = "#333333",
     fontsize.group = 18,
     sizes = 0.3,
     rotation.title = 0,
     thinBoxFeature = "UTR"
-    # just.group="above"
   )
   ranges(gene_track)$symbol <- gene2symbol[ranges(gene_track)$gene, "gene_name"]
 
@@ -288,26 +312,10 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus, wind
 }
 
 ###########################################
-###########################################
 #                                         #
-#               Load data                 #
+#           Plot genomic tracks           #
 #                                         #
 ###########################################
-
-bw_folder <- snakemake@params[["bw_folder"]]
-genome <- snakemake@input[["genome"]]
-peaks <- snakemake@input[["peaks"]]
-links <- snakemake@input[["linkage"]]
-gene_bed <- snakemake@input[["gene_bed"]]
-gene_list <- snakemake@input[["gene_list"]]
-
-# bw_folder <- "results/processed_data/mm10/ATAC_bigwig"
-# # genome <- "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz"
-# genome <- "workflow/data/mm10/gencode.vM25.annotation.gtf.gz"
-# peaks <- "results/processed_data/mm10/ATAC_norm_counts.csv"
-# links <- "results/tables/mm10/all_sig_gene2peak_linkage.csv"
-# gene_bed <- "workflow/data/mm10/gene_standard.bed"
-# gene_list <- "workflow/data/peak2gene_query.tsv"
 
 bw_files <- list.files(path = bw_folder, pattern = "REP..bw")
 links <- read.table(links, header = TRUE, row.names = 1)
@@ -336,7 +344,6 @@ TxDb <- GenomicFeatures::makeTxDbFromGFF(genome)
 
 
 pdf(file = snakemake@output[["pdf"]], width = 8, height = 8)
-# pdf(file="test.pdf", width=7.5, height=7.5)
 
 plot <- lapply(genes, function(gene) {
   locus <- gene_list[gene_list$Gene == gene, ]
@@ -361,7 +368,6 @@ plot <- lapply(genes, function(gene) {
       generate_genomic_tracks(
         stage,
         gene,
-        window,
         max_score,
         conditions_color
       )
@@ -374,7 +380,6 @@ plot <- lapply(genes, function(gene) {
       generate_genomic_tracks(
         stage,
         gene,
-        window,
         max_score,
         conditions_color
       )

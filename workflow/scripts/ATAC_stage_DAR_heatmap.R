@@ -18,10 +18,33 @@ suppressPackageStartupMessages({
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+norm_counts <- read.csv(file = snakemake@input[["norm_counts"]], row.names = 1)
+load(snakemake@input[["sig_DARs"]])
+samplesheet <- read.csv(file = snakemake@input[["samplesheet"]], row.names = 1)
+
+sex <- snakemake@params[["sex"]]
+clusters <- snakemake@params[["clusters"]]
+
+names(conditions_color) <- sort(unique(samplesheet$conditions))
+sex_colors <- conditions_color[grepl(sex, names(conditions_color))]
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
 
+#' Draw the heatmap of the z-scores from the regions differentially accessible along developmental stages
+#' @param data Full expression matrix (TPM or normalized counts).
+#' @param de_feature Vector containing the names of the regions found as differentially accessible.
+#' @param colors Vector containing the hexadecimal colours corresponding to each conditions.
+#' @param clusters Number of clusters to separate on the heatmap (k for k-mean clustering).
+#' @param res_file Name of the output file containing the list of regions per cluster.
+#' @return Pheatmap object.
 plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file) {
   matrix_DAR <- data[rownames(data) %in% de_feature, ]
 
@@ -98,13 +121,6 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file) {
     )
   )
 
-  # Prepare the peak clusters legend manually
-  # cluster_legend = Legend(
-  # 	at = levels(clustering),
-  # 	title = "Clusters",
-  # 	legend_gp = gpar(fill = cluster_colors)
-  # )
-
   # Make the heatmap
   ht_list <- Heatmap(
     matrix,
@@ -115,7 +131,6 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file) {
     row_split = clustering,
     column_split = conditions,
     cluster_columns = FALSE,
-    # cluster_rows = FALSE,
     show_column_names = FALSE,
     show_row_names = FALSE,
     show_row_dend = FALSE,
@@ -163,29 +178,12 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file) {
   return(gTree)
 }
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
-#               Load data                 #
+#              Draw heatmap               #
 #                                         #
 ###########################################
 
-norm_counts <- read.csv(file = snakemake@input[["norm_counts"]], row.names = 1)
-load(snakemake@input[["sig_DARs"]])
-samplesheet <- read.csv(file = snakemake@input[["samplesheet"]], row.names = 1)
-
-sex <- snakemake@params[["sex"]]
-clusters <- snakemake@params[["clusters"]]
-
-names(conditions_color) <- sort(unique(samplesheet$conditions))
-sex_colors <- conditions_color[grepl(sex, names(conditions_color))]
-
-###########################################
-#                                         #
-#              Drax heatmap               #
-#                                         #
-###########################################
 matrix <- norm_counts[, grep(sex, colnames(norm_counts))]
 sex_colors <- conditions_color[grepl(sex, names(conditions_color))]
 
@@ -198,14 +196,19 @@ dynamic_peaks <- plot_simple_heatmap(
   snakemake@output[["clusters"]]
 )
 
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
+
 save_plot(
   snakemake@output[["pdf"]],
   dynamic_peaks,
   base_width = 14,
   base_height = 20,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(

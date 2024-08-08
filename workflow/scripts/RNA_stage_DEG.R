@@ -19,7 +19,6 @@ sex <- snakemake@params[["sex"]]
 #                                         #
 ###########################################
 
-
 sex_count <- raw_counts[, grepl(sex, colnames(raw_counts))]
 sex_samplesheet <- samplesheet[grepl(sex, samplesheet$sample), ]
 

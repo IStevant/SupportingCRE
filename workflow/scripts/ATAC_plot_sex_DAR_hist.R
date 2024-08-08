@@ -14,6 +14,20 @@ suppressPackageStartupMessages({
 
 ###########################################
 #                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+load(snakemake@input[["sig_DARs"]])
+samplesheet <- read.csv(file = snakemake@input[["samplesheet"]], row.names = 1)
+stages <- unique(samplesheet$stages)
+
+names(conditions_color) <- sort(unique(samplesheet$conditions))
+XX_colors <- conditions_color[grepl("XX", names(conditions_color))]
+XY_colors <- conditions_color[grepl("XY", names(conditions_color))]
+
+###########################################
+#                                         #
 #               Functions                 #
 #                                         #
 ###########################################
@@ -78,23 +92,6 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors) {
   return(plot)
 }
 
-#################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-load(snakemake@input[["sig_DARs"]])
-samplesheet <- read.csv(file = snakemake@input[["samplesheet"]], row.names = 1)
-stages <- unique(samplesheet$stages)
-
-
-names(conditions_color) <- sort(unique(samplesheet$conditions))
-XX_colors <- conditions_color[grepl("XX", names(conditions_color))]
-XY_colors <- conditions_color[grepl("XY", names(conditions_color))]
-
 ###########################################
 #                                         #
 #           Histogram sex DARs            #
@@ -113,14 +110,19 @@ sex_dar <- data.frame(
 
 sex_dymorphic_plot <- plot_dymorphic_genes(sex_dar, XX_colors, XY_colors)
 
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
+
 save_plot(
   snakemake@output[["pdf"]],
   sex_dymorphic_plot,
   base_width = 20,
   base_height = 8,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(

@@ -35,8 +35,6 @@ adj.pval <- snakemake@params[["adjpval"]]
 log2FC <- snakemake@params[["log2FC"]]
 path <- snakemake@params[["path"]]
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Functions                 #
@@ -302,14 +300,19 @@ figure <- plot_grid(
   ncol = 1
 )
 
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
+
 save_plot(
   snakemake@output[["pdf"]],
   figure,
   base_width = 28,
   base_height = 48,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(

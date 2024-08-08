@@ -1,5 +1,4 @@
 source(".Rprofile")
-# source("workflow/scripts/00.color_palettes.R")
 
 ###########################################
 #                                         #
@@ -23,8 +22,6 @@ adj.pval <- snakemake@params[["adjpval"]]
 log2FC <- snakemake@params[["log2FC"]]
 
 save_folder <- snakemake@params[["save_folder"]]
-
-#################################################################################################################################
 
 ###########################################
 #                                         #
@@ -80,6 +77,9 @@ get_sex_DAR_per_stage <- function(dds, stage, p.adj, log2FC, gtf) {
   return(sig.DA)
 }
 
+#' Generage a GRanges object from peak coordinates
+#' @param dataframe where the peak coordinates are defined as the rownames.
+#' @return Return a GRanges object.
 get_GR <- function(dataframe) {
   # Test is the dataframe is not empty
   if (nrow(dataframe) > 0) {
@@ -102,10 +102,6 @@ get_GR <- function(dataframe) {
   return(gr)
 }
 
-
-
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #     DESeq2 analysis sex per stages      #
@@ -126,11 +122,7 @@ stages <- unique(samplesheet$stages)
 # For each stages, extract significant DARs
 filtered_SexDARs <- lapply(stages, function(stg) get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC, gtf))
 
-# For each stages, write DAR results into separated files
-export <- lapply(seq_along(stages), function(stg) write.table(filtered_SexDARs[stg], paste0(save_folder, "/ATAC_DAR_sex_", stages[stg], ".tsv"), quote = FALSE, sep = "\t"))
-
 names(filtered_SexDARs) <- stages
-save(filtered_SexDARs, file = snakemake@output[["sig_DARs"]])
 
 sexDAR_GR_list <- lapply(filtered_SexDARs, get_GR)
 XX_peaks <- lapply(sexDAR_GR_list, function(stgGR) stgGR[(GenomicRanges::elementMetadata(stgGR)[, "Diff.Acc."] == "More in XX")])
@@ -140,4 +132,14 @@ peak_list <- list(
   XX = XX_peaks,
   XY = XY_peaks
 )
+
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
+
+# For each stages, write DAR results into separated files
+export <- lapply(seq_along(stages), function(stg) write.table(filtered_SexDARs[stg], paste0(save_folder, "/ATAC_DAR_sex_", stages[stg], ".tsv"), quote = FALSE, sep = "\t"))
+save(filtered_SexDARs, file = snakemake@output[["sig_DARs"]])
 save(peak_list, file = snakemake@output[["sig_DARs_GR"]])

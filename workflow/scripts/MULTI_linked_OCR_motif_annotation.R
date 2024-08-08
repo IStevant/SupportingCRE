@@ -18,8 +18,6 @@ suppressPackageStartupMessages({
   library("motifStack")
 })
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Load data                 #
@@ -29,17 +27,18 @@ suppressPackageStartupMessages({
 linked_OCRs <- "results/tables/mm10/all_sig_gene2peak_linkage.csv"
 
 TPM <- read.csv(file = snakemake@input[["TPM"]], header = TRUE, row.names = 1)
-# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
-
 
 genome_version <- snakemake@params[["genome"]]
-# genome_version <- "mm10"
-
 
 JASPAR <- JASPAR2020::JASPAR2020
 JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 
-#################################################################################################################################
+###########################################
+#                                         #
+#              Annotation                 #
+#                                         #
+###########################################
+
 
 peaks <- read.table(linked_OCRs, header = TRUE)
 

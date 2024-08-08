@@ -1,6 +1,8 @@
 source(".Rprofile")
 source("workflow/scripts/00.color_palettes.R")
 
+# This script is not so optimal for Snakemake but it works...
+
 ###########################################
 #                                         #
 #               Libraries                 #
@@ -19,8 +21,21 @@ suppressPackageStartupMessages({
 })
 
 doParallel::registerDoParallel(cores = 12)
-
 options(ucscChromosomeNames = FALSE)
+
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+bw_folder <- snakemake@params[["bw_folder"]]
+genome <- snakemake@input[["genome"]]
+peaks <- snakemake@input[["peaks"]]
+peak_list <- snakemake@input[["peak_list"]]
+save_folder <- snakemake@params[["save_folder"]]
+sex <- snakemake@params[["sex"]]
 
 ###########################################
 #                                         #
@@ -28,10 +43,12 @@ options(ucscChromosomeNames = FALSE)
 #                                         #
 ###########################################
 
-import_bw_files <- function(folder, files, locus, window) {
-  # locus <- peak_coord[peak_coord$name %in% locus,]
-  full_locus <- window
-
+#' Import the coverage data for a given genomic locus from bigwig files.
+#' @param folder Path to the bigwig files.
+#' @param files Bigwig file names.
+#' @param full_locus GRanges coordnate of the extended locus of interest.
+#' @return Return a list of GRanges objects.
+import_bw_files <- function(folder, files, full_locus) {
   imports <- foreach(file = files, .final = function(file) setNames(file, files)) %dopar% {
     sex <- sapply(strsplit(file, "_"), `[`, 2)
     stage <- sapply(strsplit(file, "_"), `[`, 1)
@@ -43,6 +60,7 @@ import_bw_files <- function(folder, files, locus, window) {
       gr <- locus
       gr$score <- 0.1
     }
+    # Add space to correct the track name position
     gr$cond <- rep(paste("           ", sex, stage), length(gr))
     return(gr)
   }
@@ -50,18 +68,20 @@ import_bw_files <- function(folder, files, locus, window) {
   stages <- unique(sapply(strsplit(files, "_"), `[`, 1))
   gr_list <- lapply(sex, function(sx) {
     sex_gr <- imports[grep(sx, names(imports))]
-    # print(sex_gr)
     lapply(stages, function(stg) {
       stg_gr <- sex_gr[grep(stg, names(sex_gr))]
     })
   })
-  # print("Done")
   names(gr_list) <- sex
-  # names(gr_list[[1]]) <- stages
-  # names(gr_list[[2]]) <- stages
   return(gr_list)
 }
 
+#' Create the coverage tracks with replicates overlay.
+#' @param gr_list List containing the extended locus coverage per condition.
+#' @param locus GRanges object with the coordinate of the locus of interest.
+#' @param max_score Maximal score to set the Y axis limit.
+#' @param colors vector of hexadecimal colors.
+#' @return Return a Gviz object.
 generate_genomic_tracks <- function(gr_list, locus, max_score, colors) {
   cond <- stringr::str_extract(names(gr_list), "^.{8}")
   # print(cond)
@@ -94,10 +114,14 @@ generate_genomic_tracks <- function(gr_list, locus, max_score, colors) {
   return(track)
 }
 
-
-plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, locus, window) {
-  full_locus <- window
-
+#' Plot the genomic tracks with the peaks and the genome annotation.
+#' @param peak_gr GRanges object with the coordinate of the ATAC peaks.
+#' @param TxDb Genome annotation.
+#' @param gene2symbol Data frame containing the conversion of the Ensembl gene IDs to gene symbols.
+#' @param plot_list Gviz objects generated using generate_genomic_tracks().
+#' @param full_locus GRanges coordnate of the extended locus of interest.
+#' @return Return a Gviz plot.
+plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, full_locus) {
   locus_gr <- full_locus
   peak_gr_locus <- subsetByOverlaps(peak_gr, locus_gr)
 
@@ -123,7 +147,6 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, locus, window) {
     col = 0,
     col.line = NULL,
     fill = "#585858",
-    # lwd=0.3,
     fontcolor.group = "#333333",
     fontsize.group = 18,
     sizes = 0.4,
@@ -146,7 +169,6 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, locus, window) {
     sizes = 0.4,
     rotation.title = 0
   )
-
 
   ht <- HighlightTrack(
     trackList = c(plot_list, peak_track, gene_track),
@@ -186,26 +208,10 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, locus, window) {
 }
 
 ###########################################
-###########################################
 #                                         #
-#               Load data                 #
+#           Plot genomic tracks           #
 #                                         #
 ###########################################
-
-bw_folder <- snakemake@params[["bw_folder"]]
-genome <- snakemake@input[["genome"]]
-peaks <- snakemake@input[["peaks"]]
-peak_list <- snakemake@input[["peak_list"]]
-save_folder <- snakemake@params[["save_folder"]]
-sex <- snakemake@params[["sex"]]
-
-
-# bw_folder <- "results/processed_data/mm10/ATAC_bigwig"
-# # genome <- "workflow/data/mm10/iGenome_mm10_ucsc_peaks.gtf.gz"
-# genome <- "workflow/data/mm10/gencode.vM25.annotation.gtf.gz"
-# peaks <- "results/processed_data/mm10/ATAC_norm_counts.csv"
-# peak_list <- "workflow/data/gTrack_peak_examples.tsv"
-# sex <- "XY"
 
 bw_files <- list.files(path = bw_folder, pattern = "REP..bw")
 
@@ -239,10 +245,6 @@ rownames(gene2symbol) <- gene2symbol$gene_id
 
 TxDb <- GenomicFeatures::makeTxDbFromGFF(genome)
 
-# pdf(file=snakemake@output[['pdf']], width=8, height=8)
-# pdf(file="test.pdf", width=7.5, height=5)
-
-# plot <- lapply(peaks, function(peak){
 plot <- foreach(peak = peak2plot) %dopar% {
   cluster <- peak_list[peak_list$Locus == peak, ]$Cluster
   locus <- peak_list[peak_list$Locus == peak, ]
@@ -252,7 +254,6 @@ plot <- foreach(peak = peak2plot) %dopar% {
   atac_coverage <- import_bw_files(
     bw_folder,
     bw_files,
-    peak,
     window
   )
 
@@ -299,23 +300,37 @@ plot <- foreach(peak = peak2plot) %dopar% {
     )
   }
 
-  png(file = paste0(save_folder, "/", "ATAC_", sex, "_cluster_", cluster, "_", peak, "_peak_tracks.png"), width = 2.5, height = 3.5, units = "in", res = 150)
+  png(
+    file = paste0(
+      save_folder, 
+      "/", 
+      "ATAC_", 
+      sex, 
+      "_cluster_", 
+      cluster, 
+      "_", 
+      peak, 
+      "_peak_tracks.png"
+      ), 
+    width = 2.5, 
+    height = 3.5, 
+    units = "in", 
+    res = 150
+  )
 
-  # png(file=paste0("ATAC_", sex, "_cluster_", cluster, "_", peak, "_peak_tracks.png"), width=3, height=5, units = 'in', res=150)
-
-  print(paste("Plot", peak))
   plot <- plot_tracks(
     peak_gr,
     TxDb,
     gene2symbol,
     bw_track,
-    peak_list_gr,
     window
   )
 
   dev.off()
+
+  # Ugly code:
+  # If the code ran ok, create a file to let Snakemake know
   is_plot_ok <- "y"
   write.csv(is_plot_ok, file = snakemake@output[["log"]])
   return(plot)
 }
-# })

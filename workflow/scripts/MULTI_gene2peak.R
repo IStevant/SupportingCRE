@@ -13,11 +13,87 @@ suppressPackageStartupMessages({
 
 doParallel::registerDoParallel(cores = 12)
 
+
+
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+rna_samplesheet <- read.csv(snakemake@input[["RNA_samplesheet"]], row.names = 1)
+atac_samplesheet <- read.csv(snakemake@input[["ATAC_samplesheet"]], row.names = 1)
+
+rna <- read.csv(snakemake@input[["RNA_norm_counts"]], row.names = 1)
+atac <- read.csv(snakemake@input[["ATAC_norm_counts"]], row.names = 1)
+
+sex <- snakemake@params[["sex"]]
+
+distance <- snakemake@params[["distance"]]
+min_cor <- snakemake@params[["min_cor"]]
+max_FDR <- snakemake@params[["FDR"]]
+
+addAnnotation(
+  gene_bed = snakemake@input[["genes"]],
+  gtf = snakemake@input[["gtf"]],
+  genome_size = snakemake@input[["chrom_size"]]
+)
+
+anno <- annoMergedPeaks(
+  quant_data = snakemake@input[["ATAC_norm_counts"]],
+  cutoff = 3000,
+  tss_flank = 1000
+)
+
+promoters <- anno[anno$Type == "Proximal", ]
+anno_wo_prom <- anno[!anno$Type == "Proximal", ]
+
 ###########################################
 #                                         #
 #               Functions                 #
 #                                         #
 ###########################################
+
+###################################################################
+
+# Code kept for record
+
+###########################################
+#                                         #
+#         Prepare cisDynet files          #
+#                                         #
+###########################################
+
+# install.packages("devtools")
+# devtools::install_github("tzhu-bio/cisDynet")
+# renv::install("tidyverse")
+# renv::snapshot()
+# genome_file <- "workflow/data/iGenome_mm10_ucsc_genes.gtf.gz"
+# mm10Genes <- rtracklayer::import(genome_file)
+# mm10Genes$gene_id <- mm10Genes$gene_name
+# rtracklayer::export(mm10Genes, format="bed")
+# genes <- subset(mm10Genes, type == "gene")
+# genes$gene_id <- genes$gene_name
+
+
+# txdb <- GenomicFeatures::makeTxDbFromGRanges(
+#   mm10Genes,
+#   drop.stop.codons=FALSE
+# )
+
+# genes <- GenomicFeatures::genes(txdb)
+# mm10_genes <- data.frame(
+#   seqnames(genes),
+#   start(genes),
+#   end(genes),
+#   genes$gene_id,
+#   rep(1,length(genes)),
+#   strand(genes)
+# )
+# test <- mm10_genes[grep("^chr[0-9|X|Y]{1,2}$", mm10_genes$seqnames.genes.),]
+# write.table(test, file="mm39_gene_standard.bed", col.names=FALSE, row.names=FALSE, quote=FALSE, sep="\t")
+
+###################################################################
 
 # Modified version of the function from cisDynet
 
@@ -84,10 +160,8 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   }
   ##  calculate the all gene peak2gene links
   gene_list <- rownames(rna_paired)
-  # pb <- progress::progress_bar$new(total = length(gene_list))
   result_list <- lapply(c(1:length(gene_list)), function(x) {
     result <- getGenePeaks(gene_list[x], max_distance = max_distance)
-    # pb$tick()
     return(result)
   })
   na.omit.list <- function(y) {
@@ -165,97 +239,6 @@ annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path = NA, save_
   return(intra_pe)
 }
 
-###########################################
-#                                         #
-#         Prepare cisDynet files          #
-#                                         #
-###########################################
-
-# install.packages("devtools")
-# devtools::install_github("tzhu-bio/cisDynet")
-# renv::install("tidyverse")
-# renv::snapshot()
-# genome_file <- "workflow/data/iGenome_mm10_ucsc_genes.gtf.gz"
-# mm10Genes <- rtracklayer::import(genome_file)
-# mm10Genes$gene_id <- mm10Genes$gene_name
-# rtracklayer::export(mm10Genes, format="bed")
-# genes <- subset(mm10Genes, type == "gene")
-# genes$gene_id <- genes$gene_name
-
-
-# txdb <- GenomicFeatures::makeTxDbFromGRanges(
-# 	mm10Genes,
-# 	drop.stop.codons=FALSE
-# )
-
-# genes <- GenomicFeatures::genes(txdb)
-# mm10_genes <- data.frame(
-# 	seqnames(genes),
-# 	start(genes),
-# 	end(genes),
-# 	genes$gene_id,
-# 	rep(1,length(genes)),
-# 	strand(genes)
-# )
-# test <- mm10_genes[grep("^chr[0-9|X|Y]{1,2}$", mm10_genes$seqnames.genes.),]
-# write.table(test, file="mm39_gene_standard.bed", col.names=FALSE, row.names=FALSE, quote=FALSE, sep="\t")
-
-addAnnotation(
-  gene_bed = snakemake@input[["genes"]],
-  gtf = snakemake@input[["gtf"]],
-  genome_size = snakemake@input[["chrom_size"]]
-)
-
-anno <- annoMergedPeaks(
-  quant_data = snakemake@input[["ATAC_norm_counts"]],
-  cutoff = 3000,
-  tss_flank = 1000
-)
-
-
-# addAnnotation(
-#   gene_bed = "workflow/data/mm10/gene_standard.bed",
-#   gtf = "workflow/data/mm10/iGenome_mm10_ucsc_genes.gtf.gz",
-#   genome_size = "workflow/data/mm10/chrom.size"
-# )
-
-# anno <- annoMergedPeaks(
-#   quant_data = "results/processed_data/mm10/ATAC_norm_counts.csv",
-#   cutoff=3000,
-#   tss_flank=1000
-# )
-
-promoters <- anno[anno$Type == "Proximal", ]
-anno_wo_prom <- anno[!anno$Type == "Proximal", ]
-
-#################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-rna_samplesheet <- read.csv(snakemake@input[["RNA_samplesheet"]], row.names = 1)
-atac_samplesheet <- read.csv(snakemake@input[["ATAC_samplesheet"]], row.names = 1)
-# rna_samplesheet <- read.csv("results/processed_data/mm10/RNA_samplesheet.csv", row.names=1)
-# atac_samplesheet <- read.csv("results/processed_data/mm10/ATAC_samplesheet.csv", row.names=1)
-
-rna <- read.csv(snakemake@input[["RNA_norm_counts"]], row.names = 1)
-# rna <- read.csv("results/processed_data/mm10/RNA_norm_counts.csv", row.names=1)
-
-atac <- read.csv(snakemake@input[["ATAC_norm_counts"]], row.names = 1)
-# atac <- read.csv("results/processed_data/mm10/ATAC_norm_counts.csv", row.names=1)
-
-sex <- snakemake@params[["sex"]]
-# sex <- "XX"
-
-distance <- snakemake@params[["distance"]]
-
-min_cor <- snakemake@params[["min_cor"]]
-
-max_FDR <- snakemake@params[["FDR"]]
-
 
 ###########################################
 #                                         #
@@ -280,13 +263,10 @@ samples <- lapply(conditions, function(cond) rna_samplesheet[rna_samplesheet$con
 means <- lapply(samples, function(cond) rowMeans(rna[, cond]))
 names(means) <- conditions
 rna_means <- as.data.frame(do.call(cbind, means))
-# split_RNA data into 4 tables to parallelize the work
+# split_RNA data into 12 tables to parallelize the work
 split_rna <- split(rna_means, factor(sort(rank(row.names(rna_means)) %% 12)))
 
-# split_rna <- split(rna, factor(sort(rank(row.names(rna)) %% 8)))
-
 # Mean expression of the replicates
-
 samples <- lapply(conditions, function(cond) atac_samplesheet[atac_samplesheet$conditions == cond, 1])
 means <- lapply(samples, function(cond) rowMeans(atac[, cond]))
 names(means) <- conditions

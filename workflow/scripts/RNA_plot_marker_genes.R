@@ -22,8 +22,6 @@ TPM <- read.csv(file = snakemake@input[["tpm"]], row.names = 1)
 markerGenes <- read.csv(file = snakemake@input[["marker_genes"]])
 whole_gonad <- read.csv(file = snakemake@input[["whole_gonad"]])
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Functions                 #
@@ -187,8 +185,6 @@ mCherry_dotplot <- function(TPM, sex) {
   return(plot)
 }
 
-#################################################################################################################################
-
 ##########################################
 #                                        #
 #              Prepare data              #
@@ -246,8 +242,7 @@ save_plot(
   base_width = 38,
   base_height = 30,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(
@@ -256,8 +251,7 @@ save_plot(
   base_width = 20,
   base_height = 22,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 # As PNG

@@ -1,4 +1,5 @@
 source(".Rprofile")
+
 ###########################################
 #                                         #
 #               Libraries                 #
@@ -10,6 +11,14 @@ suppressPackageStartupMessages({
   library("ggplot2")
 })
 
+###########################################
+#                                         #
+#               Load data                 #
+#                                         #
+###########################################
+
+# filtered_SexDARs
+load(snakemake@input[["sig_DARs"]])
 
 ###########################################
 #                                         #
@@ -17,6 +26,10 @@ suppressPackageStartupMessages({
 #                                         #
 ###########################################
 
+#' When the maximum value (read count) of a peak between samples is under a certain threshold, we considere it is not relevant and the values are set to 0.
+#' @param DARs Sex differentially accessible dataframe.
+#' @param sex String, can be either "XX" or "XY".
+#' @return Return a ggplot object.
 upset_plots_sex <- function(DARs, sex) {
   current_sex <- paste("More in", sex)
   filtered_SexDARs <- lapply(DARs, function(DAR) rownames(DAR[DAR$Diff.Acc. == current_sex, , drop = FALSE]))
@@ -50,7 +63,6 @@ upset_plots_sex <- function(DARs, sex) {
     sort_sets = "ascending",
     stripes = alpha("white", 0),
     set_sizes = FALSE,
-    # wrap=TRUE
     base_annotations = list(
       "Intersection size" = ComplexUpset::intersection_size(
         text_colors = text_col,
@@ -76,16 +88,6 @@ upset_plots_sex <- function(DARs, sex) {
 
   return(plot)
 }
-#################################################################################################################################
-
-###########################################
-#                                         #
-#               Load data                 #
-#                                         #
-###########################################
-
-# filtered_SexDARs
-load(snakemake@input[["sig_DARs"]])
 
 ###########################################
 #                                         #
@@ -102,7 +104,12 @@ figure <- plot_grid(
   labels = "AUTO",
   ncol = 1
 )
-figure
+
+###########################################
+#                                         #
+#               Save files                #
+#                                         #
+###########################################
 
 save_plot(
   snakemake@output[["pdf"]],
@@ -110,8 +117,7 @@ save_plot(
   base_width = 28,
   base_height = 20,
   units = c("cm"),
-  dpi = 300,
-  bg = "white"
+  dpi = 300
 )
 
 save_plot(

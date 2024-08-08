@@ -24,8 +24,6 @@ suppressPackageStartupMessages({
   library("motifStack")
 })
 
-#################################################################################################################################
-
 ###########################################
 #                                         #
 #               Load data                 #
@@ -33,28 +31,20 @@ suppressPackageStartupMessages({
 ###########################################
 
 linked_OCRs <- snakemake@input[["linkage"]]
-# linked_OCRs <- "results/tables/mm10/all_sig_gene2peak_linkage.csv"
 
 TPM <- read.csv(file = snakemake@input[["TPM"]], header = TRUE, row.names = 1)
-# TPM <- read.csv(file="results/processed_data/mm10/RNA_TPM.csv", header=TRUE, row.names=1)
 
 genome_version <- snakemake@params[["genome"]]
-# genome_version <- "mm10"
 
 # Run analysis using the genome bakground or calculating the enrichment compared to the conditions
 background <- snakemake@params[["background"]]
-# background <- "conditions"
-# background <- "genome"
 
 sex <- snakemake@params[["sex"]]
-# sex <- "XY"
 
 # filtered_SexDEGs
 load(snakemake@input[["sex_DEGs"]])
-# load("results/processed_data/mm10/RNA_sig_SexDEGs.Robj")
 
 save_folder <- snakemake@params[["save_folder"]]
-# save_folder <- "."
 
 
 JASPAR <- JASPAR2020::JASPAR2020
@@ -62,7 +52,6 @@ JASPAR@db <- JASPAR2024::JASPAR2024() %>% .@db
 
 peaks <- read.table(linked_OCRs, header = TRUE)
 
-#################################################################################################################################
 ###########################################
 #                                         #
 #               Functions                 #
@@ -87,8 +76,14 @@ filter_low_counts <- function(row, col_names, minExp) {
   }
 }
 
-# sex <- "XY"
 
+#' Get TFBS motifs enrichment using the monaLisa package.
+#' @param genes Table of the differentially expressed genes.
+#' @param TPM Read count matrix.
+#' @param peaks Open chromatin regions linked to genes.
+#' @param sex String, can be either "XX" or "XY".
+#' @param save_folder Minimum value. Default is 5.
+#' @return Return a monaLisa enrichment object.
 get_enriched_TFs <- function(genes, TPM, peaks, sex, save_folder) {
   # genes <- filtered_SexDEGs
   spe_genes <- unique(unlist(lapply(genes, function(x) rownames(x[x$Diff.Exp. == paste("Up in", sex), ]))))
@@ -228,7 +223,9 @@ get_enriched_TFs <- function(genes, TPM, peaks, sex, save_folder) {
   return(seSel)
 }
 
-
+#' Merge the enrichment result by TFBS motif similarity and plot the results as heatmap.
+#' @param seSel monaLisa enrichment object.
+#' @return Return a grid object.
 merge_TF_motifs <- function(seSel) {
   # Cluster motifs by enrichment
   TF_enrichment <- SummarizedExperiment::assay(seSel, "log2enr")
@@ -244,10 +241,7 @@ merge_TF_motifs <- function(seSel) {
 
   motif_sig <- lapply(1:nbCluster, function(cl) {
     TFs <- names(clustering[clustering == cl])
-    # TFs <- names(clustering[clustering==cl])
-    # print(TFs)
     matrices <- seSel@elementMetadata$motif.pfm[TFs]
-    # print(length(matrices))
     pfms <- universalmotif::convert_motifs(matrices, class = "motifStack-pcm")
     hc <- motifStack::clusterMotifs(pfms)
     phylog <- ade4::hclust2phylog(hc)
@@ -303,7 +297,6 @@ merge_TF_motifs <- function(seSel) {
           colnames(tf_enrichment) <- tf_names
           tf_enrichment <- as.data.frame(t(tf_enrichment))
           tf_enrichment$mat_names <- TF
-          # print(tf_enrichment)
         } else {
           tf_enrichment <- as.data.frame(tf_enrichment)
           tf_enrichment$mat_names <- TF
@@ -351,9 +344,6 @@ merge_TF_motifs <- function(seSel) {
     Neg = "#2191FB"
   )
 
-  # names(bincols) <- c("Neg. cor.", "Pos. cor.")
-  # conditions <- c("Pos.", "Neg.")
-
   names(bincols) <- colnames(matrix)
   conditions <- colnames(matrix)
 
@@ -375,21 +365,16 @@ merge_TF_motifs <- function(seSel) {
     colors = TYP
   )
 
-  # mypalette <- RColorBrewer::brewer.pal(11,"BuPu")
-
   ht_list <- Heatmap(
     rev(matrix),
     clustering_method_rows = "ward.D2",
     name = "Log2 enrichment",
-    # row_km = nbCluster,
     right_annotation = hmSeqlogo,
     top_annotation = stage_anno,
     column_split = conditions,
     show_column_names = FALSE,
     show_row_dend = FALSE,
-    # cluster_row_slices = FALSE,
     cluster_columns = FALSE,
-    # column_order=order(colnames(matrix), decreasing = TRUE),
     column_title = NULL,
     row_title = NULL,
     col = mypalette,
@@ -401,26 +386,27 @@ merge_TF_motifs <- function(seSel) {
 
   ht_list_2 <- grid.grabExpr(draw(ht_list, heatmap_legend_side = "bottom"), wrap.grobs = TRUE)
 
-  # pdf("test.pdf", height=5, width=10)
-  # 	# plot(ht_list_2)
-  # 	draw(ht_list, heatmap_legend_side = "bottom")
-  # dev.off()
-
   return(ht_list_2)
 }
 
-
-
-#################################################################################################################################
+###########################################
+#                                         #
+#                Analysis                 #
+#                                         #
+###########################################
 
 enrichments <- get_enriched_TFs(filtered_SexDEGs, TPM, peaks, sex, save_folder)
 
-
 heatmap_list <- merge_TF_motifs(enrichments)
+
+##########################################
+#                                        #
+#               Save plots               #
+#                                        #
+##########################################
 
 save_plot(
   snakemake@output[["pdf"]],
-  # "test.pdf",
   heatmap_list,
   base_width = 30,
   base_height = 30,
@@ -434,10 +420,14 @@ save_plot(
   base_width = 30,
   base_height = 30,
   units = c("cm"),
-  dpi = 300
+  dpi = 300,
+  bg = "white"
 )
 
 
+#####################################################################
+
+# Code kept for record
 
 
 
