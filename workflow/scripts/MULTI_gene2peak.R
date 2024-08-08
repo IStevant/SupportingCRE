@@ -33,21 +33,6 @@ distance <- snakemake@params[["distance"]]
 min_cor <- snakemake@params[["min_cor"]]
 max_FDR <- snakemake@params[["FDR"]]
 
-addAnnotation(
-  gene_bed = snakemake@input[["genes"]],
-  gtf = snakemake@input[["gtf"]],
-  genome_size = snakemake@input[["chrom_size"]]
-)
-
-anno <- annoMergedPeaks(
-  quant_data = snakemake@input[["ATAC_norm_counts"]],
-  cutoff = 3000,
-  tss_flank = 1000
-)
-
-promoters <- anno[anno$Type == "Proximal", ]
-anno_wo_prom <- anno[!anno$Type == "Proximal", ]
-
 ###########################################
 #                                         #
 #               Functions                 #
@@ -239,12 +224,26 @@ annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path = NA, save_
   return(intra_pe)
 }
 
-
 ###########################################
 #                                         #
 #        Get gene-peak correlation        #
 #                                         #
 ###########################################
+
+addAnnotation(
+  gene_bed = snakemake@input[["genes"]],
+  gtf = snakemake@input[["gtf"]],
+  genome_size = snakemake@input[["chrom_size"]]
+)
+
+anno <- annoMergedPeaks(
+  quant_data = snakemake@input[["ATAC_norm_counts"]],
+  cutoff = 3000,
+  tss_flank = 1000
+)
+
+promoters <- anno[anno$Type == "Proximal", ]
+anno_wo_prom <- anno[!anno$Type == "Proximal", ]
 
 # Mean expression of the replicates
 if (sex == "all") {
