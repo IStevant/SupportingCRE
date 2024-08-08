@@ -274,7 +274,6 @@ atac_means <- as.data.frame(do.call(cbind, means))
 atac_means <- atac_means[!rownames(atac_means) %in% rownames(promoters), ]
 
 p2g_split <- foreach(split = split_rna) %dopar% {
-  # print(head(split))
   my_getPeak2Gene(
     atac_matrix = atac_means,
     rna_matrix = split,
