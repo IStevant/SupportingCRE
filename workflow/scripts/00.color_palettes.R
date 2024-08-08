@@ -7,13 +7,13 @@
 sex_colors <- c("#22AAA1", "#253D5B")
 names(sex_colors) <- c("XX", "XY")
 
-conditions_color <-  c(
-	"#fdb049",
-	"#f55b43",
-	"#d52867",
-	"#900453",
-	"#94d574",
-	"#28ad9e",
-	"#1e8bd1",
-	"#2b349a"
+conditions_color <- c(
+  "#fdb049",
+  "#f55b43",
+  "#d52867",
+  "#900453",
+  "#94d574",
+  "#28ad9e",
+  "#1e8bd1",
+  "#2b349a"
 )

@@ -1,7 +1,7 @@
 source(".Rprofile")
 
 suppressPackageStartupMessages({
-	library("GenomicRanges")
+  library("GenomicRanges")
 })
 
 ###########################################
@@ -10,12 +10,12 @@ suppressPackageStartupMessages({
 #                                         #
 ###########################################
 
-raw_counts <- read.csv(file=snakemake@input[['counts']], row.names=1)
-samplesheet <- read.csv(file=snakemake@input[['samplesheet']], row.names=1)
-load(file=snakemake@input[['peak_list']])
-adj.pval <- snakemake@params[['adjpval']]
-log2FC <- snakemake@params[['log2FC']]
-sex <- snakemake@params[['sex']]
+raw_counts <- read.csv(file = snakemake@input[["counts"]], row.names = 1)
+samplesheet <- read.csv(file = snakemake@input[["samplesheet"]], row.names = 1)
+load(file = snakemake@input[["peak_list"]])
+adj.pval <- snakemake@params[["adjpval"]]
+log2FC <- snakemake@params[["log2FC"]]
+sex <- snakemake@params[["sex"]]
 
 
 # raw_counts <- read.csv(file="results/processed_data/mm39/ATAC_raw_counts.csv", row.names=1)
@@ -43,20 +43,20 @@ common_peaks <- subsetByOverlaps(all_peaks, merged_sex_peaks)
 
 sex_peaks <- paste0(seqnames(common_peaks), ":", start(common_peaks), "-", end(common_peaks))
 
-sex_count <- raw_counts[, grepl(sex , colnames(raw_counts))]
+sex_count <- raw_counts[, grepl(sex, colnames(raw_counts))]
 sex_count <- sex_count[rownames(sex_count) %in% sex_peaks, ]
 
 
-sex_samplesheet <- samplesheet[grepl(sex , samplesheet$sample),]
+sex_samplesheet <- samplesheet[grepl(sex, samplesheet$sample), ]
 
 
 dds <- DESeq2::DESeqDataSetFromMatrix(
-	countData = sex_count,
-	colData = sex_samplesheet,
-	design = ~stages
+  countData = sex_count,
+  colData = sex_samplesheet,
+  design = ~stages
 )
 
-ddsTC <- DESeq2::DESeq(dds, test="LRT", reduced = ~1)
+ddsTC <- DESeq2::DESeq(dds, test = "LRT", reduced = ~1)
 resTC <- DESeq2::results(ddsTC)
 resTC$symbol <- GenomicRanges::mcols(ddsTC)$symbol
 
@@ -64,8 +64,8 @@ resTC$symbol <- GenomicRanges::mcols(ddsTC)$symbol
 filtered_StageDARs <- subset(resTC, padj < adj.pval)
 filtered_StageDARs <- subset(filtered_StageDARs, abs(log2FoldChange) > log2FC)
 
-write.csv(filtered_StageDARs[order(filtered_StageDARs$padj),], file=snakemake@output[['csv']], quote = FALSE)
+write.csv(filtered_StageDARs[order(filtered_StageDARs$padj), ], file = snakemake@output[["csv"]], quote = FALSE)
 
 filtered_StageDARs <- rownames(filtered_StageDARs)
 
-save(filtered_StageDARs, file=snakemake@output[['sig_DARs']])
+save(filtered_StageDARs, file = snakemake@output[["sig_DARs"]])
