@@ -46,11 +46,11 @@ rule_all_input_list = [
 	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
 	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
 	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png",
-	f"{output_pdf}/gene2peak_plots.pdf",
+	f"{output_pdf}/MULTI_gene2peak_plots.pdf",
 	f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
 	f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
-	f"{processed_data}/plot_example_1.log",
-	f"{processed_data}/plot_example_2.log",
+	# f"{processed_data}/plot_example_1.log",
+	# f"{processed_data}/plot_example_2.log",
 	f"{processed_data}/plot_example_3.log"
 ]
 
@@ -364,23 +364,23 @@ rule ATAC_corr_PCA:
 	script:
 		"workflow/scripts/Corr_pca.R"
 
-rule ATAC_Plot_peak_examples:
-	input:
-		genome=f"{genome}",
-		gene_bed=f"{input_data}/gene_standard.bed",
-		peaks=f"{processed_data}/ATAC_norm_counts.csv",
-		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-		gene_list=config["peak_examples"],
-	params:
-		bw_folder="results/processed_data/mm10/ATAC_bigwig",
-		save_folder=f"{output_png}"
-	output: 
-		log= f"{processed_data}/plot_example_1.log"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/MULTI_plot_genomic_tracks_examples.R"
+# rule ATAC_Plot_peak_examples:
+# 	input:
+# 		genome=f"{genome}",
+# 		gene_bed=f"{input_data}/gene_standard.bed",
+# 		peaks=f"{processed_data}/ATAC_norm_counts.csv",
+# 		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+# 		gene_list=config["peak_examples"],
+# 	params:
+# 		bw_folder="results/processed_data/mm10/ATAC_bigwig",
+# 		save_folder=f"{output_png}"
+# 	output: 
+# 		log= f"{processed_data}/plot_example_1.log"
+# 	resources:
+# 		cpus_per_task=12,
+# 		mem_mb=64000
+# 	script:
+# 		"workflow/scripts/MULTI_plot_genomic_tracks_examples.R"
 
 
 rule ATAC_Get_sex_DARs:
@@ -519,22 +519,22 @@ rule ATAC_Get_XX_dynamic_DARs:
 	script:
 		"workflow/scripts/ATAC_stage_DAR.R"
 
-rule ATAC_Plot_XX_stage_DAR_peak_examples:
-	input:
-		genome=f"{genome}",
-		peaks=f"{processed_data}/ATAC_norm_counts.csv",
-		peak_list=config["DAR_peak_examples_XX"],
-	params:
-		bw_folder="results/processed_data/mm10/ATAC_bigwig",
-		save_folder=f"{output_png}",
-		sex="XX"
-	output: 
-		log= f"{processed_data}/plot_example_2.log"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/ATAC_plot_DAR_peak_examples.R"
+# rule ATAC_Plot_XX_stage_DAR_peak_examples:
+# 	input:
+# 		genome=f"{genome}",
+# 		peaks=f"{processed_data}/ATAC_norm_counts.csv",
+# 		peak_list=config["DAR_peak_examples_XX"],
+# 	params:
+# 		bw_folder="results/processed_data/mm10/ATAC_bigwig",
+# 		save_folder=f"{output_png}",
+# 		sex="XX"
+# 	output: 
+# 		log= f"{processed_data}/plot_example_2.log"
+# 	resources:
+# 		cpus_per_task=12,
+# 		mem_mb=64000
+# 	script:
+# 		"workflow/scripts/ATAC_plot_DAR_peak_examples.R"
 
 
 rule ATAC_Get_XY_dynamic_DARs:
@@ -555,22 +555,22 @@ rule ATAC_Get_XY_dynamic_DARs:
 	script:
 		"workflow/scripts/ATAC_stage_DAR.R"
 
-rule ATAC_Plot_XY_stage_DAR_peak_examples:
-	input:
-		genome=f"{genome}",
-		peaks=f"{processed_data}/ATAC_norm_counts.csv",
-		peak_list=config["DAR_peak_examples_XY"],
-	params:
-		bw_folder="results/processed_data/mm10/ATAC_bigwig",
-		save_folder=f"{output_png}",
-		sex="XY"
-	output: 
-		log= f"{processed_data}/plot_example_3.log"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/ATAC_plot_DAR_peak_examples.R"
+# rule ATAC_Plot_XY_stage_DAR_peak_examples:
+# 	input:
+# 		genome=f"{genome}",
+# 		peaks=f"{processed_data}/ATAC_norm_counts.csv",
+# 		peak_list=config["DAR_peak_examples_XY"],
+# 	params:
+# 		bw_folder="results/processed_data/mm10/ATAC_bigwig",
+# 		save_folder=f"{output_png}",
+# 		sex="XY"
+# 	output: 
+# 		log= f"{processed_data}/plot_example_3.log"
+# 	resources:
+# 		cpus_per_task=12,
+# 		mem_mb=64000
+# 	script:
+# 		"workflow/scripts/ATAC_plot_DAR_peak_examples.R"
 
 
 rule ATAC_Plot_heatmap_dyn_DARs_XX:
@@ -694,7 +694,7 @@ rule ATAC_XY_TFBS_motifs_stage_rand_bg_DAR:
 		png=f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png"
 	resources:
 		cpus_per_task=12,
-		mem_mb=64000
+		mem_mb=80000
 	script:
 		"workflow/scripts/ATAC_stage_DAR_motif_enrich.R"
 
@@ -731,7 +731,7 @@ rule MULTI_Plot_gene_peak_correlation:
 	params:
 		bw_folder="results/processed_data/mm10/ATAC_bigwig"
 	output:
-		pdf=f"{output_pdf}/gene2peak_plots.pdf"
+		pdf=f"{output_pdf}/MULTI_gene2peak_plots.pdf"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000

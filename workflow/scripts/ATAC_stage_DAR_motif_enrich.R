@@ -97,10 +97,8 @@ filter_low_counts <- function(row, col_names, minExp) {
 #' @param save_folder Minimum value. Default is 5.
 #' @return Return a monaLisa enrichment object.
 get_enriched_TFs <- function(DARs, TPM, minTPM, save_folder) {
-  # Select the genes expressed at a specific stage for both sexes
-  genes <- run_filter_low_counts(genes, minTPM)
   # Discard lowly expressed genes
-  genes <- run_filter_low_counts(genes, minTPM)
+  genes <- run_filter_low_counts(TPM, minTPM)
   genes <- rownames(genes[rowSums(genes) > 0, ])
 
   pwms <- TFBSTools::getMatrixSet(
