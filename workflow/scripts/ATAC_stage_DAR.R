@@ -22,7 +22,15 @@ load(file = snakemake@input[["peak_list"]])
 adj.pval <- snakemake@params[["adjpval"]]
 log2FC <- snakemake@params[["log2FC"]]
 sex <- snakemake@params[["sex"]]
+gtf <- snakemake@input[["gtf"]]
 
+# Promoter region, i.e. distance to TSS
+promoter <- snakemake@params[["promoter"]]
+
+genome_gtf <- rtracklayer::import(gtf)
+gene2symbol <- GenomicRanges::mcols(genome_gtf)[, c("gene_id", "gene_name")]
+gene2symbol <- unique(gene2symbol)
+rownames(gene2symbol) <- gene2symbol$gene_id
 ###########################################
 #                                         #
 #            DESeq analysis               #
@@ -58,10 +66,34 @@ resTC <- DESeq2::results(ddsTC)
 resTC$symbol <- GenomicRanges::mcols(ddsTC)$symbol
 
 
-filtered_StageDARs <- subset(resTC, padj < adj.pval)
-filtered_StageDARs <- subset(filtered_StageDARs, abs(log2FoldChange) > log2FC)
+sig.DA <- subset(resTC, padj < adj.pval)
+sig.DA <- subset(sig.DA, abs(log2FoldChange) > log2FC)
 
-write.csv(filtered_StageDARs[order(filtered_StageDARs$padj), ], file = snakemake@output[["csv"]], quote = FALSE)
+DAR_GR <- GenomicRanges::GRanges(rownames(sig.DA))
+
+TxDb <- GenomicFeatures::makeTxDbFromGFF(gtf)
+
+DA_anno <- as.data.frame(
+  ChIPseeker::annotatePeak(
+    DAR_GR,
+    genomicAnnotationPriority = c("Promoter", "5UTR", "Exon", "Intron", "3UTR", "Downstream", "Intergenic"),
+    tssRegion = c(-promoter, 0),
+    TxDb = TxDb,
+    level = "gene",
+    overlap = "all"
+  )
+)
+
+DA_anno$geneId <- gene2symbol[DA_anno$geneId, "gene_name"]
+
+filtered_StageDARs <- data.frame(
+  sig.DA[, -c(3:4)],
+  annotation = DA_anno$annotation,
+  nearest.gene = DA_anno$geneId,
+  distanceToTSS = DA_anno$distanceToTSS
+)
+
+write.table(filtered_StageDARs[order(filtered_StageDARs$padj), ], file = snakemake@output[["tsv"]], quote = FALSE, sep="\t")
 
 filtered_StageDARs <- rownames(filtered_StageDARs)
 

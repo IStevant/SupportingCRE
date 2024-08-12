@@ -505,13 +505,15 @@ rule ATAC_Get_XX_dynamic_DARs:
 	input:
 		counts=f"{processed_data}/ATAC_raw_counts.csv",
 		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj"
+		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj",
+		gtf=f"{genome}"
 	params:
 		adjpval=config["ATAC_adjpval"],
 		log2FC=config["ATAC_log2FC"],
+		promoter=config["ATAC_promoter_distance"],
 		sex="XX"
 	output:
-		csv=f"{output_tables}/ATAC_XX_DEG_stage.csv",
+		tsv=f"{output_tables}/ATAC_XX_DAR_stage.tsv",
 		sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XX.Robj"
 	resources:
 		cpus_per_task=12,
@@ -541,13 +543,15 @@ rule ATAC_Get_XY_dynamic_DARs:
 	input:
 		counts=f"{processed_data}/ATAC_raw_counts.csv",
 		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj"
+		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj",
+		gtf=f"{genome}"
 	params:
 		adjpval=config["ATAC_adjpval"],
 		log2FC=config["ATAC_log2FC"],
+		promoter=config["ATAC_promoter_distance"],
 		sex="XY"
 	output:
-		csv=f"{output_tables}/ATAC_XY_DEG_stage.csv",
+		tsv=f"{output_tables}/ATAC_XY_DAR_stage.tsv",
 		sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XY.Robj"
 	resources:
 		cpus_per_task=12,

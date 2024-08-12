@@ -14,6 +14,7 @@ suppressPackageStartupMessages({
   library("grid")
   library("ggplot2")
   library("clusterProfiler")
+  library("JLutils")
 })
 
 ###########################################
@@ -55,13 +56,21 @@ plot_simple_heatmap <- function(data, de_feature, colors, clusters, res_file) {
 
   # Cluster matrix
   row_dend <- hclust(dist(matrix), method = "ward.D")
+
+  # Calculate the optimal number of clusters
+  clusters <- best.cutree(row_dend, min = 4, max = 15)
+
+  clustering <- cutree(row_dend, k = clusters)
+
   clustering <- as.factor(cutree(row_dend, k = clusters))
   levels(clustering) <- letters[1:clusters]
 
-  if (sex == "XX") {
-    clustering <- factor(clustering, levels = c("c", "b", "a", "d"))
-  } else if (sex == "XY") {
-    clustering <- factor(clustering, levels = c("a", "c", "b", "d"))
+  if (length(levels(clustering)) == 4){
+    if (sex == "XX") {
+      clustering <- factor(clustering, levels = c("c", "b", "a", "d"))
+    } else if (sex == "XY") {
+      clustering <- factor(clustering, levels = c("a", "c", "b", "d"))
+    }  
   }
 
   levels(clustering) <- letters[1:clusters]
