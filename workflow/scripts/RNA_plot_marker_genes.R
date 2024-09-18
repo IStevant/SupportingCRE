@@ -114,7 +114,7 @@ gene_exp <- function(genes, TPM, title) {
       hjust = 0.5
     )
 
-  plot_graphs <- plot_grid(plotlist = plotlist, ncol = 5, align = "hv")
+  plot_graphs <- plot_grid(plotlist = plotlist, ncol = 4, align = "hv")
 
   plots <- plot_grid(
     gtitle, plot_graphs,
@@ -239,8 +239,8 @@ figure2 <- plot_grid(
 save_plot(
   snakemake@output[["pdf1"]],
   figure,
-  base_width = 38,
-  base_height = 30,
+  base_width = 32,
+  base_height = 32,
   units = c("cm"),
   dpi = 300
 )
@@ -258,8 +258,8 @@ save_plot(
 save_plot(
   snakemake@output[["png1"]],
   figure,
-  base_width = 38,
-  base_height = 30,
+  base_width = 32,
+  base_height = 32,
   units = c("cm"),
   dpi = 300,
   bg = "white"

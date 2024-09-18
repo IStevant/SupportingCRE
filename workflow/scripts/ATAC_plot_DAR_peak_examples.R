@@ -246,7 +246,6 @@ rownames(gene2symbol) <- gene2symbol$gene_id
 TxDb <- GenomicFeatures::makeTxDbFromGFF(genome)
 
 plot <- foreach(peak = peak2plot) %dopar% {
-  cluster <- peak_list[peak_list$Locus == peak, ]$Cluster
   locus <- peak_list[peak_list$Locus == peak, ]
   peak_list_gr <- GRanges(locus$Locus)
   window <- peak_list_gr + 1000
@@ -300,22 +299,36 @@ plot <- foreach(peak = peak2plot) %dopar% {
     )
   }
 
-  png(
+  # png(
+  #   file = paste0(
+  #     save_folder, 
+  #     "/", 
+  #     "ATAC_", 
+  #     sex, 
+  #     "_", 
+  #     peak, 
+  #     "_peak_tracks.png"
+  #     ), 
+  #   width = 5.5, 
+  #   height = 4.5, 
+  #   units = "in", 
+  #   res = 150
+  # )
+
+  pdf(
     file = paste0(
       save_folder, 
       "/", 
       "ATAC_", 
       sex, 
-      "_cluster_", 
-      cluster, 
       "_", 
       peak, 
-      "_peak_tracks.png"
+      "_peak_tracks.pdf"
       ), 
-    width = 2.5, 
-    height = 3.5, 
-    units = "in", 
-    res = 150
+    width = 6.5, 
+    height = 5.5
+    # units = "in", 
+    # res = 150
   )
 
   plot <- plot_tracks(

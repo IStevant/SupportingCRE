@@ -2,24 +2,23 @@ Gene,Cell_type
 Nr5a1,Somatic cells
 Wt1,Somatic cells
 Gata4,Somatic cells
-Runx1,Pre-granulosa
-Fst,Pre-granulosa
-Foxl2,Pre-granulosa
-Bmp2,Pre-granulosa
-Wnt4,Pre-granulosa
-Sry,Sertoli
-Sox9,Sertoli
-Dmrt1,Sertoli
-Dhh,Sertoli
-Amh,Sertoli
-Ptn,Interstitium/Stroma
-Nr2f2,Interstitium/Stroma
-Wnt5a,Interstitium/Stroma
-Tcf21,Interstitium/Stroma
-Hsd3b1,FLC
-Star,FLC
-Cyp11a1,FLC
-Insl3,FLC
+Amhr2,Somatic cells
+Foxl2,Pre-granulosa cells
+Bmp2,Pre-granulosa cells
+Wnt4,Pre-granulosa cells
+Lef1,Pre-granulosa cells
+Sry,Sertoli cells
+Fgf9,Sertoli cells
+Dmrt1,Sertoli cells
+Dhh,Sertoli cells
+Ptn,Interstitium/Stroma cells
+Nr2f2,Interstitium/Stroma cells
+Wnt5a,Interstitium/Stroma cells
+Tcf21,Interstitium/Stroma cells
+Hsd3b1,Fetal Leydig cells
+Star,Fetal Leydig cells
+Cyp17a1,Fetal Leydig cells
+Insl3,Fetal Leydig cells
 Mael,Germ cells
 Dazl,Germ cells
 Ddx4,Germ cells

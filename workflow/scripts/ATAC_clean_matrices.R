@@ -154,6 +154,14 @@ size_factors <- get_size_factors(
 
 ###########################################
 #                                         #
+#             Prepare bed file            #
+#                                         #
+###########################################
+
+OCR_GR <- GenomicRanges::GRanges(rownames(norm_counts))
+
+###########################################
+#                                         #
 #               Save files                #
 #                                         #
 ###########################################
@@ -162,3 +170,4 @@ write.csv(raw_counts, snakemake@output[["counts"]])
 write.csv(norm_counts, snakemake@output[["norm_counts"]])
 write.csv(samplesheet, snakemake@output[["samplesheet"]])
 write.csv(size_factors, snakemake@output[["size_factors"]])
+rtracklayer::export.bed(OCR_GR,con=snakemake@output[["bed"]])
