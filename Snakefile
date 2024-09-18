@@ -77,9 +77,9 @@ rule RNA_Get_matrices:
 		RNA_outliers=config["RNA_outliers"]
 	output:
 		tpm_all=f"{processed_data}/RNA_TPM_all_samples.csv",
-		tpm=f"{processed_data}/RNA_TPM.csv",
-		counts=f"{processed_data}/RNA_raw_counts.csv",
-		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
+		tpm=f"{output_tables}/RNA_TPM.csv",
+		counts=f"{output_tables}/RNA_raw_counts.csv",
+		norm_counts=f"{output_tables}/RNA_norm_counts.csv",
 		norm_counts_all=f"{processed_data}/RNA_norm_counts_all.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
 	resources:
@@ -104,7 +104,7 @@ rule RNA_corr_PCA_with outliers:
 
 rule RNA_corr_PCA:
 	input:
-		norm_data=f"{processed_data}/RNA_norm_counts.csv"
+		norm_data=f"{output_tables}/RNA_norm_counts.csv"
 	params:
 		corr_method="spearman"
 	output:
@@ -120,7 +120,7 @@ rule RNA_Plot_marker_genes:
 	input:
 		marker_genes=config["marker_genes"],
 		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',
-		tpm=f"{processed_data}/RNA_TPM.csv"
+		tpm=f"{output_tables}/RNA_TPM.csv"
 	output:
 		pdf1=f"{output_pdf}/RNA_marker_genes.pdf",
 		png1=f"{output_png}/RNA_marker_genes.png",
@@ -134,7 +134,7 @@ rule RNA_Plot_marker_genes:
 
 rule RNA_Get_sex_DEGs:
 	input:
-		counts=f"{processed_data}/RNA_raw_counts.csv",
+		counts=f"{output_tables}/RNA_raw_counts.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
 		TF_genes=config["TF_genes"],
 		TF_pheno=config["TF_pheno"]
@@ -184,6 +184,8 @@ rule RNA_Plot_sex_DEG_volcano_GO:
 rule RNA_Plot_sex_DEG_upset:
 	input:
 		sig_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj"
+	params:
+		output_folder=f"{output_tables}/"
 	output:
 		pdf=f"{output_pdf}/RNA_sex_DEG_upset.pdf",
 		png=f"{output_png}/RNA_sex_DEG_upset.png"
@@ -195,7 +197,7 @@ rule RNA_Plot_sex_DEG_upset:
 
 rule RNA_Get_XX_dynamic_DEGs:
 	input:
-		counts=f"{processed_data}/RNA_raw_counts.csv",
+		counts=f"{output_tables}/RNA_raw_counts.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
 		TF_genes=config["TF_genes"],
 		TF_pheno=config["TF_pheno"]
@@ -214,7 +216,7 @@ rule RNA_Get_XX_dynamic_DEGs:
 
 rule RNA_Get_XY_dynamic_DEGs:
 	input:
-		counts=f"{processed_data}/RNA_raw_counts.csv",
+		counts=f"{output_tables}/RNA_raw_counts.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
 		TF_genes=config["TF_genes"],
 		TF_pheno=config["TF_pheno"]
@@ -236,7 +238,7 @@ rule RNA_Plot_heatmap_GO_XX:
 		TF_genes=config["TF_genes"],
 		TF_pheno=config["TF_pheno"],
 		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XX.Robj",
-		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
+		norm_counts=f"{output_tables}/RNA_norm_counts.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
 	params:
 		sex="XX",
@@ -257,7 +259,7 @@ rule RNA_Plot_heatmap_GO_XY:
 		TF_genes=config["TF_genes"],
 		TF_pheno=config["TF_pheno"],
 		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XY.Robj",
-		norm_counts=f"{processed_data}/RNA_norm_counts.csv",
+		norm_counts=f"{output_tables}/RNA_norm_counts.csv",
 		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
 	params:
 		sex="XY",
@@ -447,7 +449,7 @@ rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="genome",
@@ -466,7 +468,7 @@ rule ATAC_TFBS_motifs_sex_cond_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -485,7 +487,7 @@ rule ATAC_TFBS_motifs_sex_DAR_merged_stages:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -618,7 +620,7 @@ rule ATAC_XX_TFBS_motifs_stage_cond_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -640,7 +642,7 @@ rule ATAC_XY_TFBS_motifs_stage_cond_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -662,7 +664,7 @@ rule ATAC_XX_TFBS_motifs_stage_rand_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="genome",
@@ -684,7 +686,7 @@ rule ATAC_XY_TFBS_motifs_stage_rand_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="genome",
@@ -707,7 +709,7 @@ rule MULTI_Get_all_gene_peak_correlation:
 	input:
 		RNA_samplesheet=f"{processed_data}/RNA_samplesheet.csv",
 		ATAC_samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-		RNA_norm_counts=f"{processed_data}/RNA_norm_counts.csv",
+		RNA_norm_counts=f"{output_tables}/RNA_norm_counts.csv",
 		ATAC_norm_counts=f"{processed_data}/ATAC_norm_counts.csv",
 		chrom_size=f"{input_data}/chrom.size",
 		genes=f"{input_data}/gene_standard.bed",
@@ -746,7 +748,7 @@ rule MULTI_TFBS_motifs_peak_XX_genes:
 	input:
 		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
 		sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		background="conditions",
 		genome=config["genome_version"],
@@ -765,7 +767,7 @@ rule MULTI_TFBS_motifs_peak_XY_genes:
 	input:
 		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
 		sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-		TPM=f"{processed_data}/RNA_TPM.csv"
+		TPM=f"{output_tables}/RNA_TPM.csv"
 	params:
 		background="conditions",
 		genome=config["genome_version"],

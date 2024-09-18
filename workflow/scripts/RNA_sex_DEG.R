@@ -92,7 +92,17 @@ filtered_SexDEGs <- lapply(filtered_SexDEGs, function(filtered) {
 ##########################################
 
 # For each stages, write DEG results into separated files
-export <- lapply(seq_along(stages), function(stg) write.table(filtered_SexDEGs[stg], paste0(save_folder, "/RNA_DEG_sex_", stages[stg], ".tsv"), quote = FALSE, row.names = FALSE, sep = "\t"))
+export <- lapply(
+  seq_along(stages), 
+  function(stg) 
+    write.table(
+      filtered_SexDEGs[stg], 
+      file=paste0(save_folder, "/RNA_DEG_sex_", stages[stg], ".tsv"), 
+      quote = FALSE, 
+      row.names = FALSE, 
+      sep = "\t"
+    )
+)
 
 # Save the Robj of the results for reuse
 save(SexDEGs, file = snakemake@output[["all_DEGs"]])
