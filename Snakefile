@@ -1,23 +1,21 @@
-configfile: "smk_env/workflow_config.yaml"
+'''
+Author: Isabelle Stévant
+Affiliation: University of Bar Ilan
+Date: 18/09/2024
+Licence: MIT
+
+Pipeline created to analyse the paired time series RNA and ATAC-seq of the supporting cells from mouse fetal gonads.
+Stévant et al. 2024
+doi:
+
+'''
 
 # Generate the report
 # report: "report/workflow.rst"
 
-# Get file path according to the genome version
-input_data = f'{config["path_to_data"]}{config["genome_version"]}'
-processed_data = f'{config["path_to_process"]}{config["genome_version"]}'
-output_png = f'{config["path_to_graphs"]}{config["genome_version"]}/PNG'
-output_pdf = f'{config["path_to_graphs"]}{config["genome_version"]}/PDF'
-output_tables = f'{config["path_to_tables"]}{config["genome_version"]}'
-
-if config["genome_version"] == "mm10":
-	genome = f'{input_data}/gencode.vM25.annotation.gtf.gz'
-	RNA_bigwig_folder = config["RNA_bigwig_folder_mm10"]
-	ATAC_bigwig_folder = config["ATAC_bigwig_folder_mm10"]
-else :
-	genome = f'{input_data}/gencode.vM34.annotation.gtf.gz'
-	RNA_bigwig_folder = config["RNA_bigwig_folder_mm39"]
-	ATAC_bigwig_folder = config["ATAC_bigwig_folder_mm39"]
+# Import the different pipeline modules
+include: "workflow/rules/RNA_analysis.smk"
+include: "workflow/rules/ATAC_analysis.smk"
 
 # List of output files
 rule_all_input_list = [
@@ -54,396 +52,35 @@ rule_all_input_list = [
 	f"{processed_data}/plot_example_3.log"
 ]
 
-# If there is no outliers, do not run the analysis that discard them
-if len(config["RNA_outliers"])<1:
-	rule_all_input_list.remove(f"{output_png}/RNA_corr_pca_all_samples.png")
-
-rule all:
-	input:
-		rule_all_input_list
-
+# Install the necessary R packages using Renv
 rule install_packages:
 	script:
 		"renv/restore.R"
 
-rule RNA_Get_matrices:
+# Run the whole pipeline
+rule all:
 	input:
-		counts=f'{input_data}/{config["RNA_counts"]}',
-		tpm=f'{input_data}/{config["RNA_TPM"]}',
-		protein_genes=config["protein_genes"]
-	params:
-		minReads=config["RNA_minReads"],
-		minTPM=config["RNA_minTPM"],
-		RNA_outliers=config["RNA_outliers"]
-	output:
-		tpm_all=f"{processed_data}/RNA_TPM_all_samples.csv",
-		tpm=f"{output_tables}/RNA_TPM.csv",
-		counts=f"{output_tables}/RNA_raw_counts.csv",
-		norm_counts=f"{output_tables}/RNA_norm_counts.csv",
-		norm_counts_all=f"{processed_data}/RNA_norm_counts_all.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_clean_matrices.R"
+		rule_RNA_input_list + rule_ATAC_input_list
 
-rule RNA_corr_PCA_with outliers:
+# Run the RNA-seq analysis only
+rule RNA_analysis:
 	input:
-		norm_data=f"{processed_data}/RNA_norm_counts_all.csv"
-	params:
-		corr_method=config["RNA_corr_met"]
-	output:
-		pdf=f"{output_pdf}/RNA_corr_pca_all_samples.pdf",
-		png=f"{output_png}/RNA_corr_pca_all_samples.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/Corr_pca.R"
+		rule_RNA_input_list
 
-rule RNA_corr_PCA:
+# Run the ATAC-seq analysis only
+rule ATAC_analysis:
 	input:
-		norm_data=f"{output_tables}/RNA_norm_counts.csv"
-	params:
-		corr_method="spearman"
-	output:
-		pdf=f"{output_pdf}/RNA_corr_pca.pdf",
-		png=f"{output_png}/RNA_corr_pca.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/Corr_pca.R"
-
-rule RNA_Plot_marker_genes:
-	input:
-		marker_genes=config["marker_genes"],
-		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',
-		tpm=f"{output_tables}/RNA_TPM.csv"
-	output:
-		pdf1=f"{output_pdf}/RNA_marker_genes.pdf",
-		png1=f"{output_png}/RNA_marker_genes.png",
-		pdf2=f"{output_pdf}/RNA_marker_genes_enrichment.pdf",
-		png2=f"{output_png}/RNA_marker_genes_enrichment.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_plot_marker_genes.R"
-
-rule RNA_Get_sex_DEGs:
-	input:
-		counts=f"{output_tables}/RNA_raw_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-		TF_genes=config["TF_genes"],
-		TF_pheno=config["TF_pheno"]
-	params:
-		adjpval=config["RNA_adjpval"],
-		log2FC=config["RNA_log2FC"],
-		save_folder=f"{output_tables}"
-	output:
-		all_DEGs=f"{processed_data}/RNA_all_SexDEGs.Robj",
-		sig_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_sex_DEG.R"
-
-rule RNA_Plot_sex_DEG_histogram:
-	input:
-		sig_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	output:
-		pdf=f"{output_pdf}/RNA_sex_DEG_histograms.pdf",
-		png=f"{output_png}/RNA_sex_DEG_histograms.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_plot_sex_DEG_hist.R"
-
-rule RNA_Plot_sex_DEG_volcano_GO:
-	input:
-		all_DEGs=f"{processed_data}/RNA_all_SexDEGs.Robj",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	params:
-		adjpval=config["RNA_adjpval"],
-		log2FC=config["RNA_log2FC"],
-		path=f"{output_tables}"
-	output:
-		pdf=f"{output_pdf}/RNA_sex_DEG_volcano.pdf",
-		png=f"{output_png}/RNA_sex_DEG_volcano.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_plot_sex_volcano_GO.R"
-
-rule RNA_Plot_sex_DEG_upset:
-	input:
-		sig_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj"
-	params:
-		output_folder=f"{output_tables}/"
-	output:
-		pdf=f"{output_pdf}/RNA_sex_DEG_upset.pdf",
-		png=f"{output_png}/RNA_sex_DEG_upset.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_sex_DEG_upset.R"
-
-rule RNA_Get_XX_dynamic_DEGs:
-	input:
-		counts=f"{output_tables}/RNA_raw_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-		TF_genes=config["TF_genes"],
-		TF_pheno=config["TF_pheno"]
-	params:
-		adjpval=config["RNA_adjpval"],
-		log2FC=config["RNA_log2FC"],
-		sex="XX"
-	output:
-		tsv=f"{output_tables}/RNA_XX_DEG_stage.tsv",
-		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XX.Robj"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_stage_DEG.R"
-
-rule RNA_Get_XY_dynamic_DEGs:
-	input:
-		counts=f"{output_tables}/RNA_raw_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv",
-		TF_genes=config["TF_genes"],
-		TF_pheno=config["TF_pheno"]
-	params:
-		adjpval=config["RNA_adjpval"],
-		log2FC=config["RNA_log2FC"],
-		sex="XY"
-	output:
-		tsv=f"{output_tables}/RNA_XY_DEG_stage.tsv",
-		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XY.Robj"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_stage_DEG.R"
-
-rule RNA_Plot_heatmap_GO_XX:
-	input:
-		TF_genes=config["TF_genes"],
-		TF_pheno=config["TF_pheno"],
-		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XX.Robj",
-		norm_counts=f"{output_tables}/RNA_norm_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	params:
-		sex="XX",
-		clusters=config["RNA_XX_stage_DEG_clusters"]
-	output:
-		GO=f"{output_tables}/RNA_XX_GO_DEG_stage.csv",
-		cluster_file=f"{output_tables}/RNA_XX_DEG_stage_heatmap_clusters.csv",
-		pdf=f"{output_pdf}/RNA_XX_DEG_stage_heatmap.pdf",
-		png=f"{output_png}/RNA_XX_DEG_stage_heatmap.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_stage_DEG_heatmap.R"
-
-rule RNA_Plot_heatmap_GO_XY:
-	input:
-		TF_genes=config["TF_genes"],
-		TF_pheno=config["TF_pheno"],
-		sig_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XY.Robj",
-		norm_counts=f"{output_tables}/RNA_norm_counts.csv",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	params:
-		sex="XY",
-		clusters=config["RNA_XY_stage_DEG_clusters"]
-	output:
-		GO=f"{output_tables}/RNA_XY_GO_DEG_stage.csv",
-		cluster_file=f"{output_tables}/RNA_XY_DEG_stage_heatmap_clusters.csv",
-		pdf=f"{output_pdf}/RNA_XY_DEG_stage_heatmap.pdf",
-		png=f"{output_png}/RNA_XY_DEG_stage_heatmap.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_stage_DEG_heatmap.R"
-
-rule RNA_Plot_sex_stage_common_DEGs:
-	input:
-		sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-		XY_stage_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XY.Robj",
-		XX_stage_DEGs=f"{processed_data}/RNA_sig_stage_DEGs_XX.Robj",
-		samplesheet=f"{processed_data}/RNA_samplesheet.csv"
-	output:
-		pdf=f"{output_pdf}/RNA_sex_stage_common_DEGs.pdf",
-		png=f"{output_png}/RNA_sex_stage_common_DEGs.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/RNA_overlap_sex_stage_DEG.R"
-
-################################################################################################
-rule ATAC_Get_matrices:
-	input:
-		counts=f'{input_data}/{config["ATAC_counts"]}',
-	params:
-		minReads=config["ATAC_minReads"],
-	output:
-		counts=f"{processed_data}/ATAC_raw_counts.csv",
-		norm_counts=f"{processed_data}/ATAC_norm_counts.csv",
-		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-		size_factors=f"{processed_data}/ATAC_size_factors.csv"
-	resources:
-		cpus_per_task=4,
-		mem_mb=16000
-	script:
-		"workflow/scripts/ATAC_clean_matrices.R"
-
-# Force the execution if you need to re-normalize the bigwig files
-rule ATAC_Normalize_bigwig:
-	input:
-		size_factors=f"{processed_data}/ATAC_size_factors.csv"
-	params:
-		bigwig_folder=f"{ATAC_bigwig_folder}",
-		new_bigwig_folder=f"{processed_data}/ATAC_bigwig"
-	output:
-		output_file=f"{processed_data}/ATAC_bigwig/scale/ATAC_size_factors.csv"
-	resources:
-		cpus_per_task=12,
-		mem_mb=16000
-	script:
-		"workflow/scripts/MULTI_norm_bigwig.R"
-
-rule ATAC_Plot_nb_consensus_peak:
-	input:
-		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj",
-		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-		norm_data=f"{processed_data}/ATAC_norm_counts.csv"
-	output:
-		pdf=f"{output_pdf}/ATAC_consensus_peak_distribution.pdf",
-		png=f"{output_png}/ATAC_consensus_peak_distribution.png"
-	resources:
-		cpus_per_task=4,
-		mem_mb=16000
-	script:
-		"workflow/scripts/ATAC_peak_distribution_per_sex.R"
-
-rule ATAC_Plot_consensus_peak_annotation:
-	input:
-		genome=f"{genome}",
-		peak_list=f"{input_data}/ATAC_all_consensus_peaks_2rep_list.Robj"
-	params:
-		promoter=config["ATAC_promoter_distance"]
-	output:
-		anno_list=f"{processed_data}/ATAC_all_consensus_peak_annotation.Robj",
-		pdf=f"{output_pdf}/ATAC_all_consensus_peak_annotation.pdf",
-		png=f"{output_png}/ATAC_all_consensus_peak_annotation.png"
-	resources:
-		cpus_per_task=4,
-		mem_mb=16000
-	script:
-		"workflow/scripts/ATAC_peak_annotation_per_sex.R"
-
-rule ATAC_corr_PCA:
-	input:
-		norm_data=f"{processed_data}/ATAC_norm_counts.csv"
-	params:
-		corr_method=config["ATAC_corr_met"]
-	output:
-		pdf=f"{output_pdf}/ATAC_corr_pca_all_samples.pdf",
-		png=f"{output_png}/ATAC_corr_pca_all_samples.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/Corr_pca.R"
-
-# rule ATAC_Plot_peak_examples:
-# 	input:
-# 		genome=f"{genome}",
-# 		gene_bed=f"{input_data}/gene_standard.bed",
-# 		peaks=f"{processed_data}/ATAC_norm_counts.csv",
-# 		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-# 		gene_list=config["peak_examples"],
-# 	params:
-# 		bw_folder="results/processed_data/mm10/ATAC_bigwig",
-# 		save_folder=f"{output_png}"
-# 	output: 
-# 		log= f"{processed_data}/plot_example_1.log"
-# 	resources:
-# 		cpus_per_task=12,
-# 		mem_mb=64000
-# 	script:
-# 		"workflow/scripts/MULTI_plot_genomic_tracks_examples.R"
+		rule_ATAC_input_list
 
 
-rule ATAC_Get_sex_DARs:
-	input:
-		counts=f"{processed_data}/ATAC_raw_counts.csv",
-		samplesheet=f"{processed_data}/ATAC_samplesheet.csv",
-		gtf=f"{genome}"
-	params:
-		adjpval=config["ATAC_adjpval"],
-		log2FC=config["ATAC_log2FC"],
-		promoter=config["ATAC_promoter_distance"],
-		save_folder=f"{output_tables}"
-	output:
-		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-		sig_DARs_GR=f"{processed_data}/ATAC_sig_SexDARs_GR.Robj"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/ATAC_sex_DAR.R"
 
-rule ATAC_Plot_sex_DAR_histogram:
-	input:
-		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-		samplesheet=f"{processed_data}/ATAC_samplesheet.csv"
-	output:
-		pdf=f"{output_pdf}/ATAC_sex_DAR_histograms.pdf",
-		png=f"{output_png}/ATAC_sex_DAR_histograms.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/ATAC_plot_sex_DAR_hist.R"
 
-rule ATAC_Plot_sex_DAR_peak_annotation:
-	input:
-		genome=f"{genome}",
-		peak_list=f"{processed_data}/ATAC_sig_SexDARs_GR.Robj"
-	params:
-		promoter=config["ATAC_promoter_distance"]
-	output:
-		anno_list=f"{processed_data}/ATAC_sig_SexDARs_annotation.Robj",
-		pdf=f"{output_pdf}/ATAC_sig_sex_DARs_annotation.pdf",
-		png=f"{output_png}/ATAC_sig_sex_DARs_annotation.png"
-	resources:
-		cpus_per_task=12,
-		mem_mb=64000
-	script:
-		"workflow/scripts/ATAC_peak_annotation_per_sex.R"
 
-rule ATAC_Plot_sex_DAR_upset:
-	input:
-		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj"
-	output:
-		pdf=f"{output_pdf}/ATAC_sex_DAR_upset.pdf",
-		png=f"{output_png}/ATAC_sex_DAR_upset.png"
-	resources:
-		cpus_per_task=24,
-		mem_mb=64000
-	script:
-		"workflow/scripts/ATAC_sex_DAR_upset.R"
+
+
+
+
+
 
 rule ATAC_TFBS_motifs_sex_rdm_bg_DAR:
 	input:
