@@ -17,40 +17,41 @@ doi:
 include: "workflow/rules/RNA_analysis.smk"
 include: "workflow/rules/ATAC_analysis.smk"
 
+
 # List of output files
-rule_all_input_list = [
-	f"{output_png}/RNA_corr_pca_all_samples.png",
-	f"{output_png}/RNA_corr_pca.png",
-	f"{output_png}/RNA_marker_genes.png",
-	f"{output_png}/RNA_marker_genes_enrichment.png",
-	f"{output_png}/RNA_sex_DEG_histograms.png",
-	f"{output_png}/RNA_sex_DEG_volcano.png",
-	f"{output_png}/RNA_sex_DEG_upset.png",
-	f"{output_png}/RNA_XX_DEG_stage_heatmap.png",
-	f"{output_png}/RNA_XY_DEG_stage_heatmap.png",
-	f"{output_png}/RNA_sex_stage_common_DEGs.png",
-	f"{output_png}/ATAC_corr_pca_all_samples.png",
-	f"{output_png}/ATAC_consensus_peak_distribution.png",
-	f"{output_png}/ATAC_all_consensus_peak_annotation.png",
-	f"{output_png}/ATAC_sex_DAR_histograms.png",
-	f"{output_png}/ATAC_sig_sex_DARs_annotation.png",
-	f"{output_png}/ATAC_sex_DAR_upset.png",
-	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
-	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
-	f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
-	f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
-	f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
-	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
-	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
-	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
-	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png",
-	f"{output_pdf}/MULTI_gene2peak_plots.pdf",
-	f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
-	f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
-	# f"{processed_data}/plot_example_1.log",
-	# f"{processed_data}/plot_example_2.log",
-	f"{processed_data}/plot_example_3.log"
-]
+# rule_all_input_list = [
+# 	f"{output_png}/RNA_corr_pca_all_samples.png",
+# 	f"{output_png}/RNA_corr_pca.png",
+# 	f"{output_png}/RNA_marker_genes.png",
+# 	f"{output_png}/RNA_marker_genes_enrichment.png",
+# 	f"{output_png}/RNA_sex_DEG_histograms.png",
+# 	f"{output_png}/RNA_sex_DEG_volcano.png",
+# 	f"{output_png}/RNA_sex_DEG_upset.png",
+# 	f"{output_png}/RNA_XX_DEG_stage_heatmap.png",
+# 	f"{output_png}/RNA_XY_DEG_stage_heatmap.png",
+# 	f"{output_png}/RNA_sex_stage_common_DEGs.png",
+# 	f"{output_png}/ATAC_corr_pca_all_samples.png",
+# 	f"{output_png}/ATAC_consensus_peak_distribution.png",
+# 	f"{output_png}/ATAC_all_consensus_peak_annotation.png",
+# 	f"{output_png}/ATAC_sex_DAR_histograms.png",
+# 	f"{output_png}/ATAC_sig_sex_DARs_annotation.png",
+# 	f"{output_png}/ATAC_sex_DAR_upset.png",
+# 	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
+# 	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
+# 	f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
+# 	f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
+# 	f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
+# 	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
+# 	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
+# 	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
+# 	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png",
+# 	f"{output_pdf}/MULTI_gene2peak_plots.pdf",
+# 	f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
+# 	f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
+# 	# f"{processed_data}/plot_example_1.log",
+# 	# f"{processed_data}/plot_example_2.log",
+# 	f"{processed_data}/plot_example_3.log"
+# ]
 
 # Install the necessary R packages using Renv
 rule install_packages:
