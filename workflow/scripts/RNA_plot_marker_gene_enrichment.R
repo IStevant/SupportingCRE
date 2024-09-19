@@ -19,7 +19,6 @@ suppressPackageStartupMessages({
 ###########################################
 
 TPM <- read.csv(file = snakemake@input[["tpm"]], row.names = 1)
-markerGenes <- read.csv(file = snakemake@input[["marker_genes"]])
 whole_gonad <- read.csv(file = snakemake@input[["whole_gonad"]])
 
 ###########################################
