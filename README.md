@@ -3,9 +3,12 @@
 ## Introduction
 
 The following pipeline was created to analyse paired time-series ATAC and RNA-seq data of purified pre-granulosa and Sertoli cells from fetal gonads.
+
 The analysis consists first in analysing the RNA-seq data by performing sex-differentially expressed gene analysis, embryonic stage differentially expressed genes using DESeq2, and GO term enrichment analysis of the obtained group of genes with ClusterProfiler.
+
 Second, the ATAC-seq analysis consists in performing sex-differentially accessible open chromatin regions, embryonic stage differentially accessible open chromatin regions using DESeq2, and TF motif enrichment analysis of the obtained group of chromatin regions.
 Finally, we combine the RNA and the ATAC data to predict cis-regulatory regions and their target genes by correlation analysis with monaLISA.
+
 We also performed ATAC footprint analysis with TOBIAS to predict TF bonding sites and recontruct gene regulatory networks.
 
 ## How to run the pipeline
