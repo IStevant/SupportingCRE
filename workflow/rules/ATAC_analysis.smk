@@ -18,7 +18,7 @@ doi:
 
 configfile: "smk_env/workflow_config.yaml"
 
-sexes = config["sex"]
+sexes = config["sexes"]
 stages = config["stages"]
 TFBS_background = ["genome", "conditions"]
 
