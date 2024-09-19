@@ -7,9 +7,6 @@ Licence: MIT
 
 Snakemake rules concerning the RNA-seq analysis
 
-The pipeline support mm10 and mm39 mouse genome versions
-The genome version is specified in the smk_env/workflow_config.yaml configuration file.
-
 Pipeline created to analyse the paired time series RNA and ATAC-seq of the supporting cells from mouse fetal gonads.
 Stévant et al. 2024
 doi:
@@ -29,16 +26,16 @@ output_tables = f'{config["path_to_tables"]}{config["genome_version"]}/RNA'
 
 # List of output figures
 rule_RNA_input_list = [
-	f"{output_png}/Figure1_RNA_corr_pca_all_samples.png",
-	f"{output_png}/Figure2_RNA_corr_pca.png",
-	f"{output_png}/Figure3_RNA_marker_genes.png",
-	f"{output_png}/Figure4_RNA_marker_genes_enrichment.png",
-	f"{output_png}/Figure5_RNA_sex_DEG_histograms.png",
-	f"{output_png}/Figure6_RNA_sex_DEG_volcano.png",
-	f"{output_png}/Figure7_RNA_sex_DEG_upset.png",
-	f"{output_png}/Figure8_RNA_XX_DEG_stage_heatmap.png",
-	f"{output_png}/Figure9_RNA_XY_DEG_stage_heatmap.png",
-	f"{output_png}/Figure10_RNA_sex_stage_common_DEGs.png"
+	f"{output_png}/RNA_corr_pca_all_samples.png",
+	f"{output_png}/RNA_corr_pca.png",
+	f"{output_png}/RNA_marker_genes.png",
+	f"{output_png}/RNA_marker_genes_enrichment.png",
+	f"{output_png}/RNA_sex_DEG_histograms.png",
+	f"{output_png}/RNA_sex_DEG_volcano.png",
+	f"{output_png}/RNA_sex_DEG_upset.png",
+	f"{output_png}/RNA_XX_DEG_stage_heatmap.png",
+	f"{output_png}/RNA_XY_DEG_stage_heatmap.png",
+	f"{output_png}/RNA_sex_stage_common_DEGs.png"
 ]
 
 # If there is no outliers, do not run the analysis that discard them
@@ -58,14 +55,14 @@ if len(config["RNA_outliers"])<1:
 #                                         #
 ###########################################
 
-# Generate the expression matrices that will be used for the rest of teh analysis
+# Generate the expression matrices that will be used for the rest of the analysis
 rule RNA_Get_matrices:
 	input:
 		counts=f'{input_data}/{config["RNA_counts"]}', # Raw read count per gene matrix comming from the nf-core/rnaseq pipeline
 		tpm=f'{input_data}/{config["RNA_TPM"]}',       # TPM per gene matrix comming from the nf-core/rnaseq pipeline
 		protein_genes=config["protein_genes"]          # List of the mouse protein coding genes
 	params:
-		minReads=config["RNA_minReads"],     # Minimal number of raw reads from which we consider a gen eexpressed
+		minReads=config["RNA_minReads"],     # Minimal number of raw reads from which we consider a gene expressed
 		minTPM=config["RNA_minTPM"],         # Minimal number of TPM from which we consider a gen eexpressed
 		RNA_outliers=config["RNA_outliers"]  # If we know in advance we have outlier samples, generate the matrices with and without the outliers
 	output:
@@ -135,8 +132,8 @@ rule RNA_corr_PCA_with_outliers:
 	params:
 		corr_method=config["RNA_corr_met"]     # Correlation method (can be either "Pearson" or "Spearman")
 	output:
-		pdf=f"{output_pdf}/Figure1_RNA_corr_pca_all_samples.pdf",  # Figure as PDF
-		png=f"{output_png}/Figure1_RNA_corr_pca_all_samples.png"   # Figure as PNG
+		pdf=f"{output_pdf}/RNA_corr_pca_all_samples.pdf",  # Figure as PDF
+		png=f"{output_png}/RNA_corr_pca_all_samples.png"   # Figure as PNG
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
@@ -150,8 +147,8 @@ rule RNA_corr_PCA:
 	params:
 		corr_method=config["RNA_corr_met"]     # Correlation method (can be either "Pearson" or "Spearman")
 	output:
-		pdf=f"{output_pdf}/Figure2_RNA_corr_pca.pdf",  # Figure as PDF
-		png=f"{output_png}/Figure2_RNA_corr_pca.png"   # Figure as PNG
+		pdf=f"{output_pdf}/RNA_corr_pca.pdf",  # Figure as PDF
+		png=f"{output_png}/RNA_corr_pca.png"   # Figure as PNG
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
@@ -165,8 +162,8 @@ rule RNA_Plot_marker_genes:
 		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',   # Expression matrix of whole gonad RNA-seq (TPMs)
 		tpm=f"{output_tables}/TPM.csv"                                # TPM matrix without the outliers
 	output:
-		pdf=f"{output_pdf}/Figure3_RNA_marker_genes.pdf",
-		png=f"{output_png}/Figure3_RNA_marker_genes.png"
+		pdf=f"{output_pdf}/RNA_marker_genes.pdf",
+		png=f"{output_png}/RNA_marker_genes.png"
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
@@ -179,8 +176,8 @@ rule RNA_Plot_marker_gene_enrichment:
 		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',   # Expression matrix of whole gonad RNA-seq (TPMs)
 		tpm=f"{output_tables}/TPM.csv"                                # TPM matrix without the outliers
 	output:
-		pdf=f"{output_pdf}/Figure4_RNA_marker_genes_enrichment.pdf",
-		png=f"{output_png}/Figure4_RNA_marker_genes_enrichment.png"
+		pdf=f"{output_pdf}/RNA_marker_genes_enrichment.pdf",
+		png=f"{output_png}/RNA_marker_genes_enrichment.png"
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
@@ -193,8 +190,8 @@ rule RNA_Plot_sex_DEG_histogram:
 		sig_DEGs=f"{processed_data}/sig_SexDEGs.Robj",   # Robj containing the filtered DEGs
 		samplesheet=f"{output_tables}/samplesheet.csv"   # Description of the samples
 	output:
-		pdf=f"{output_pdf}/Figure5_RNA_sex_DEG_histograms.pdf",
-		png=f"{output_png}/Figure5_RNA_sex_DEG_histograms.png"
+		pdf=f"{output_pdf}/RNA_sex_DEG_histograms.pdf",
+		png=f"{output_png}/RNA_sex_DEG_histograms.png"
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
@@ -211,8 +208,8 @@ rule RNA_Plot_sex_DEG_volcano_GO:
 		log2FC=config["RNA_log2FC"],      # Log2 fold change threshold to condider a gene differentially expressed
 		path=f"{output_tables}"           # Location where the result tables are saved
 	output:
-		pdf=f"{output_pdf}/Figure6_RNA_sex_DEG_volcano.pdf",
-		png=f"{output_png}/Figure6_RNA_sex_DEG_volcano.png"
+		pdf=f"{output_pdf}/RNA_sex_DEG_volcano.pdf",
+		png=f"{output_png}/RNA_sex_DEG_volcano.png"
 	resources:
 		cpus_per_task=12,
 		mem_mb=64000
@@ -227,61 +224,86 @@ rule RNA_Plot_sex_DEG_upset:
 	params:
 		output_folder=f"{output_tables}/"      # Location where the result tables are saved
 	output:
-		pdf=f"{output_pdf}/Figure7_RNA_sex_DEG_upset.pdf",
-		png=f"{output_png}/Figure7_RNA_sex_DEG_upset.png"
+		pdf=f"{output_pdf}/RNA_sex_DEG_upset.pdf",
+		png=f"{output_png}/RNA_sex_DEG_upset.png"
 	resources:
 		cpus_per_task=2,
 		mem_mb=4000
 	script:
 		"../scripts/RNA_sex_DEG_upset.R"
 
+
 # Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
 # The heatmap is annotated with 25 TFs with gonadal phenotypes.
 # Return the genes in each clusters and the GO term enrichment result table.
-rule RNA_Plot_heatmap_GO_XX:
+rule RNA_Plot_heatmap_GO:
 	input:
 		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
 		TF_pheno=config["TF_pheno"]                           # List ig genes with gonadal phenotypes from MGI OBO database
-		sig_DEGs=f"{processed_data}/sig_stage_DEGs_XX.Robj",  # Robj with the filtered XX dynamic genes
+		sig_DEGs=f"{processed_data}/sig_stage_DEGs_{{sex}}.Robj",  # Robj with the filtered dynamic genes
 		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
 		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
 	params:
-		sex="XX",                                     # Current sex
-		clusters=config["RNA_XX_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
+		sex=lambda wildcards: wildcards.sex,               # Current sex
+		clusters=config["RNA_{{sex}}_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
 	output:
-		GO=f"{output_tables}/XX_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
-		cluster_file=f"{output_tables}/XX_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
-		pdf=f"{output_pdf}/Figure8_RNA_XX_DEG_stage_heatmap.pdf",
-		png=f"{output_png}/Figure8_RNA_XX_DEG_stage_heatmap.png"
+		GO=f"{output_tables}/{{sex}}_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
+		cluster_file=f"{output_tables}/{{sex}}_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
+		pdf=f"{output_pdf}/RNA_{{sex}}_DEG_stage_heatmap.pdf",
+		png=f"{output_png}/RNA_{{sex}}_DEG_stage_heatmap.png"
 	resources:
 		cpus_per_task=4,
 		mem_mb=16000
 	script:
 		"../scripts/RNA_stage_DEG_heatmap.R"
 
-# Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
-# The heatmap is annotated with 25 TFs with gonadal phenotypes.
-# Return the genes in each clusters and the GO term enrichment result table.
-rule RNA_Plot_heatmap_GO_XY:
-	input:
-		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
-		TF_pheno=config["TF_pheno"]                           # List ig genes with gonadal phenotypes from MGI OBO database
-		sig_DEGs=f"{processed_data}/sig_stage_DEGs_XX.Robj",  # Robj with the filtered XY dynamic genes
-		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
-		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
-	params:
-		sex="XY",                                     # Current sex
-		clusters=config["RNA_XY_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
-	output:
-		GO=f"{output_tables}/XY_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
-		cluster_file=f"{output_tables}/XY_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
-		pdf=f"{output_pdf}/Figure9_RNA_XY_DEG_stage_heatmap.pdf",
-		png=f"{output_png}/Figure9_RNA_XY_DEG_stage_heatmap.png"
-	resources:
-		cpus_per_task=2,
-		mem_mb=24000
-	script:
-		"../scripts/RNA_stage_DEG_heatmap.R"
+# # Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
+# # The heatmap is annotated with 25 TFs with gonadal phenotypes.
+# # Return the genes in each clusters and the GO term enrichment result table.
+# rule RNA_Plot_heatmap_GO_XX:
+# 	input:
+# 		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
+# 		TF_pheno=config["TF_pheno"]                           # List ig genes with gonadal phenotypes from MGI OBO database
+# 		sig_DEGs=f"{processed_data}/sig_stage_DEGs_XX.Robj",  # Robj with the filtered XX dynamic genes
+# 		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
+# 		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
+# 	params:
+# 		sex="XX",                                     # Current sex
+# 		clusters=config["RNA_XX_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
+# 	output:
+# 		GO=f"{output_tables}/XX_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
+# 		cluster_file=f"{output_tables}/XX_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
+# 		pdf=f"{output_pdf}/RNA_XX_DEG_stage_heatmap.pdf",
+# 		png=f"{output_png}/RNA_XX_DEG_stage_heatmap.png"
+# 	resources:
+# 		cpus_per_task=4,
+# 		mem_mb=16000
+# 	script:
+# 		"../scripts/RNA_stage_DEG_heatmap.R"
+
+# # Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
+# # The heatmap is annotated with 25 TFs with gonadal phenotypes.
+# # Return the genes in each clusters and the GO term enrichment result table.
+# rule RNA_Plot_heatmap_GO_XY:
+# 	input:
+# 		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
+# 		TF_pheno=config["TF_pheno"]                           # List ig genes with gonadal phenotypes from MGI OBO database
+# 		sig_DEGs=f"{processed_data}/sig_stage_DEGs_XX.Robj",  # Robj with the filtered XY dynamic genes
+# 		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
+# 		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
+# 	params:
+# 		sex="XY",                                     # Current sex
+# 		clusters=config["RNA_XY_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
+# 	output:
+# 		GO=f"{output_tables}/XY_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
+# 		cluster_file=f"{output_tables}/XY_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
+# 		pdf=f"{output_pdf}/RNA_XY_DEG_stage_heatmap.pdf",
+# 		png=f"{output_png}/RNA_XY_DEG_stage_heatmap.png"
+# 	resources:
+# 		cpus_per_task=2,
+# 		mem_mb=24000
+# 	script:
+# 		"../scripts/RNA_stage_DEG_heatmap.R"
 
 # Draw venn diagrams of the comparison of dynamic and sex-specific DEGs for each sex
 rule RNA_Plot_sex_stage_common_DEGs:
@@ -291,8 +313,8 @@ rule RNA_Plot_sex_stage_common_DEGs:
 		XY_stage_DEGs=f"{processed_data}/sig_stage_DEGs_XY.Robj",    # Robj with the filtered XY dynamic genes
 		samplesheet=f"{output_tables}/samplesheet.csv"               # Description of the samples
 	output:
-		pdf=f"{output_pdf}/Figure10_RNA_sex_stage_common_DEGs.pdf",
-		png=f"{output_png}/Figure10_RNA_sex_stage_common_DEGs.png"
+		pdf=f"{output_pdf}/RNA_sex_stage_common_DEGs.pdf",
+		png=f"{output_png}/RNA_sex_stage_common_DEGs.png"
 	resources:
 		cpus_per_task=2,
 		mem_mb=4000
