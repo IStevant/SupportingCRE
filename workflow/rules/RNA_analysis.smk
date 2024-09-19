@@ -33,8 +33,7 @@ rule_RNA_input_list = [
 	f"{output_png}/RNA_sex_DEG_histograms.png",
 	f"{output_png}/RNA_sex_DEG_volcano.png",
 	f"{output_png}/RNA_sex_DEG_upset.png",
-	f"{output_png}/RNA_dynamic_XX_DEG_heatmap.png",
-	f"{output_png}/RNA_dynamic_XY_DEG_heatmap.png",
+	expand(f"{output_png}/RNA_{{sex}}_DEG_stage_heatmap.png", sex=sexes),
 	f"{output_png}/RNA_common_dynamic_DEGs.png",
 	f"{output_png}/RNA_common_sex_dynamic_DEGs.png"
 ]
@@ -233,74 +232,24 @@ rule RNA_Plot_sex_DEG_upset:
 	script:
 		"../scripts/RNA_sex_DEG_upset.R"
 
-
-# # Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
-# # The heatmap is annotated with 25 TFs with gonadal phenotypes.
-# # Return the genes in each clusters and the GO term enrichment result table.
-# rule RNA_Plot_heatmap_GO:
-# 	input:
-# 		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
-# 		TF_pheno=config["TF_pheno"],                          # List ig genes with gonadal phenotypes from MGI OBO database
-# 		sig_DEGs=f"{processed_data}/sig_stage_DEGs_{{sex}}.Robj",  # Robj with the filtered dynamic genes
-# 		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
-# 		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
-# 	params:
-# 		sex=lambda wildcards: wildcards.sex,               # Current sex
-# 		clusters=config[f"RNA_{{sex}}_stage_DEG_clusters"] # Minimal number of clusters (decided by visual inspection of the heatmap)
-# 	output:
-# 		GO=f"{output_tables}/{{sex}}_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
-# 		cluster_file=f"{output_tables}/{{sex}}_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
-# 		pdf=f"{output_pdf}/RNA_{{sex}}_DEG_stage_heatmap.pdf",
-# 		png=f"{output_png}/RNA_{{sex}}_DEG_stage_heatmap.png"
-# 	resources:
-# 		cpus_per_task=4,
-# 		mem_mb=16000
-# 	script:
-# 		"../scripts/RNA_dynamic_DEG_heatmap.R"
-
 # Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
 # The heatmap is annotated with 25 TFs with gonadal phenotypes.
 # Return the genes in each clusters and the GO term enrichment result table.
-
-rule RNA_Plot_dynamic_XX_DEG_heatmap_GO_XX:
+rule RNA_Plot_heatmap_GO:
 	input:
 		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
 		TF_pheno=config["TF_pheno"],                          # List ig genes with gonadal phenotypes from MGI OBO database
-		sig_DEGs=f"{processed_data}/sig_stage_DEGs_XX.Robj",  # Robj with the filtered XX dynamic genes
+		sig_DEGs=f"{processed_data}/sig_stage_DEGs_{{sex}}.Robj",  # Robj with the filtered dynamic genes
 		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
 		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
 	params:
-		sex="XX",                                     # Current sex
-		clusters=config["RNA_XX_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
+		sex=lambda wildcards: wildcards.sex,               # Current sex
+		clusters=config["RNA_stage_DEG_clusters"]            # Minimal number of clusters (decided by visual inspection of the heatmap)
 	output:
-		GO=f"{output_tables}/XX_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
-		cluster_file=f"{output_tables}/XX_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
-		pdf=f"{output_pdf}/RNA_dynamic_XX_DEG_heatmap.pdf",
-		png=f"{output_png}/RNA_dynamic_XX_DEG_heatmap.png"
-	resources:
-		cpus_per_task=4,
-		mem_mb=16000
-	script:
-		"../scripts/RNA_dynamic_DEG_heatmap.R"
-
-# Draw the heatmap of the dynamically expressed genes and top GO term enrichment for each cluster side by side.
-# The heatmap is annotated with 25 TFs with gonadal phenotypes.
-# Return the genes in each clusters and the GO term enrichment result table.
-rule RNA_Plot_dynamic_XX_DEG_heatmap_GO_XY:
-	input:
-		TF_genes=config["TF_genes"],                          # List of known mouse transcription factors
-		TF_pheno=config["TF_pheno"],                          # List ig genes with gonadal phenotypes from MGI OBO database
-		sig_DEGs=f"{processed_data}/sig_stage_DEGs_XY.Robj",  # Robj with the filtered XY dynamic genes
-		norm_counts=f"{output_tables}/norm_counts.csv",       # Filtered normalized read counts (normalization by the library size)
-		samplesheet=f"{output_tables}/samplesheet.csv"        # Description of the samples
-	params:
-		sex="XY",                                     # Current sex
-		clusters=config["RNA_XY_stage_DEG_clusters"]  # Minimal number of clusters (decided by visual inspection of the heatmap)
-	output:
-		GO=f"{output_tables}/XY_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
-		cluster_file=f"{output_tables}/XY_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
-		pdf=f"{output_pdf}/RNA_dynamic_XY_DEG_heatmap.pdf",
-		png=f"{output_png}/RNA_dynamic_XY_DEG_heatmap.png"
+		GO=f"{output_tables}/{{sex}}_GO_DEG_stage.csv",                          # Simplified GO term enrichment result table
+		cluster_file=f"{output_tables}/{{sex}}_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
+		pdf=f"{output_pdf}/RNA_{{sex}}_DEG_stage_heatmap.pdf",
+		png=f"{output_png}/RNA_{{sex}}_DEG_stage_heatmap.png"
 	resources:
 		cpus_per_task=4,
 		mem_mb=16000
@@ -323,7 +272,6 @@ rule RNA_Plot_common_dynamic_DEGs:
 		mem_mb=4000
 	script:
 		"../scripts/RNA_overlap_dynamic_DEG.R"
-
 
 # Draw venn diagrams of the comparison of dynamic and sex-specific DEGs for each sex
 rule RNA_Plot_common_sex_dynamic_DEGs:

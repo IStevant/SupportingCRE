@@ -28,6 +28,8 @@ processed_data = f'{config["path_to_process"]}{config["genome_version"]}/ATAC'
 output_png = f'{config["path_to_graphs"]}{config["genome_version"]}/ATAC'
 output_pdf = f'{config["path_to_graphs"]}{config["genome_version"]}/ATAC/PDF'
 output_tables = f'{config["path_to_tables"]}{config["genome_version"]}/ATAC'
+RNA_tables = f'{config["path_to_tables"]}{config["genome_version"]}/RNA'
+
 
 if config["genome_version"] == "mm10":
 	genome = f'{input_data}/gencode.vM25.annotation.gtf.gz'
@@ -44,15 +46,16 @@ rule_ATAC_input_list = [
 	f"{output_png}/ATAC_sex_DAR_histograms.png",
 	f"{output_png}/ATAC_sig_sex_DARs_annotation.png",
 	f"{output_png}/ATAC_sex_DAR_upset.png",
-	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_rdm_bg.pdf",
-	f"{output_pdf}/ATAC_sex_DAR_TF_motifs_sex_bg.pdf",
-	f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
-	f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
-	f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
-	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
-	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
-	f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
-	f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png"
+	expand(f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png", background = TFBS_background),
+	# f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
+	# expand(f"{output_png}/ATAC_{{sex}}_DAR_stage_heatmap.png", sex=sexes),
+	# f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
+	# f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
+	# expand(f"{output_png}/ATAC_{{sex}}_stage_DAR_TF_motifs_{{background}}_bg.png", sex=sexes, background = TFBS_background)
+	# f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
+	# f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
+	# f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
+	# f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png"
 ]
 
 ## Uncomment if you want to run only this pipeline
@@ -130,7 +133,7 @@ rule ATAC_TFBS_motifs_sex_DAR:
 	input:
 		TF_genes=config["TF_genes"],                         # List of known mouse transcripotion factors
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",  # R object containing the filtered DESeq2 results
-		TPM=f"{output_tables}/TPM.csv"                       # Gene expression matrix
+		TPM=f"{RNA_tables}/TPM.csv"                       # Gene expression matrix
 	output:
 		pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.pdf",  # Figure as PDF
 		png=f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png"   # Figure as PNG
@@ -149,7 +152,7 @@ rule ATAC_TFBS_motifs_sex_DAR:
 # 	input:
 # 		TF_genes=config["TF_genes"],
 # 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-# 		TPM=f"{output_tables}/TPM.csv"
+# 		TPM=f"{RNA_tables}/TPM.csv"
 # 	params:
 # 		minTPM=config["RNA_minTPM"],
 # 		background="genome",
@@ -168,7 +171,7 @@ rule ATAC_TFBS_motifs_sex_DAR:
 # 	input:
 # 		TF_genes=config["TF_genes"],
 # 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-# 		TPM=f"{output_tables}/TPM.csv"
+# 		TPM=f"{RNA_tables}/TPM.csv"
 # 	params:
 # 		minTPM=config["RNA_minTPM"],
 # 		background="conditions",
@@ -187,7 +190,7 @@ rule ATAC_TFBS_motifs_sex_DAR_merged_stages:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",
-		TPM=f"{output_tables}/TPM.csv"
+		TPM=f"{RNA_tables}/TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -247,7 +250,7 @@ rule ATAC_XX_TFBS_motifs_stage_cond_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{output_tables}/TPM.csv"
+		TPM=f"{RNA_tables}/TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -269,7 +272,7 @@ rule ATAC_XY_TFBS_motifs_stage_cond_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{output_tables}/TPM.csv"
+		TPM=f"{RNA_tables}/TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="conditions",
@@ -291,7 +294,7 @@ rule ATAC_XX_TFBS_motifs_stage_rand_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{output_tables}/TPM.csv"
+		TPM=f"{RNA_tables}/TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="genome",
@@ -313,7 +316,7 @@ rule ATAC_XY_TFBS_motifs_stage_rand_bg_DAR:
 	input:
 		TF_genes=config["TF_genes"],
 		sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-		TPM=f"{output_tables}/TPM.csv"
+		TPM=f"{RNA_tables}/TPM.csv"
 	params:
 		minTPM=config["RNA_minTPM"],
 		background="genome",

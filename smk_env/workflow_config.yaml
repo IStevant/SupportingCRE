@@ -36,8 +36,7 @@ RNA_corr_met: spearman
 RNA_adjpval: 0.01
 RNA_log2FC: 0.5
 RNA_sex_double_heatmap_clusters: 8
-RNA_XX_stage_DEG_clusters: 6
-RNA_XY_stage_DEG_clusters: 6
+RNA_stage_DEG_clusters: 6
 RNA_bigwig_folder_mm10: /home/istevant/work/data/RNAseq/bigwig_mm10
 RNA_bigwig_folder_mm39: /home/istevant/work/data/.../bigwig
 

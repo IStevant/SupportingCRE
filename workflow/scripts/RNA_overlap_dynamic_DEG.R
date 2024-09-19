@@ -58,12 +58,6 @@ get_intersections <- function(sets_list) {
 }
 
 draw_venn_sex_dyn <- function(set1, set2, title, output_folder) {
-  # data <- c(
-  #   set1 = length(setdiff(set1, set2)),
-  #   set2 = length(setdiff(set2, set1)),
-  #   "set1&set2" = length(intersect(set1, set2))
-  # )
-
   data <- list(XX_dynamic=set1, XY_dynamic=set2)
 
   intersections <- get_intersections(data)
