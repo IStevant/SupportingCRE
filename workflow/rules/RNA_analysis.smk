@@ -165,8 +165,8 @@ rule RNA_Plot_marker_genes:
 		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',   # Expression matrix of whole gonad RNA-seq (TPMs)
 		tpm=f"{output_tables}/TPM.csv"                                # TPM matrix without the outliers
 	output:
-		pdf1=f"{output_pdf}/Figure3_RNA_marker_genes.pdf",
-		png1=f"{output_png}/Figure3_RNA_marker_genes.png"
+		pdf=f"{output_pdf}/Figure3_RNA_marker_genes.pdf",
+		png=f"{output_png}/Figure3_RNA_marker_genes.png"
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
@@ -179,8 +179,8 @@ rule RNA_Plot_marker_gene_enrichment:
 		whole_gonad=f'{input_data}/{config["whole_gonad_RNAseq"]}',   # Expression matrix of whole gonad RNA-seq (TPMs)
 		tpm=f"{output_tables}/TPM.csv"                                # TPM matrix without the outliers
 	output:
-		pdf2=f"{output_pdf}/Figure4_RNA_marker_genes_enrichment.pdf",
-		png2=f"{output_png}/Figure4_RNA_marker_genes_enrichment.png"
+		pdf=f"{output_pdf}/Figure4_RNA_marker_genes_enrichment.pdf",
+		png=f"{output_png}/Figure4_RNA_marker_genes_enrichment.png"
 	resources:
 		cpus_per_task=1,
 		mem_mb=4000
