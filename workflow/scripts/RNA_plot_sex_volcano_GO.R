@@ -17,7 +17,6 @@ suppressPackageStartupMessages({
   library("cowplot")
 })
 
-doParallel::registerDoParallel(cores = 4)
 
 
 ###########################################
@@ -34,6 +33,9 @@ names(conditions_color) <- sort(unique(samplesheet$conditions))
 adj.pval <- snakemake@params[["adjpval"]]
 log2FC <- snakemake@params[["log2FC"]]
 path <- snakemake@params[["path"]]
+
+n_cores <- as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK", 12))
+doParallel::registerDoParallel(cores = n_cores)
 
 ###########################################
 #                                         #
@@ -289,7 +291,6 @@ kegg_plot <- function(kegg_res, nb_terms = 5) {
 #         Volcano + GO sex DEGs           #
 #                                         #
 ###########################################
-
 sex_DEG_plots <- foreach(stg = stages) %dopar% {
   plot_DEG(SexDEGs, stg, adj.pval, log2FC, conditions_color, path)
 }

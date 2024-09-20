@@ -206,11 +206,13 @@ get_enriched_TFs <- function(DARs, stg, TPM, minTPM, save_folder) {
   assays(seSel)$expr <- log10(assays(seSel)$expr)
 
   TF_summary <- data.frame(
+    TF.name = seSel@elementMetadata$motif.name,
+    TF.matrix = rownames(SummarizedExperiment::assay(seSel, "log2enr")),
     SummarizedExperiment::assay(seSel, "log2enr"),
-    TF.name = seSel@elementMetadata$motif.name
+    10^(-SummarizedExperiment::assay(seSel, "negLog10Padj"))
   )
 
-  write.csv(TF_summary, file = paste0(save_folder, "/ATAC_sex_DAR_TF_", stg, "_", background, "_bg.csv"))
+  write.table(TF_summary, file = paste0(save_folder, "/ATAC_sex_DAR_TF_", stg, "_", background, "_bg.csv"), row.names=FALSE, quote=FALSE, sep="\t")
   return(seSel)
 }
 
@@ -383,9 +385,14 @@ merge_TF_motifs <- function(seSel, stg) {
 stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
 
 # For each stage, get TFBS motif enrichments
-enrichments <- lapply(stages, function(stg) {
+# enrichments <- lapply(stages, function(stg) {
+#   get_enriched_TFs(filtered_SexDARs, stg, TPM, minTPM, save_folder)
+# })
+
+enrichments <- foreach(stg = stages) %dopar% {
   get_enriched_TFs(filtered_SexDARs, stg, TPM, minTPM, save_folder)
-})
+}
+
 
 
 heatmap_list <- lapply(seq_along(enrichments), function(i) {

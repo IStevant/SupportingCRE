@@ -19,6 +19,7 @@ suppressPackageStartupMessages({
 
 # filtered_SexDARs
 load(snakemake@input[["sig_DARs"]])
+output_folder <- snakemake@params[["output_folder"]]
 
 ###########################################
 #                                         #
@@ -26,14 +27,40 @@ load(snakemake@input[["sig_DARs"]])
 #                                         #
 ###########################################
 
-#' When the maximum value (read count) of a peak between samples is under a certain threshold, we considere it is not relevant and the values are set to 0.
+#' Get genes contained in each intersections.
+#' @param sets_list Sex DESeq2 analysis result table
+get_intersections <- function(sets_list) {
+  intersections <- list()
+  
+  all_sets <- names(sets_list)
+  comb <- expand.grid(lapply(all_sets, function(x) c(TRUE, FALSE)))
+  comb <- comb[-nrow(comb), ]
+  
+  for (i in 1:nrow(comb)) {
+    included_sets <- all_sets[comb[i, ] == TRUE]
+    excluded_sets <- all_sets[comb[i, ] == FALSE]
+    
+    intersection_genes <- Reduce(intersect, sets_list[included_sets])
+    
+    if (length(excluded_sets) > 0) {
+      excluded_genes <- unlist(sets_list[excluded_sets])
+      intersection_genes <- setdiff(intersection_genes, excluded_genes)
+    }
+    
+    intersections[[paste(included_sets, collapse = "+")]] <- intersection_genes
+  }
+  
+  return(intersections)
+}
+
+#' Draw upset plot.
 #' @param DARs Sex differentially accessible dataframe.
 #' @param sex String, can be either "XX" or "XY".
 #' @return Return a ggplot object.
-upset_plots_sex <- function(DARs, sex) {
+upset_plots_sex <- function(DARs, sex, output_folder) {
   current_sex <- paste("More in", sex)
   filtered_SexDARs <- lapply(DARs, function(DAR) rownames(DAR[DAR$Diff.Acc. == current_sex, , drop = FALSE]))
-  venn <- eulerr::euler(filtered_SexDARs)
+
   if (sex == "XX") {
     color <- "#FFB100"
     text_col <- c("black", "black")
@@ -49,6 +76,27 @@ upset_plots_sex <- function(DARs, sex) {
       legend.position = "none"
     )
   }
+
+
+  intersections <- get_intersections(filtered_SexDARs)
+
+  intersection_df <- do.call(
+    rbind, 
+    lapply(
+      names(intersections), 
+      function(set) {
+        data.frame(Intersection = set, Gene = intersections[[set]])
+      }
+    )
+  )
+
+  write.table(
+    intersection_df, 
+    file=paste0(output_folder, "ATAC_upset_sex_DEGs_", sex, ".tsv"), 
+    row.name=FALSE, 
+    quote=FALSE,
+    sep="\t"
+  )
 
   venn <- eulerr::euler(filtered_SexDARs)
   data <- UpSetR::fromExpression(venn$original.values)
@@ -95,8 +143,8 @@ upset_plots_sex <- function(DARs, sex) {
 #                                         #
 ###########################################
 
-XX_upset <- upset_plots_sex(filtered_SexDARs, "XX")
-XY_upset <- upset_plots_sex(filtered_SexDARs, "XY")
+XX_upset <- upset_plots_sex(filtered_SexDARs, "XX", output_folder)
+XY_upset <- upset_plots_sex(filtered_SexDARs, "XY", output_folder)
 
 
 figure <- plot_grid(
