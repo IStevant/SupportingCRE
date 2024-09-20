@@ -59,17 +59,17 @@ snakemake --core 1 -f install_packages
 #### Run the full pipeline
 
 ```bash
-snakemake --slurm --profile=smk_env/ 
+snakemake --profile=slurm/ 
 ```
 
 #### Run only the RNA-seq analysis
 
 ```bash
-snakemake --slurm --profile=smk_env/ -f RNA_analysis
+snakemake --profile=slurm/ -f RNA_analysis
 ```
 
 #### Run only the ATAC-seq analysis
 
 ```bash
-snakemake --slurm --profile=smk_env/ -f ATAC_analysis
+snakemake --profile=slurm/ -f ATAC_analysis
 ```

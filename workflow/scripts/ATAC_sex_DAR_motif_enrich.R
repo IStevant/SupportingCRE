@@ -27,7 +27,7 @@ suppressPackageStartupMessages({
   library("motifStack")
 })
 
-doParallel::registerDoParallel(cores = 12)
+doParallel::registerDoParallel(cores = 48)
 
 ###########################################
 #                                         #
@@ -385,13 +385,13 @@ merge_TF_motifs <- function(seSel, stg) {
 stages <- unique(sapply(strsplit(colnames(TPM), "_"), `[`, 1))
 
 # For each stage, get TFBS motif enrichments
-# enrichments <- lapply(stages, function(stg) {
-#   get_enriched_TFs(filtered_SexDARs, stg, TPM, minTPM, save_folder)
-# })
-
-enrichments <- foreach(stg = stages) %dopar% {
+enrichments <- lapply(stages, function(stg) {
   get_enriched_TFs(filtered_SexDARs, stg, TPM, minTPM, save_folder)
-}
+})
+
+# enrichments <- foreach(stg = stages) %dopar% {
+#   get_enriched_TFs(filtered_SexDARs, stg, TPM, minTPM, save_folder)
+# }
 
 
 

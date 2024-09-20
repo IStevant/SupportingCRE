@@ -4,6 +4,10 @@ Affiliation: University of Bar Ilan
 Date: 18/09/2024
 Licence: MIT
 
+Snakemake rules to run the full pipeline.
+
+The parameters of the analsysis are defined in the analysis_parameters.yaml configuration file.
+
 Pipeline created to analyse the paired time series RNA and ATAC-seq of the supporting cells from mouse fetal gonads.
 Stévant et al. 2024
 doi:
