@@ -15,13 +15,16 @@ suppressPackageStartupMessages({
 #                                         #
 ###########################################
 
-# filtered_StageDEGs
-load(snakemake@input[["XY_stage_DEGs"]])
-XY_filtered_StageDEGs <- filtered_StageDEGs
+# filtered_SexDARs
+load(snakemake@input[["sex_DARs"]])
 
-# filtered_StageDEGs
-load(snakemake@input[["XX_stage_DEGs"]])
-XX_filtered_StageDEGs <- filtered_StageDEGs
+# filtered_StageDARs
+load(snakemake@input[["XY_stage_DARs"]])
+XY_filtered_StageDARs <- filtered_StageDARs
+
+# filtered_StageDARs
+load(snakemake@input[["XX_stage_DARs"]])
+XX_filtered_StageDARs <- filtered_StageDARs
 
 output_folder <- snakemake@params[["output_folder"]]
 
@@ -31,7 +34,7 @@ output_folder <- snakemake@params[["output_folder"]]
 #                                         #
 ###########################################
 
-#' Get genes contained in each intersections.
+#' Get regions contained in each intersections.
 #' @param sets_list Sex DESeq2 analysis result table
 get_intersections <- function(sets_list) {
   intersections <- list()
@@ -44,21 +47,22 @@ get_intersections <- function(sets_list) {
     included_sets <- all_sets[comb[i, ] == TRUE]
     excluded_sets <- all_sets[comb[i, ] == FALSE]
     
-    intersection_genes <- Reduce(intersect, sets_list[included_sets])
+    intersection_regions <- Reduce(intersect, sets_list[included_sets])
     
     if (length(excluded_sets) > 0) {
-      excluded_genes <- unlist(sets_list[excluded_sets])
-      intersection_genes <- setdiff(intersection_genes, excluded_genes)
+      excluded_regions <- unlist(sets_list[excluded_sets])
+      intersection_regions <- setdiff(intersection_regions, excluded_regions)
     }
     
-    intersections[[paste(included_sets, collapse = "+")]] <- intersection_genes
+    intersections[[paste(included_sets, collapse = "+")]] <- intersection_regions
   }
   
   return(intersections)
 }
 
-draw_venn_sex_dyn <- function(set1, set2, title, output_folder) {
-  data <- list(XX_dynamic=set1, XY_dynamic=set2)
+
+draw_venn_sex_dyn <- function(sexID, sex, dyn, title, output_folder) {
+  data <- list(Sex.biased=sex, Dynamic=dyn)
 
   intersections <- get_intersections(data)
 
@@ -74,20 +78,26 @@ draw_venn_sex_dyn <- function(set1, set2, title, output_folder) {
 
   write.table(
     intersection_df, 
-    file=paste0(output_folder, "RNA_common_dynamic_DEGs.tsv"), 
+    file=paste0(output_folder, "ATAC_common_sex_dynamic_DARs.tsv"), 
     row.name=FALSE, 
     quote=FALSE,
     sep="\t"
   )
 
-  colours <- c("#D62828", "#1e8bd1")
+
+  if (sexID == "XX") {
+    colours <- c("#FCBF49", "#D62828")
+  } else {
+    colours <- c("#94d574", "#1e8bd1")
+  }
+
   venn <- eulerr::euler(data)
   title <- title
   venn_plot <- plot(
     venn,
     labels = c(
-      paste0("Dynamic in XX\n(", prettyNum(length(set1), big.mark = ","), ")"),
-      paste0("Dynamic in XY\n(", prettyNum(length(set2), big.mark = ","), ")")
+      paste0("Sexually dymorphic\n(", prettyNum(length(sex), big.mark = ","), ")"),
+      paste0("Dynamic\n(", prettyNum(length(dyn), big.mark = ","), ")")
     ),
     quantities = list(fontsize = 10),
     edges = list(
@@ -106,12 +116,21 @@ draw_venn_sex_dyn <- function(set1, set2, title, output_folder) {
 #               Draw Venn                 #
 #                                         #
 ###########################################
+XX_spe_regions <- unique(unlist(lapply(filtered_SexDARs, function(x) rownames(x[x$Diff.Acc. == "More in XX", ]))))
 
-XX_dyn_genes <- XX_filtered_StageDEGs
-XY_dyn_genes <- XY_filtered_StageDEGs
+XX_dyn_regions <- XX_filtered_StageDARs
+XX_venn <- draw_venn_sex_dyn(sexID = "XX", XX_spe_regions, XX_dyn_regions, "XX regions", output_folder)
 
-venn <- draw_venn_sex_dyn(XX_dyn_genes, XY_dyn_genes, "Dynamic genes", output_folder)
+XY_spe_regions <- unique(unlist(lapply(filtered_SexDARs, function(x) rownames(x[x$Diff.Acc. == "More in XY", ]))))
+XY_dyn_regions <- XY_filtered_StageDARs
+XY_venn <- draw_venn_sex_dyn(sexID = "XY", XY_spe_regions, XY_dyn_regions, "XY regions", output_folder)
 
+
+figure <- plot_grid(
+  XX_venn, XY_venn,
+  labels = c("XX", "XY"),
+  ncol = 1
+)
 
 ###########################################
 #                                         #
@@ -121,18 +140,18 @@ venn <- draw_venn_sex_dyn(XX_dyn_genes, XY_dyn_genes, "Dynamic genes", output_fo
 
 save_plot(
   snakemake@output[["pdf"]],
-  venn,
+  figure,
   base_width = 12,
-  base_height = 8,
+  base_height = 15,
   units = c("cm"),
   dpi = 300
 )
 
 save_plot(
   snakemake@output[["png"]],
-  venn,
+  figure,
   base_width = 12,
-  base_height = 8,
+  base_height = 15,
   units = c("cm"),
   dpi = 300,
   bg = "white"

@@ -50,8 +50,6 @@ save_folder <- snakemake@params[["save_folder"]]
 # Print the logos of the TFs on the heatmap
 logos <- snakemake@params[["logos"]]
 genome_version <- snakemake@params[["genome"]]
-# Nb of top TFs per sex to print
-nbTFs <- snakemake@params[["nbTFs"]]
 sex <- snakemake@params[["sex"]]
 
 stage <- sapply(strsplit(colnames(TPM), "_"), `[`, 1)
@@ -205,11 +203,13 @@ get_enriched_TFs <- function(DARs, TPM, minTPM, save_folder) {
   seSel <- seSel[sel2, ]
 
   TF_summary <- data.frame(
+    TF.name = seSel@elementMetadata$motif.name,
+    TF.matrix = rownames(SummarizedExperiment::assay(seSel, "log2enr")),
     SummarizedExperiment::assay(seSel, "log2enr"),
-    TF.name = seSel@elementMetadata$motif.name
+    10^(-SummarizedExperiment::assay(seSel, "negLog10Padj"))
   )
 
-  write.csv(TF_summary, file = paste0(save_folder, "/ATAC_stage_DAR_TF_", sex, "_", background, "_bg.csv"))
+  write.table(TF_summary, file = paste0(save_folder, "/ATAC_stage_DAR_TF_", sex, "_", background, "_bg.csv"), row.names=FALSE, quote=FALSE, sep="\t")
 
 
   return(seSel)

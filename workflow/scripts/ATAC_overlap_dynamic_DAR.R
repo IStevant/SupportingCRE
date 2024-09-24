@@ -15,13 +15,13 @@ suppressPackageStartupMessages({
 #                                         #
 ###########################################
 
-# filtered_StageDEGs
-load(snakemake@input[["XY_stage_DEGs"]])
-XY_filtered_StageDEGs <- filtered_StageDEGs
+# filtered_StageDARs
+load(snakemake@input[["XY_stage_DARs"]])
+XY_filtered_StageDARs <- filtered_StageDARs
 
-# filtered_StageDEGs
-load(snakemake@input[["XX_stage_DEGs"]])
-XX_filtered_StageDEGs <- filtered_StageDEGs
+# filtered_StageDARs
+load(snakemake@input[["XX_stage_DARs"]])
+XX_filtered_StageDARs <- filtered_StageDARs
 
 output_folder <- snakemake@params[["output_folder"]]
 
@@ -31,7 +31,7 @@ output_folder <- snakemake@params[["output_folder"]]
 #                                         #
 ###########################################
 
-#' Get genes contained in each intersections.
+#' Get elements contained in each intersections.
 #' @param sets_list Sex DESeq2 analysis result table
 get_intersections <- function(sets_list) {
   intersections <- list()
@@ -44,14 +44,14 @@ get_intersections <- function(sets_list) {
     included_sets <- all_sets[comb[i, ] == TRUE]
     excluded_sets <- all_sets[comb[i, ] == FALSE]
     
-    intersection_genes <- Reduce(intersect, sets_list[included_sets])
+    intersection_elements <- Reduce(intersect, sets_list[included_sets])
     
     if (length(excluded_sets) > 0) {
-      excluded_genes <- unlist(sets_list[excluded_sets])
-      intersection_genes <- setdiff(intersection_genes, excluded_genes)
+      excluded_elements <- unlist(sets_list[excluded_sets])
+      intersection_elements <- setdiff(intersection_elements, excluded_elements)
     }
     
-    intersections[[paste(included_sets, collapse = "+")]] <- intersection_genes
+    intersections[[paste(included_sets, collapse = "+")]] <- intersection_elements
   }
   
   return(intersections)
@@ -67,14 +67,14 @@ draw_venn_sex_dyn <- function(set1, set2, title, output_folder) {
     lapply(
       names(intersections), 
       function(set) {
-        data.frame(Intersection = set, Gene = intersections[[set]])
+        data.frame(Intersection = set, OCRs = intersections[[set]])
       }
     )
   )
 
   write.table(
     intersection_df, 
-    file=paste0(output_folder, "RNA_common_dynamic_DEGs.tsv"), 
+    file=paste0(output_folder, "ATAC_common_dynamic_DARs.tsv"), 
     row.name=FALSE, 
     quote=FALSE,
     sep="\t"
@@ -107,10 +107,10 @@ draw_venn_sex_dyn <- function(set1, set2, title, output_folder) {
 #                                         #
 ###########################################
 
-XX_dyn_genes <- XX_filtered_StageDEGs
-XY_dyn_genes <- XY_filtered_StageDEGs
+XX_dyn_OCRs <- XX_filtered_StageDARs
+XY_dyn_OCRs <- XY_filtered_StageDARs
 
-venn <- draw_venn_sex_dyn(XX_dyn_genes, XY_dyn_genes, "Dynamic genes", output_folder)
+venn <- draw_venn_sex_dyn(XX_dyn_OCRs, XY_dyn_OCRs, "Dynamic OCRs", output_folder)
 
 
 ###########################################

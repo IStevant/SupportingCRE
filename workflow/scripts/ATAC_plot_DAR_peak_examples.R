@@ -17,7 +17,7 @@ suppressPackageStartupMessages({
   library("foreach")
   library("cowplot")
   library("grid")
-  library("ggplotify")
+  library("ggplot2")
 })
 
 doParallel::registerDoParallel(cores = 12)
@@ -30,12 +30,15 @@ options(ucscChromosomeNames = FALSE)
 #                                         #
 ###########################################
 
-bw_folder <- snakemake@params[["bw_folder"]]
 genome <- snakemake@input[["genome"]]
 peaks <- snakemake@input[["peaks"]]
 peak_list <- snakemake@input[["peak_list"]]
+TPM <-  snakemake@input[["TPM"]]
+
+bw_folder <- snakemake@params[["bw_folder"]]
 save_folder <- snakemake@params[["save_folder"]]
-sex <- snakemake@params[["sex"]]
+# sex <- snakemake@params[["sex"]]
+
 
 ###########################################
 #                                         #
@@ -103,7 +106,7 @@ generate_genomic_tracks <- function(gr_list, locus, max_score, colors) {
         col.histogram = 0,
         fill.histogram = color,
         ylim = c(0, trunc(max_score, digit = 4)),
-        yTicksAt = c(0, trunc(max_score, digit = 4)),
+        yTicksAt = c(trunc(max_score, digit = 4)),
         rotation.title = 0,
         lwd = 0,
         alpha = 0.8
@@ -120,7 +123,7 @@ generate_genomic_tracks <- function(gr_list, locus, max_score, colors) {
 #' @param gene2symbol Data frame containing the conversion of the Ensembl gene IDs to gene symbols.
 #' @param plot_list Gviz objects generated using generate_genomic_tracks().
 #' @param full_locus GRanges coordnate of the extended locus of interest.
-#' @return Return a Gviz plot.
+#' @return Return a Grid object.
 plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, full_locus) {
   locus_gr <- full_locus
   peak_gr_locus <- subsetByOverlaps(peak_gr, locus_gr)
@@ -151,8 +154,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, full_locus) {
     fontsize.group = 18,
     sizes = 0.4,
     rotation.title = 0,
-    thinBoxFeature = "UTR",
-    just.group = "above"
+    thinBoxFeature = "UTR"
+    # just.group = "above"
   )
   ranges(gene_track)$symbol <- gene2symbol[ranges(gene_track)$gene, "gene_name"]
 
@@ -184,27 +187,98 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, full_locus) {
   title <- paste0(seqnames(locus_gr), ":", start(locus_gr), "-", end(locus_gr))
 
   plot <- plotTracks(
-    c(ht, genome_track),
-    chromosome = as.character(seqnames(locus_gr)),
-    from = start(locus_gr),
-    to = end(locus_gr),
-    transcriptAnnotation = "symbol",
-    background.title = "transparent",
-    col.border.title = "transparent",
-    col.title = "#333333",
-    col.axis = "#333333",
-    alpha.title = 1,
-    alpha.axis = 1,
-    sizes = c(rep(0.4, length(plot_list)), 0.3, 0.4, 0.3),
-    cex.title = 0.9,
-    cex.id = 0.5,
-    title.width = 1.4,
-    main = title,
-    cex.main = 1,
-    col.main = "#333333"
+      c(ht, genome_track),
+      chromosome = as.character(seqnames(locus_gr)),
+      from = start(locus_gr),
+      to = end(locus_gr),
+      transcriptAnnotation = "symbol",
+      background.title = "transparent",
+      col.border.title = "transparent",
+      col.title = "#333333",
+      col.axis = "#333333",
+      alpha.title = 1,
+      alpha.axis = 1,
+      sizes = c(rep(0.4, length(plot_list)), 0.3, 0.4, 0.3),
+      cex.title = 0.9,
+      cex.id = 0.5,
+      title.width = 1.4,
+      main = title,
+      cex.main = 1,
+      col.main = "#333333"
   )
 
   return(plot)
+}
+
+#' Plot gene expression as horizontal TPM to plot side by side with the genomic tracks.
+#' @param TPM GRanges object with the coordinate of the ATAC peaks.
+#' @param gene Genome annotation.
+#' @return Return a Ggplot object.
+plot_gene_expression <- function(TPM, gene, sex, conditions_color){
+  TPM <- read.csv(TPM, header=TRUE, row.names=1)
+  names(conditions_color) <- paste0(
+    sapply(strsplit(names(conditions_color), "_"), `[`, 2),
+    "_",
+    sapply(strsplit(names(conditions_color), "_"), `[`, 1)
+  )
+
+  print(conditions_color)
+
+  if (sex=="all") {
+    exp <- as.numeric(TPM[gene, ])
+    sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
+  } else {
+    TPM <- TPM[,grep(sex, colnames(TPM))]
+    exp <- as.numeric(TPM[gene, ])
+    sex <- sapply(strsplit(colnames(TPM), "_"), `[`, 2)
+  }
+
+    gene_exp <- data.frame(
+      sex = sex,
+      stages = sapply(strsplit(colnames(TPM), "_"), `[`, 1),
+      cond = paste0(sex, "_",sapply(strsplit(colnames(TPM), "_"), `[`, 1)),
+      exp = exp
+    )
+
+    df <- dplyr::group_by(gene_exp, cond, sex)
+    options(dplyr.summarise.inform = FALSE)
+    df.summary2 <- dplyr::summarise(
+      df,
+      sd = sd(exp),
+      len = mean(exp)
+    )
+
+    plot <- ggplot(df.summary2, aes(x = len, y = cond, color = cond, fill = cond)) +
+      geom_bar(stat="identity", width=0.7) +
+      geom_errorbar(
+        aes(
+          xmin = len - sd,
+          xmax = len + sd
+        ),
+        width = .3
+      ) +
+      scale_color_manual(
+        values = conditions_color
+      ) +
+      scale_fill_manual(
+        values = conditions_color
+      ) +
+      ggtitle(paste0("\n", gene, "\n")) +
+      xlab("TPM\n") +
+      scale_x_continuous(labels = scales::comma, n.breaks = 3) +
+      scale_y_discrete(limits=rev) +
+      coord_cartesian(ylim = c(0, NA)) +
+      theme_light() +
+      theme(
+        plot.title = element_text(size = 12, face = "bold.italic", hjust = 0.5),
+        axis.text = element_text(size = 10),
+        # axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y=element_blank(),
+        # aspect.ratio = 3.5,
+        legend.position = "none"
+      )
+    return(plot)
 }
 
 ###########################################
@@ -226,13 +300,9 @@ conditions <- c(conditions[c(TRUE, FALSE)], conditions[c(FALSE, TRUE)])
 names(conditions_color) <- conditions
 
 
-if (sex != "all") {
-  bw_files <- grep(sex, bw_files, value = TRUE)
-  conditions_color <- conditions_color[grep(sex, names(conditions_color))]
-}
-
 peak_list <- read.table(peak_list, header = TRUE)
 peak2plot <- peak_list$Locus
+
 
 peak_gr <- GRanges(rownames(read.csv(peaks, header = TRUE, row.names = 1)))
 
@@ -246,9 +316,17 @@ rownames(gene2symbol) <- gene2symbol$gene_id
 TxDb <- GenomicFeatures::makeTxDbFromGFF(genome)
 
 plot <- foreach(peak = peak2plot) %dopar% {
+
+  sex <- peak_list[peak_list$Locus == peak, "Sex"]
+
+  if (sex != "all") {
+    bw_files <- grep(sex, bw_files, value = TRUE)
+    conditions_color <- conditions_color[grep(sex, names(conditions_color))]
+  }
+
   locus <- peak_list[peak_list$Locus == peak, ]
   peak_list_gr <- GRanges(locus$Locus)
-  window <- peak_list_gr + 1000
+  window <- peak_list_gr
 
   atac_coverage <- import_bw_files(
     bw_folder,
@@ -256,8 +334,10 @@ plot <- foreach(peak = peak2plot) %dopar% {
     window
   )
 
+  # print(head(atac_coverage))
   max_score <- do.call("c", do.call("c", do.call("c", atac_coverage)))
   max_score <- max(unlist(lapply(max_score, function(x) x$score)))
+  # print("Still ok")
 
   if (sex == "all") {
     XX_track_list <- lapply(
@@ -285,6 +365,8 @@ plot <- foreach(peak = peak2plot) %dopar% {
     )
 
     bw_track <- c(XX_track_list, XY_track_list)
+    pdf_height <- 6.5
+
   } else {
     bw_track <- lapply(
       atac_coverage[[sex]],
@@ -297,23 +379,10 @@ plot <- foreach(peak = peak2plot) %dopar% {
         )
       }
     )
+    pdf_height <- 4
   }
 
-  # png(
-  #   file = paste0(
-  #     save_folder, 
-  #     "/", 
-  #     "ATAC_", 
-  #     sex, 
-  #     "_", 
-  #     peak, 
-  #     "_peak_tracks.png"
-  #     ), 
-  #   width = 5.5, 
-  #   height = 4.5, 
-  #   units = "in", 
-  #   res = 150
-  # )
+  gene <- peak_list[peak_list$Locus == peak, "Gene"]
 
   pdf(
     file = paste0(
@@ -322,22 +391,31 @@ plot <- foreach(peak = peak2plot) %dopar% {
       "ATAC_", 
       sex, 
       "_", 
-      peak, 
+      gene, 
       "_peak_tracks.pdf"
       ), 
-    width = 6.5, 
-    height = 5.5
-    # units = "in", 
-    # res = 150
+    width = 8, 
+    height = pdf_height
   )
 
-  plot <- plot_tracks(
-    peak_gr,
-    TxDb,
-    gene2symbol,
-    bw_track,
-    window
+  plot <- grid::grid.grabExpr(
+      plot_tracks(
+        peak_gr,
+        TxDb,
+        gene2symbol,
+        bw_track,
+        window
+      )
+    )
+
+  gene_expr_plot <- plot_gene_expression(TPM, gene, sex, conditions_color)
+
+  gridExtra::grid.arrange(
+    plot, gene_expr_plot, 
+    ncol = 2, 
+    widths = c(4,0.5)
   )
+
 
   dev.off()
 

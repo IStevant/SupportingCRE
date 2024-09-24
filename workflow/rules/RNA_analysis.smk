@@ -17,7 +17,6 @@ doi:
 configfile: "analysis_parameters.yaml"
 
 sexes = config["sexes"]
-stages = config["stages"]
 
 # Get file path according to the genome version
 input_data = f'{config["path_to_data"]}{config["genome_version"]}'
@@ -74,7 +73,7 @@ rule RNA_Get_matrices:
         norm_counts=f"{output_tables}/norm_counts.csv",           # Filtered normalized read counts (normalization by the library size)
         norm_counts_all=f"{output_tables}/norm_counts_all_samples.csv",   # Filtered normalized read counts without the outliers (normalization by the library size)
         samplesheet=f"{output_tables}/samplesheet.csv"            # Description of the samples for downstream analysis
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -94,7 +93,7 @@ rule RNA_Get_sex_DEGs:
     output:
         all_DEGs=f"{processed_data}/all_SexDEGs.Robj",  # R object containing the full DESeq2 results
         sig_DEGs=f"{processed_data}/sig_SexDEGs.Robj"   # R object containing the only the significant DESeq2 results
-    threads: 1
+    threads: 12
     resources:
         mem_mb=12000
     script:
@@ -114,7 +113,7 @@ rule RNA_Get_dynamic_DEGs:
         adjpval=config["RNA_adjpval"],        # Adjusted p-value threshold to condider a gene differentially expressed
         log2FC=config["RNA_log2FC"],          # Log2 fold change threshold to condider a gene differentially expressed
         sex=lambda wildcards: wildcards.sex   # Run the analysis for each sex
-    threads: 1
+    threads: 12
     resources:
         mem_mb=12000
     script:
@@ -136,7 +135,7 @@ rule RNA_corr_PCA_with_outliers:
     output:
         pdf=f"{output_pdf}/RNA_corr_pca_all_samples.pdf",  # Figure as PDF
         png=f"{output_png}/RNA_corr_pca_all_samples.png"   # Figure as PNG
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -151,7 +150,7 @@ rule RNA_corr_PCA:
     output:
         pdf=f"{output_pdf}/RNA_corr_pca.pdf",  # Figure as PDF
         png=f"{output_png}/RNA_corr_pca.png"   # Figure as PNG
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -166,7 +165,7 @@ rule RNA_Plot_marker_genes:
     output:
         pdf=f"{output_pdf}/RNA_marker_genes.pdf",
         png=f"{output_png}/RNA_marker_genes.png"
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -180,7 +179,7 @@ rule RNA_Plot_marker_gene_enrichment:
     output:
         pdf=f"{output_pdf}/RNA_marker_genes_enrichment.pdf",
         png=f"{output_png}/RNA_marker_genes_enrichment.png"
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -194,7 +193,7 @@ rule RNA_Plot_sex_DEG_histogram:
     output:
         pdf=f"{output_pdf}/RNA_sex_DEG_histograms.pdf",
         png=f"{output_png}/RNA_sex_DEG_histograms.png"
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -212,7 +211,7 @@ rule RNA_Plot_sex_DEG_volcano_GO:
     output:
         pdf=f"{output_pdf}/RNA_sex_DEG_volcano.pdf",
         png=f"{output_png}/RNA_sex_DEG_volcano.png"
-    threads: 4
+    threads: 12
     resources:
         mem_mb=64000
     script:
@@ -228,7 +227,7 @@ rule RNA_Plot_sex_DEG_upset:
     output:
         pdf=f"{output_pdf}/RNA_sex_DEG_upset.pdf",
         png=f"{output_png}/RNA_sex_DEG_upset.png"
-    threads: 1
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -252,7 +251,7 @@ rule RNA_Plot_heatmap_GO:
         cluster_file=f"{output_tables}/{{sex}}_DEG_stage_heatmap_clusters.csv",  # Genes per clusters
         pdf=f"{output_pdf}/RNA_{{sex}}_DEG_stage_heatmap.pdf",
         png=f"{output_png}/RNA_{{sex}}_DEG_stage_heatmap.png"
-    threads: 2
+    threads: 12
     resources:
         mem_mb=16000
     script:
@@ -269,7 +268,7 @@ rule RNA_Plot_common_dynamic_DEGs:
     output:
         pdf=f"{output_pdf}/RNA_common_dynamic_DEGs.pdf",
         png=f"{output_png}/RNA_common_dynamic_DEGs.png"
-    threads: 2
+    threads: 12
     resources:
         mem_mb=4000
     script:
@@ -287,7 +286,7 @@ rule RNA_Plot_common_sex_dynamic_DEGs:
     output:
         pdf=f"{output_pdf}/RNA_common_sex_dynamic_DEGs.pdf",
         png=f"{output_png}/RNA_common_sex_dynamic_DEGs.png"
-    threads: 2
+    threads: 12
     resources:
         mem_mb=4000
     script:

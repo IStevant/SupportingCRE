@@ -19,7 +19,6 @@ doi:
 configfile: "analysis_parameters.yaml"
 
 sexes = config["sexes"]
-stages = config["stages"]
 TFBS_background = ["genome", "conditions"]
 
 # Get file path according to the genome version
@@ -34,9 +33,11 @@ RNA_tables = f'{config["path_to_tables"]}{config["genome_version"]}/RNA'
 if config["genome_version"] == "mm10":
     genome = f'{input_data}/gencode.vM25.annotation.gtf.gz'
     ATAC_bigwig_folder = config["ATAC_bigwig_folder_mm10"]
+    ATAC_norm_bigwig_folder = config["ATAC_norm_bigwig_folder_mm10"]
 else :
     genome = f'{input_data}/gencode.vM34.annotation.gtf.gz'
     ATAC_bigwig_folder = config["ATAC_bigwig_folder_mm39"]
+    ATAC_norm_bigwig_folder = config["ATAC_norm_bigwig_folder_mm39"]
 
 # List of output files
 rule_ATAC_input_list = [
@@ -48,14 +49,12 @@ rule_ATAC_input_list = [
     f"{output_png}/ATAC_sex_DAR_upset.png",
     expand(f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png", background = TFBS_background),
     f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
-    # expand(f"{output_png}/ATAC_{{sex}}_DAR_stage_heatmap.png", sex=sexes),
-    # f"{output_png}/ATAC_XX_DAR_stage_heatmap.png",
-    # f"{output_png}/ATAC_XY_DAR_stage_heatmap.png",
-    # expand(f"{output_png}/ATAC_{{sex}}_stage_DAR_TF_motifs_{{background}}_bg.png", sex=sexes, background = TFBS_background)
-    # f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png",
-    # f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png",
-    # f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png",
-    # f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png"
+    expand(f"{output_png}/ATAC_{{sex}}_DAR_stage_heatmap.png", sex=sexes),
+    f"{output_png}/ATAC_common_dynamic_DARs.png",
+    f"{output_png}/ATAC_common_sex_dynamic_DARs.png",
+    f"{output_png}/ATAC_sig_stage_DARs_annotation.png",
+    expand(f"{output_png}/ATAC_{{sex}}_dyn_DAR_TF_motifs_{{background}}_bg.png", sex=sexes, background = TFBS_background),
+    f"{processed_data}/plot_example_1.log"
 ]
 
 ## Uncomment if you want to run only this pipeline
@@ -99,7 +98,7 @@ rule ATAC_Normalize_bigwig:
         size_factors=f"{output_tables}/ATAC_size_factors.csv"   # Size factors used to normalize the data
     params:
         bigwig_folder=f"{ATAC_bigwig_folder}",             # Path to the original nf-core/atacseq BigWig files
-        new_bigwig_folder=f"{processed_data}/ATAC_bigwig"  # Path to the normalized files
+        new_bigwig_folder=f"{ATAC_norm_bigwig_folder}"  # Path to the normalized files
     output:
         output_file=f"{processed_data}/ATAC_bigwig/scale/ATAC_size_factors.csv"  # Save the size factors with the new BigWig (to signify snakemake that the rule executed well)
     threads: 12
@@ -210,93 +209,30 @@ rule ATAC_Get_XY_dynamic_DARs:
     script:
         "../scripts/ATAC_stage_DAR.R"
 
-rule ATAC_XX_TFBS_motifs_stage_cond_bg_DAR:
+
+# Get TFBS enrichment in sex-biased OCRs against random genomic background and against the opposite sex as background.
+# Returns the plots and the enrichment scores as tables.
+rule ATAC_TFBS_motifs_dynamic_DAR:
     input:
-        TF_genes=config["TF_genes"],
-        sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-        TPM=f"{RNA_tables}/TPM.csv"
-    params:
-        minTPM=config["RNA_minTPM"],
-        background="conditions",
-        logos="TRUE",
-        nbTFs=8,
-        genome=config["genome_version"],
-        save_folder=f"{output_tables}",
-        sex="XX"
+        TF_genes=config["TF_genes"],                         # List of known mouse transcripotion factors
+        sig_DARs=f"{output_tables}/ATAC_{{sex}}_DAR_stage_heatmap_clusters.csv",  # R object containing the filtered DESeq2 results
+        TPM=f"{RNA_tables}/TPM.csv"                          # Gene expression matrix
     output:
-        pdf=f"{output_pdf}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.pdf",
-        png=f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_sex_bg.png"
-    threads: 12
+        pdf=f"{output_pdf}/ATAC_{{sex}}_dyn_DAR_TF_motifs_{{background}}_bg.pdf",  # Figure as PDF
+        png=f"{output_png}/ATAC_{{sex}}_dyn_DAR_TF_motifs_{{background}}_bg.png"   # Figure as PNG
+    params:
+        minTPM=config["RNA_minTPM"],                        # Minimal number of TPM from which we consider a gene expressed
+        background=lambda wildcards: wildcards.background,  # Background to use to do the enrichment analysis (either "genome" or "conditions")
+        logos="TRUE",
+        genome=config["genome_version"],                    # Version of the genome ("mm10" or "mm39")
+        save_folder=f"{output_tables}",                     # Location where the result tables are saved
+        sex=lambda wildcards: wildcards.sex
+    threads: 48
     resources:
         mem_mb=64000
     script:
         "../scripts/ATAC_stage_DAR_motif_enrich.R"
 
-rule ATAC_XY_TFBS_motifs_stage_cond_bg_DAR:
-    input:
-        TF_genes=config["TF_genes"],
-        sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-        TPM=f"{RNA_tables}/TPM.csv"
-    params:
-        minTPM=config["RNA_minTPM"],
-        background="conditions",
-        logos="TRUE",
-        nbTFs=8,
-        genome=config["genome_version"],
-        save_folder=f"{output_tables}",
-        sex="XY"
-    output:
-        pdf=f"{output_pdf}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.pdf",
-        png=f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_sex_bg.png"
-    threads: 12
-    resources:
-        mem_mb=64000
-    script:
-        "../scripts/ATAC_stage_DAR_motif_enrich.R"
-
-rule ATAC_XX_TFBS_motifs_stage_rand_bg_DAR:
-    input:
-        TF_genes=config["TF_genes"],
-        sig_DARs=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-        TPM=f"{RNA_tables}/TPM.csv"
-    params:
-        minTPM=config["RNA_minTPM"],
-        background="genome",
-        logos="TRUE",
-        nbTFs=8,
-        genome=config["genome_version"],
-        save_folder=f"{output_tables}",
-        sex="XX"
-    output:
-        pdf=f"{output_pdf}/ATAC_XX_stage_DAR_TF_motifs_random_bg.pdf",
-        png=f"{output_png}/ATAC_XX_stage_DAR_TF_motifs_random_bg.png"
-    threads: 12
-    resources:
-        mem_mb=64000
-    script:
-        "../scripts/ATAC_stage_DAR_motif_enrich.R"
-
-rule ATAC_XY_TFBS_motifs_stage_rand_bg_DAR:
-    input:
-        TF_genes=config["TF_genes"],
-        sig_DARs=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-        TPM=f"{RNA_tables}/TPM.csv"
-    params:
-        minTPM=config["RNA_minTPM"],
-        background="genome",
-        logos="TRUE",
-        nbTFs=8,
-        genome=config["genome_version"],
-        save_folder=f"{output_tables}",
-        sex="XY"
-    output:
-        pdf=f"{output_pdf}/ATAC_XY_stage_DAR_TF_motifs_random_bg.pdf",
-        png=f"{output_png}/ATAC_XY_stage_DAR_TF_motifs_random_bg.png"
-    threads: 12
-    resources:
-        mem_mb=80000
-    script:
-        "../scripts/ATAC_stage_DAR_motif_enrich.R"
 
 ###########################################
 #                                         #
@@ -347,24 +283,6 @@ rule ATAC_corr_PCA:
         mem_mb=64000
     script:
         "../scripts/Corr_pca.R"
-
-# rule ATAC_Plot_peak_examples:
-#   input:
-#       genome=f"{genome}",
-#       gene_bed=f"{input_data}/gene_standard.bed",
-#       peaks=f"{output_tables}/ATAC_norm_counts.csv",
-#       linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-#       gene_list=config["peak_examples"],
-#   params:
-#       bw_folder="results/processed_data/mm10/ATAC_bigwig",
-#       save_folder=f"{output_png}"
-#   output: 
-#       log= f"{processed_data}/plot_example_1.log"
-#   resources:
-#       cpus_per_task=12,
-#       mem_mb=64000
-#   script:
-#       "../scripts/MULTI_plot_genomic_tracks_examples.R"
 
 rule ATAC_Plot_sex_DAR_histogram:
     input:
@@ -447,40 +365,90 @@ rule ATAC_Plot_sex_DAR_upset:
 #       "../scripts/ATAC_plot_DAR_peak_examples.R"
 
 
-rule ATAC_Plot_heatmap_dyn_DARs_XX:
+rule ATAC_Plot_heatmap_dyn_DARs:
     input:
-        sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XX.Robj",
+        sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_{{sex}}.Robj",
         norm_counts=f"{output_tables}/ATAC_norm_counts.csv",
         samplesheet=f"{output_tables}/ATAC_samplesheet.csv"
     params:
-        sex="XX",
-        clusters=config["ATAC_XX_stage_DAR_clusters"]
+        sex=lambda wildcards: wildcards.sex,
+        clusters=config["ATAC_stage_DAR_clusters"]
     output:
-        clusters=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
-        pdf=f"{output_pdf}/ATAC_XX_DAR_stage_heatmap.pdf",
-        png=f"{output_png}/ATAC_XX_DAR_stage_heatmap.png"
+        clusters=f"{output_tables}/ATAC_{{sex}}_DAR_stage_heatmap_clusters.csv",
+        pdf=f"{output_pdf}/ATAC_{{sex}}_DAR_stage_heatmap.pdf",
+        png=f"{output_png}/ATAC_{{sex}}_DAR_stage_heatmap.png"
     threads: 12
     resources:
         mem_mb=64000
     script:
         "../scripts/ATAC_stage_DAR_heatmap.R"
 
-rule ATAC_Plot_heatmap_dyn_DARs_XY:
+# Draw venn diagrams of the comparison of dynamic DARs of both sexes
+rule RNA_Plot_common_dynamic_DARs:
     input:
-        sig_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XY.Robj",
-        norm_counts=f"{output_tables}/ATAC_norm_counts.csv",
-        samplesheet=f"{output_tables}/ATAC_samplesheet.csv"
+        XX_stage_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XX.Robj",    # Robj with the filtered XX dynamic genes
+        XY_stage_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XY.Robj",    # Robj with the filtered XY dynamic genes
+        samplesheet=f"{output_tables}/ATAC_samplesheet.csv"               # Description of the samples
     params:
-        sex="XY",
-        clusters=config["ATAC_XY_stage_DAR_clusters"]
+        output_folder=f"{output_tables}/"      # Location where the result tables are saved
     output:
-        clusters=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
-        pdf=f"{output_pdf}/ATAC_XY_DAR_stage_heatmap.pdf",
-        png=f"{output_png}/ATAC_XY_DAR_stage_heatmap.png"
+        pdf=f"{output_pdf}/ATAC_common_dynamic_DARs.pdf",
+        png=f"{output_png}/ATAC_common_dynamic_DARs.png"
+    threads: 12
+    resources:
+        mem_mb=4000
+    script:
+        "../scripts/ATAC_overlap_dynamic_DAR.R"
+
+
+# Draw venn diagrams of the comparison of dynamic and sex-specific DARs for each sex
+rule ATAC_Plot_common_sex_dynamic_DARs:
+    input:
+        sex_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",               # Robj with the filtered sex DARs per stage
+        XX_stage_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XX.Robj",    # Robj with the filtered XX dynamic regions
+        XY_stage_DARs=f"{processed_data}/ATAC_sig_stage_DARs_XY.Robj",     # Robj with the filtered XY dynamic regions
+        samplesheet=f"{output_tables}/ATAC_samplesheet.csv"               # Description of the samples
+    params:
+        output_folder=f"{output_tables}/"      # Location where the result tables are saved
+    output:
+        pdf=f"{output_pdf}/ATAC_common_sex_dynamic_DARs.pdf",
+        png=f"{output_png}/ATAC_common_sex_dynamic_DARs.png"
+    threads: 12
+    resources:
+        mem_mb=4000
+    script:
+        "../scripts/ATAC_overlap_sex_dynamic_DAR.R"
+
+rule ATAC_Plot_dynamic_DAR_peak_annotation:
+    input:
+        genome=f"{genome}",
+        XX_peak_list=f"{output_tables}/ATAC_XX_DAR_stage_heatmap_clusters.csv",
+        XY_peak_list=f"{output_tables}/ATAC_XY_DAR_stage_heatmap_clusters.csv",
+    params:
+        promoter=config["ATAC_promoter_distance"]
+    output:
+        pdf=f"{output_pdf}/ATAC_sig_stage_DARs_annotation.pdf",
+        png=f"{output_png}/ATAC_sig_stage_DARs_annotation.png"
     threads: 12
     resources:
         mem_mb=64000
     script:
-        "../scripts/ATAC_stage_DAR_heatmap.R"
+        "../scripts/ATAC_dynamic_peak_annotation.R"
 
-
+rule ATAC_Plot_peak_examples:
+    input:
+        genome=f"{genome}",
+        peak_list=f"{input_data}/gTrack_DAR_peak_examples.tsv",
+        peaks=f"{output_tables}/ATAC_norm_counts.csv",
+        TPM=f"{RNA_tables}/TPM.csv"
+    params:
+        bw_folder=f"{ATAC_norm_bigwig_folder}",
+        save_folder=f"{output_pdf}"
+    output: 
+        log= f"{processed_data}/plot_example_1.log"
+    threads: 12
+    resources:
+        cpus_per_task=12,
+        mem_mb=64000
+    script:
+        "../scripts/ATAC_plot_DAR_peak_examples.R"
