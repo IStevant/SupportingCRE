@@ -13,8 +13,6 @@ suppressPackageStartupMessages({
 
 doParallel::registerDoParallel(cores = 12)
 
-
-
 ###########################################
 #                                         #
 #               Load data                 #
@@ -22,9 +20,9 @@ doParallel::registerDoParallel(cores = 12)
 ###########################################
 
 rna_samplesheet <- read.csv(snakemake@input[["RNA_samplesheet"]], row.names = 1)
-atac_samplesheet <- read.csv(snakemake@input[["ATAC_samplesheet"]], row.names = 1)
-
 rna <- read.csv(snakemake@input[["RNA_norm_counts"]], row.names = 1)
+
+atac_samplesheet <- read.csv(snakemake@input[["ATAC_samplesheet"]], row.names = 1)
 atac <- read.csv(snakemake@input[["ATAC_norm_counts"]], row.names = 1)
 
 sex <- snakemake@params[["sex"]]
@@ -43,51 +41,38 @@ max_FDR <- snakemake@params[["FDR"]]
 
 # Code kept for record
 
-###########################################
-#                                         #
-#         Prepare cisDynet files          #
-#                                         #
-###########################################
+# Expract the coordinates of th eprotein coding genes and export as bed fine. Used by the cisDynet functions.
 
-# install.packages("devtools")
-# devtools::install_github("tzhu-bio/cisDynet")
-# renv::install("tidyverse")
-# renv::snapshot()
-# genome_file <- "workflow/data/iGenome_mm10_ucsc_genes.gtf.gz"
+# genome_file <- "workflow/data/mm10/gencode.vM25.annotation.gtf.gz"
 # mm10Genes <- rtracklayer::import(genome_file)
 # mm10Genes$gene_id <- mm10Genes$gene_name
-# rtracklayer::export(mm10Genes, format="bed")
-# genes <- subset(mm10Genes, type == "gene")
-# genes$gene_id <- genes$gene_name
+# gtf_df <- as.data.frame(mm10Genes)
+# gtf_genes <- subset(gtf_df, type == "gene" & gene_type == "protein_coding")
+# gtf_bed <- gtf_genes[, c("seqnames", "start", "end", "gene_name", "level", "strand")]
+# write.table(unique(gtf_bed), file="workflow/data/mm10/gene_standard.bed", col.names=FALSE, row.names=FALSE, quote=FALSE, sep="\t")
 
-
-# txdb <- GenomicFeatures::makeTxDbFromGRanges(
-#   mm10Genes,
-#   drop.stop.codons=FALSE
-# )
-
-# genes <- GenomicFeatures::genes(txdb)
-# mm10_genes <- data.frame(
-#   seqnames(genes),
-#   start(genes),
-#   end(genes),
-#   genes$gene_id,
-#   rep(1,length(genes)),
-#   strand(genes)
-# )
-# test <- mm10_genes[grep("^chr[0-9|X|Y]{1,2}$", mm10_genes$seqnames.genes.),]
-# write.table(test, file="mm39_gene_standard.bed", col.names=FALSE, row.names=FALSE, quote=FALSE, sep="\t")
+# genome_file <- "workflow/data/mm39/gencode.vM34.annotation.gtf.gz"
+# mm10Genes <- rtracklayer::import(genome_file)
+# mm10Genes$gene_id <- mm10Genes$gene_name
+# gtf_df <- as.data.frame(mm10Genes)
+# gtf_genes <- subset(gtf_df, type == "gene" & gene_type == "protein_coding")
+# gtf_bed <- gtf_genes[, c("seqnames", "start", "end", "gene_name", "level", "strand")]
+# write.table(unique(gtf_bed), file="workflow/data/mm39/gene_standard.bed", col.names=FALSE, row.names=FALSE, quote=FALSE, sep="\t")
 
 ###################################################################
 
 # Modified version of the function from cisDynet
 
-my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
-                            max_distance = 20000, N_permutation = 10000, save_path = NA) {
-  # checkGeAnno()
+getPeak2Gene <- function(
+    atac_matrix, 
+    rna_matrix, 
+    peak_annotation,
+    max_distance = 20000, 
+    N_permutation = 10000, 
+    save_path = NA
+  ) {
   atac_paired_norm <- atac_matrix
   rna_paired <- rna_matrix
-  # logfile("Remove the gene with all expression value is 0.")
   rna_paired <- rna_paired[rowSums(rna_paired) > 0, ]
   tss <- CATAnno$tss %>% as.data.frame()
   rownames(tss) <- tss$name
@@ -100,9 +85,7 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   peak_gr <- GenomicRanges::makeGRangesFromDataFrame(peak_bed, keep.extra.columns = TRUE)
 
   ## Make the pseudo data for permutation
-  # logfile("Make the pseudo data for permutation...")
   test_random <- atac_paired_norm[sample(nrow(atac_paired_norm), N_permutation), ]
-
 
   ## Calculate the correlation coefficient and p-value for a given gene.
   calculate_pvalue <- function(row_data, df, gene, test_random = test_random) {
@@ -111,6 +94,11 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
     })
     correlations <- apply(df, 1, function(row) {
       corr <- cor(as.numeric(row_data), row)
+      # Here stand the modification I made
+      # The original code tests if there are NAs in the correlation scores but excecuted the same code if TRUE or FALSE
+      # When NA was found, the z.test rerurned an error
+      # I changed it to set the p-value as 1 intead to exclude the cases where no correlation can be computed (i.e. no difference between gene expression and atac signal)
+      # I reported the issue on GitHub but the developper didn't fix it
       if (is.na(corr)) {
         corr <- 0
         p <- 1
@@ -161,15 +149,13 @@ my_getPeak2Gene <- function(atac_matrix, rna_matrix, peak_annotation,
   final_res <- final_res[, c("Peak", "Gene", "correlations", "p.value", "Type", "summit", "start", "Summit2TSS", "strand", "orientation")]
   colnames(final_res)[6:7] <- c("PeakSummit", "TSS")
   final_res <- tibble::add_column(final_res, FDR = p.adjust(final_res$p.value, method = "fdr"), .after = 4)
-  if (!is.na(save_path)) {
-    saveRDS(final_res, sprintf("%s/Peak2Gene_All_Links.rds", save_path))
-  }
+
   return(final_res)
 }
 
 addAnnotation <- function(gene_bed, gtf, genome_size) {
-  # gene <- valr::read_bed(gene_bed, n_fields = 6)
   gene <- valr::read_bed(gene_bed) ## valr 0.7.0 update
+  gene$name <- make.unique(gene$name)
   tss <- gene
   tss$start <- ifelse(tss$strand == "+", tss$start, tss$end)
   tss$end <- ifelse(tss$strand == "+", tss$start + 1, tss$end + 1)
@@ -180,7 +166,6 @@ addAnnotation <- function(gene_bed, gtf, genome_size) {
 }
 
 annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path = NA, save_name = NA) {
-  # checkGeAnno()
   peak <- read.table(quant_data, header = T, row.names = 1)
   merged <- data.frame(peak = rownames(peak))
   merged_peaks <- merged %>%
@@ -242,9 +227,6 @@ anno <- annoMergedPeaks(
   tss_flank = 1000
 )
 
-promoters <- anno[anno$Type == "Proximal", ]
-anno_wo_prom <- anno[!anno$Type == "Proximal", ]
-
 # Mean expression of the replicates
 if (sex == "all") {
   conditions <- unique(rna_samplesheet$conditions)
@@ -262,6 +244,8 @@ samples <- lapply(conditions, function(cond) rna_samplesheet[rna_samplesheet$con
 means <- lapply(samples, function(cond) rowMeans(rna[, cond]))
 names(means) <- conditions
 rna_means <- as.data.frame(do.call(cbind, means))
+
+
 # split_RNA data into 12 tables to parallelize the work
 split_rna <- split(rna_means, factor(sort(rank(row.names(rna_means)) %% 12)))
 
@@ -270,14 +254,27 @@ samples <- lapply(conditions, function(cond) atac_samplesheet[atac_samplesheet$c
 means <- lapply(samples, function(cond) rowMeans(atac[, cond]))
 names(means) <- conditions
 atac_means <- as.data.frame(do.call(cbind, means))
-# Remove peaks that fall in promoters (+/- 1kb from TSS)
-atac_means <- atac_means[!rownames(atac_means) %in% rownames(promoters), ]
+
+
+# Remove all peaks corresponding to promoters
+genome_gtf <- rtracklayer::import(snakemake@input[["gtf"]])
+TxDb <- GenomicFeatures::makeTxDbFromGFF(snakemake@input[["gtf"]])
+transcripts <- unique(GenomicFeatures::transcripts(TxDb))
+all_TSS <- unique(GenomicRanges::resize(transcripts, width=2, fix='start'))
+all_promoters <- GenomicRanges::promoters(transcripts, upstream=100, downstream=0)
+
+atac_GR <- GenomicRanges::GRanges(rownames(atac_means))
+atac_GR$region <- rownames(atac_means)
+
+open_promoters <- IRanges::subsetByOverlaps(atac_GR, all_promoters)
+
+atac_means <- unique(atac_means[!rownames(atac_means) %in% open_promoters$region, ])
 
 p2g_split <- foreach(split = split_rna) %dopar% {
-  my_getPeak2Gene(
+  getPeak2Gene(
     atac_matrix = atac_means,
     rna_matrix = split,
-    peak_annotation = anno_wo_prom,
+    peak_annotation = anno,
     max_distance = distance,
     N_permutation = 10000
   )
@@ -288,6 +285,4 @@ p2g_res <- do.call(rbind.data.frame, p2g_split)
 sig_p2g_res <- p2g_res[p2g_res$FDR < max_FDR, ]
 sig_p2g_res <- sig_p2g_res[abs(sig_p2g_res$correlations) > min_cor, ]
 
-# Remove all peaks corresponding to promoters
-sig_p2g_res <- sig_p2g_res[!sig_p2g_res$Type == "Proximal", ]
-write.table(sig_p2g_res, snakemake@output[["linkage"]])
+write.table(sig_p2g_res, snakemake@output[["linkage"]], row.names=FALSE, quote=FALSE, sep="\t")

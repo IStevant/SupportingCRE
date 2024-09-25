@@ -46,11 +46,11 @@ get_TPM_counts <- function(csv_file, genes) {
   # load file
   tpm <- read.csv(file = csv_file, row.names = 1)
   # Select protein coding genes
-  if (genes == "protein") {
-    protein_coding_genes <- read.csv(file = protein_genes)
-    tpm <- tpm[rownames(tpm) %in% protein_coding_genes$external_gene_name, ]
-    rm(protein_coding_genes)
-  }
+  # if (genes == "protein") {
+  #   protein_coding_genes <- read.csv(file = protein_genes)
+  #   tpm <- tpm[rownames(tpm) %in% protein_coding_genes$external_gene_name, ]
+  #   rm(protein_coding_genes)
+  # }
   return(tpm)
 }
 

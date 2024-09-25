@@ -1,7 +1,7 @@
 '''
 Author: Isabelle Stévant
 Affiliation: Mammalian sex determination lab, University of Bar Ilan
-Date: 19/09/2024
+Date: 23/09/2024
 Licence: MIT
 
 
@@ -326,44 +326,6 @@ rule ATAC_Plot_sex_DAR_upset:
         mem_mb=64000
     script:
         "../scripts/ATAC_sex_DAR_upset.R"
-
-
-# rule ATAC_Plot_XX_stage_DAR_peak_examples:
-#   input:
-#       genome=f"{genome}",
-#       peaks=f"{output_tables}/ATAC_norm_counts.csv",
-#       peak_list=config["DAR_peak_examples_XX"],
-#   params:
-#       bw_folder="results/processed_data/mm10/ATAC_bigwig",
-#       save_folder=f"{output_png}",
-#       sex="XX"
-#   output: 
-#       log= f"{processed_data}/plot_example_2.log"
-#   resources:
-#       cpus_per_task=12,
-#       mem_mb=64000
-#   script:
-#       "../scripts/ATAC_plot_DAR_peak_examples.R"
-
-
-
-# rule ATAC_Plot_XY_stage_DAR_peak_examples:
-#   input:
-#       genome=f"{genome}",
-#       peaks=f"{output_tables}/ATAC_norm_counts.csv",
-#       peak_list=config["DAR_peak_examples_XY"],
-#   params:
-#       bw_folder="results/processed_data/mm10/ATAC_bigwig",
-#       save_folder=f"{output_png}",
-#       sex="XY"
-#   output: 
-#       log= f"{processed_data}/plot_example_3.log"
-#   resources:
-#       cpus_per_task=12,
-#       mem_mb=64000
-#   script:
-#       "../scripts/ATAC_plot_DAR_peak_examples.R"
-
 
 rule ATAC_Plot_heatmap_dyn_DARs:
     input:
