@@ -187,7 +187,7 @@ annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path = NA, save_
   merged_peaks$end <- merged_peaks$start + 1
   pro <- valr::bed_intersect(merged_peaks, promoter)[, c(1:5)]
   pro <- pro[!duplicated(pro[, c(1, 2, 3)]), ]
-  pro$Type <- "Proximal"
+  pro$Type <- "Promoter"
   colnames(pro)[2:5] <- c("start", "end", "Start", "End")
   intra <- valr::bed_intersect(merged_peaks, promoter, invert = TRUE)
   intra <- intra[!duplicated(intra[, c(1, 2, 3)]), ]
@@ -197,7 +197,7 @@ annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path = NA, save_
   colnames(intra_res)[2:5] <- c("start", "end", "Start", "End")
   re <- valr::bed_intersect(intra, intra_res, invert = TRUE)[, c(1:5)]
   re <- re[!duplicated(re[, c(1, 2, 3)]), ]
-  re$Type <- "Distal"
+  re$Type <- "Intergenic"
   intra_pe <- rbind(re, intra_res, pro)
   intra_pe <- as.data.frame(intra_pe[!duplicated(intra_pe[, c(1, 2, 3)]), ])
   intra_pe <- intra_pe[, c(1, 4, 5, 6, 2)]

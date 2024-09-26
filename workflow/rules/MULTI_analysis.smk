@@ -33,7 +33,8 @@ ATAC_tables = f'{config["path_to_tables"]}{config["genome_version"]}/ATAC'
 
 # List of output figures
 rule_MULTI_input_list = [
-	f"{output_tables}/all_sig_gene2peak_linkage.csv"
+	f"{output_tables}/all_sig_gene2peak_linkage.csv",
+	f"{output_png}/MULTI_linkage_stats.png"
 # 	f"{output_pdf}/MULTI_gene2peak_plots.pdf",
 # 	f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
 # 	f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
@@ -100,6 +101,23 @@ rule MULTI_Plot_gene_peak_correlation:
 		mem_mb=64000
 	script:
 		"../scripts/MULTI_plot_gene2peak.R"
+
+
+rule MULTI_plot_linkage_stat:
+	input:
+		linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+	output:
+		pdf=f"{output_pdf}/MULTI_linkage_stats.pdf",
+		png=f"{output_png}/MULTI_linkage_stats.png"
+	threads: 2
+	resources:
+		cpus_per_task=2,
+		mem_mb=12000
+	script:
+		"../scripts/MULTI_plot_stat_linkage.R"
+
+
+
 
 rule MULTI_TFBS_motifs_peak_XX_genes:
 	input:
