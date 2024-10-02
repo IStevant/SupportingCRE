@@ -6,6 +6,12 @@ sexes:
   - XX
   - XY
 
+stages:
+  - E11.5
+  - E12.5
+  - E13.5
+  - E15.5
+
 path_to_data: workflow/data/
 path_to_process: results/processed_data/
 path_to_tables: results/tables/

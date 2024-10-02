@@ -21,6 +21,7 @@ doi:
 include: "workflow/rules/RNA_analysis.smk"
 include: "workflow/rules/ATAC_analysis.smk"
 include: "workflow/rules/MULTI_analysis.smk"
+include: "workflow/rules/TOBIAS_analysis.smk"
 
 ###########################################
 #                                         #
@@ -31,7 +32,7 @@ include: "workflow/rules/MULTI_analysis.smk"
 # Run the whole pipeline
 rule all:
 	input:
-		rule_RNA_input_list + rule_ATAC_input_list + rule_MULTI_input_list
+		rule_RNA_input_list + rule_ATAC_input_list + rule_MULTI_input_list + rule_TOBIAS_input_list
 
 # Install the necessary R packages using Renv
 rule install_packages:
