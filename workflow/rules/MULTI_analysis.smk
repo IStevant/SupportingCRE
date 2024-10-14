@@ -84,6 +84,7 @@ rule MULTI_Get_all_gene_peak_correlation:
         FDR=config["MULTI_peak_gene_FDR"]
     output:
         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+        bedpe=f"{output_tables}/all_sig_gene2peak_linkage.bedpe"
     threads: 12
     resources:
         mem_mb=64000

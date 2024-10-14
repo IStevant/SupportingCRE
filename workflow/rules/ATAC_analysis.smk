@@ -120,12 +120,30 @@ rule ATAC_Get_sex_DARs:
         save_folder=f"{output_tables}"              # Location where the result tables are saved
     output:
         sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",      # R object containing the filtered DESeq2 results
-        sig_DARs_GR=f"{processed_data}/ATAC_sig_SexDARs_GR.Robj" # R object containing DAR regions as a GRanges list
+        sig_DARs_GR=f"{processed_data}/ATAC_sig_SexDARs_GR.Robj",# R object containing DAR regions as a GRanges list
+        sig_DARs_bed=f"{output_tables}/ATAC_sig_SexDARs.bed"
     threads: 12
     resources:
         mem_mb=16000
     script:
         "../scripts/ATAC_sex_DAR.R"
+
+
+# Get Jaspar2024 TF motifs, select the TFs expressed in the gonad using our RNA-seq, and merge ythe motofs by similarity
+rule ATAC_Merge_TF_motifs:
+    input:
+        TPM=f"{RNA_tables}/TPM.csv",
+        TF_genes=config["TF_genes"]
+    output:
+        matrices_txt=f"{processed_data}/merged_exp_TF_matrices_pfms.txt",
+        matrices_obj=f"{processed_data}/merged_exp_TF_matrices_pfms.RData"
+    params:
+        minTPM=config["RNA_minTPM"]
+    threads: 1
+    resources:
+        mem_mb=64000
+    script:
+        "../scripts/ATAC_merge_TF_motifs.R"
 
 # Get TFBS enrichment in sex-biased OCRs against random genomic background and against the opposite sex as background.
 # Returns the plots and the enrichment scores as tables.
@@ -160,8 +178,10 @@ rule ATAC_TFBS_motifs_sex_DAR_merged_stages:
         genome=config["genome_version"],                     # Version of the genome ("mm10" or "mm39")
         save_folder=f"{output_tables}"                       # Location where the result tables are saved
     output:
+        matrices_txt=f"{processed_data}/sex_merged_motifs_pfms.txt",
         pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_merged.pdf",
-        png=f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png"
+        png=f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
+        heatmap_matrice=f"{processed_data}/merged_enr_matrix.RData"
     threads: 12
     resources:
         mem_mb=64000

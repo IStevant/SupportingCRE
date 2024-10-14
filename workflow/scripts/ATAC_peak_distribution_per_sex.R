@@ -94,7 +94,7 @@ figures <- plot_grid(
 save_plot(
   snakemake@output[["pdf"]],
   figures,
-  base_width = 25,
+  base_width = 20,
   base_height = 10,
   units = c("cm"),
   dpi = 300
@@ -103,7 +103,7 @@ save_plot(
 save_plot(
   snakemake@output[["png"]],
   figures,
-  base_width = 25,
+  base_width = 20,
   base_height = 10,
   units = c("cm"),
   dpi = 300,

@@ -265,7 +265,7 @@ merge_TF_motifs <- function(seSel) {
             prefix <- sub("([a-zA-Z]+).*", "\\1", gene)
             if (prefix == "NR") {
               return(gene)
-            } else if (grepl("^HOX", prefix)) {
+            } else if (grepl("^HOX|^FOX", prefix)) {
               prefix <- stringr::str_sub(prefix, end = -2)
               return(prefix)
             } else {
@@ -277,16 +277,15 @@ merge_TF_motifs <- function(seSel) {
 
           new_tf_vector <- sapply(grouped_genes, function(gene_group) {
             common_prefix <- extract_prefix(gene_group[1])
-            if (common_prefix != "HOX") {
+            if (grepl("^HOX|^FOX", common_prefix)) {
+              paste0(common_prefix, "s")
+            } else {
               suffixes <- gsub(paste0("^", common_prefix), "", gene_group)
               numeric_suffixes <- sort(as.numeric(suffixes[grepl("^\\d+$", suffixes)]), na.last = TRUE)
               non_numeric_suffixes <- sort(suffixes[!grepl("^\\d+$", suffixes)])
               all_suffixes <- c(non_numeric_suffixes, numeric_suffixes)
               concatenated_suffixes <- paste(all_suffixes, collapse = "/")
-              paste0(common_prefix, concatenated_suffixes)
-            } else {
-              paste0(common_prefix, "s")
-            }
+              paste0(common_prefix, concatenated_suffixes)            }
           })
 
           new_tf_vector <- new_tf_vector[order(new_tf_vector)]
@@ -316,7 +315,25 @@ merge_TF_motifs <- function(seSel) {
 
 
   motifs <- merged_pfms[enrichment$mat_names]
+
   motifs_pfms <- universalmotif::convert_motifs(motifs, class = "TFBSTools-PFMatrix")
+
+  fileConn <- file(snakemake@output[["matrices_txt"]], "w")
+
+  for (i in seq_along(motifs_pfms)) {
+    pfm <- motifs_pfms[[i]]
+    # tf_name <- pfm@name
+    tf_name <- rownames(enrichment)[i]
+    writeLines(paste0(">", tf_name), fileConn)
+    pfm_matrix <- pfm@profileMatrix
+    bases <- rownames(pfm_matrix)
+    for (j in 1:nrow(pfm_matrix)) {
+      pfm_values <- paste(pfm_matrix[j, ], collapse = "   ")
+      writeLines(paste(bases[j], "[", pfm_values, "]"), fileConn)
+    }
+  }
+
+  close(fileConn)
 
   maxwidth <- max(unlist(lapply(motifs_pfms, function(x) ncol(x@profileMatrix))))
 
@@ -327,6 +344,12 @@ merge_TF_motifs <- function(seSel) {
   matrix <- enrichment[, -3]
   matrix[matrix > 1] <- 1
   matrix[matrix < (-1)] <- (-1)
+
+  matrix <- matrix[order(matrix$XX, decreasing = TRUE),]
+
+  save(matrix, file=snakemake@output[["heatmap_matrice"]])
+
+  grobL <- grobL[order(match(names(grobL),rownames(matrix)))]
 
   hmSeqlogo <- HeatmapAnnotation(
     logo = annoSeqlogo(
@@ -374,6 +397,7 @@ merge_TF_motifs <- function(seSel) {
     show_column_names = FALSE,
     show_row_dend = FALSE,
     cluster_columns = FALSE,
+    cluster_rows = FALSE,
     column_title = NULL,
     row_title = NULL,
     col = mypalette,

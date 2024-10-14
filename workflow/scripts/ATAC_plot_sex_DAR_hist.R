@@ -55,7 +55,7 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors) {
       plot.title = element_text(size = 12, hjust = 0.5, color = "#333333"),
       axis.text = element_text(size = 12),
       axis.title = element_text(size = 12),
-      aspect.ratio = 0.5
+      aspect.ratio = 0.75
     )
 
   xy_sex_dar <- dar[dar$sex == "XY", ]
@@ -74,7 +74,7 @@ plot_dymorphic_genes <- function(dar, XX_colors, XY_colors) {
       plot.title = element_text(size = 12, hjust = 0.5, color = "#333333"),
       axis.text = element_text(size = 12),
       axis.title = element_text(size = 12),
-      aspect.ratio = 0.5
+      aspect.ratio = 0.75
     )
 
   gtitle <- ggdraw() +
@@ -119,7 +119,7 @@ sex_dymorphic_plot <- plot_dymorphic_genes(sex_dar, XX_colors, XY_colors)
 save_plot(
   snakemake@output[["pdf"]],
   sex_dymorphic_plot,
-  base_width = 20,
+  base_width = 15,
   base_height = 8,
   units = c("cm"),
   dpi = 300
@@ -128,7 +128,7 @@ save_plot(
 save_plot(
   snakemake@output[["png"]],
   sex_dymorphic_plot,
-  base_width = 20,
+  base_width = 15,
   base_height = 8,
   units = c("cm"),
   dpi = 300,

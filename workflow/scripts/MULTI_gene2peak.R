@@ -6,6 +6,7 @@ source(".Rprofile")
 #                                         #
 ###########################################
 suppressPackageStartupMessages({
+  library("org.Mm.eg.db")
   library("dplyr")
   library("doParallel")
   library("foreach")
@@ -209,6 +210,44 @@ annoMergedPeaks <- function(quant_data, tss_flank, cutoff, save_path = NA, save_
   return(intra_pe)
 }
 
+make_bedpe <- function(p2g, gene_GR){
+  gene_GR$gene_id <- sapply(strsplit(gene_GR$gene_id,"[.]"), function(x) x[1])
+
+  gene_names <- na.omit(
+    as.data.frame(
+      mapIds(
+        org.Mm.eg.db,
+        keys = gene_GR$gene_id,
+        column = 'SYMBOL',
+        keytype = 'ENSEMBL'
+      )
+    )
+  )
+  colnames(gene_names) <- "Gene"
+
+  gene_names$gene_id <- rownames(gene_names)
+  gene_coord <- as.data.frame(gene_GR)
+  gene_coord <- merge(gene_coord, gene_names, by="gene_id")
+  print(head(gene_coord))
+
+  gene_coord <- merge(p2g, gene_coord, by="Gene")
+
+  peak_GR <- GenomicRanges::GRanges(gene_coord$Peak)
+
+  debpe <- data.frame(
+    p_chr = GenomicRanges::seqnames(peak_GR),
+    p_start = GenomicRanges::start(peak_GR),
+    p_end = GenomicRanges::end(peak_GR),
+    g_chr = gene_coord$seqnames,
+    g_start = ifelse(gene_coord$strand.y=="+", gene_coord$start, gene_coord$end),
+    g_end = ifelse(gene_coord$strand.y=="+", gene_coord$start+1, gene_coord$end+1),
+    gene = gene_coord$Gene,
+    corr = gene_coord$correlations
+  )
+
+  return(debpe) 
+}
+
 ###########################################
 #                                         #
 #        Get gene-peak correlation        #
@@ -245,6 +284,9 @@ means <- lapply(samples, function(cond) rowMeans(rna[, cond]))
 names(means) <- conditions
 rna_means <- as.data.frame(do.call(cbind, means))
 
+# For test purposes
+rna_means <- rna_means[1:100,]
+
 
 # split_RNA data into 12 tables to parallelize the work
 split_rna <- split(rna_means, factor(sort(rank(row.names(rna_means)) %% 12)))
@@ -260,6 +302,7 @@ atac_means <- as.data.frame(do.call(cbind, means))
 genome_gtf <- rtracklayer::import(snakemake@input[["gtf"]])
 TxDb <- GenomicFeatures::makeTxDbFromGFF(snakemake@input[["gtf"]])
 transcripts <- unique(GenomicFeatures::transcripts(TxDb))
+genes <- unique(GenomicFeatures::genes(TxDb))
 all_TSS <- unique(GenomicRanges::resize(transcripts, width=2, fix='start'))
 all_promoters <- GenomicRanges::promoters(transcripts, upstream=100, downstream=0)
 
@@ -285,4 +328,7 @@ p2g_res <- do.call(rbind.data.frame, p2g_split)
 sig_p2g_res <- p2g_res[p2g_res$FDR < max_FDR, ]
 sig_p2g_res <- sig_p2g_res[abs(sig_p2g_res$correlations) > min_cor, ]
 
+bedpe <- make_bedpe(sig_p2g_res, genes)
+
 write.table(sig_p2g_res, snakemake@output[["linkage"]], row.names=FALSE, quote=FALSE, sep="\t")
+write.table(bedpe, snakemake@output[["bedpe"]], row.names=FALSE, col.names=FALSE, quote=FALSE, sep="\t")

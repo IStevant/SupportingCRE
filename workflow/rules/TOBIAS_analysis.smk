@@ -31,6 +31,8 @@ output_pdf = f'{config["path_to_graphs"]}{config["genome_version"]}/TOBIAS/PDF'
 output_tables = f'{config["path_to_tables"]}{config["genome_version"]}/TOBIAS'
 RNA_tables = f'{config["path_to_tables"]}{config["genome_version"]}/RNA'
 ATAC_tables = f'{config["path_to_tables"]}{config["genome_version"]}/ATAC'
+ATAC_processed_data = f'{config["path_to_process"]}{config["genome_version"]}/ATAC'
+
 
 if config["genome_version"] == "mm10":
     genome = f'{input_data}/gencode.vM25.annotation.gtf.gz'
@@ -49,8 +51,7 @@ else :
 
 # List of output figures
 rule_TOBIAS_input_list = [
-    # expand(f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw", stage=stages, transgene=transgenes),
-    f"{processed_data}/BINDdetect/bindetect_figures.pdf"
+    f"{output_png}/TOBIAS_sex_DAR_bindiff.png"
 ]
 
 ## Uncomment if you want to run only this pipeline
@@ -100,7 +101,8 @@ rule TOBIAS_ScoreBigwig:
         signal = f"{processed_data}/footprint/{{stage}}_{{transgene}}_merged_sorted_corrected.bw",
         bam=f"{processed_data}/{{stage}}_{{transgene}}_merged_sorted.bam",
         genome=f"{fasta}",
-        peaks=f'{input_data}/ATAC_all_OCR.bed'
+        # peaks=f'{input_data}/ATAC_all_OCR.bed'
+        peaks=f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
     output:
         output_bw=f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw"
     threads: 12
@@ -129,12 +131,13 @@ rule TOBIAS_get_expressed_TF_matrices:
 
 rule TOBIAS_BINDetect:
     input:
-        motifs = f"{output_tables}/Merged_exp_TF_matrices_pfms.txt",
+        motifs = f"{ATAC_processed_data}/sex_merged_motifs_pfms.txt",
         signal = expand(f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw", stage=stages, transgene=transgenes),
         genome=f"{fasta}",
-        peaks=f'{input_data}/ATAC_all_OCR.bed'
+        # peaks=f'{input_data}/ATAC_all_OCR.bed'
+        peaks=f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
     output:
-        output_file=f"{processed_data}/BINDdetect/bindetect_figures.pdf",
+        output_file=f"{processed_data}/BINDdetect/bindetect_results.txt",
     params:
         output_dir=f"{processed_data}/BINDdetect",
         conditions=expand(f"{{stage}}_{{transgene}}", stage=stages, transgene=transgenes)
@@ -158,17 +161,17 @@ rule TOBIAS_BINDetect:
 #                                         #
 ###########################################
 
-
-# rule TOBIAS_plot_linkage_stat:
-#     input:
-#         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-#     output:
-#         pdf=f"{output_pdf}/TOBIAS_linkage_stats.pdf",
-#         png=f"{output_png}/TOBIAS_linkage_stats.png"
-#     threads: 2
-#     resources:
-#         cpus_per_task=2,
-#         mem_mb=12000
-#     script:
-#         "../scripts/TOBIAS_plot_stat_linkage.R"
+rule TOBIAS_plot_sex_DAR_BINDetect:
+    input:
+        bindetect=f"{processed_data}/BINDdetect/bindetect_results.txt",
+        heatmap_matrice=f"{ATAC_processed_data}/merged_enr_matrix.RData"
+    output:
+        pdf=f"{output_pdf}/TOBIAS_sex_DAR_bindiff.pdf",
+        png=f"{output_png}/TOBIAS_sex_DAR_bindiff.png"
+    threads: 2
+    resources:
+        cpus_per_task=2,
+        mem_mb=12000
+    script:
+        "../scripts/TOBIAS_sex_DAR_bindiff.R"
 

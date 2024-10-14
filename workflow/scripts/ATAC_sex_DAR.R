@@ -122,6 +122,8 @@ stages <- unique(samplesheet$stages)
 # For each stages, extract significant DARs
 filtered_SexDARs <- lapply(stages, function(stg) get_sex_DAR_per_stage(SexDARs, stg, adj.pval, log2FC, gtf))
 
+merged_peak_GR <- GenomicRanges::GRanges(unique(unlist(lapply(filtered_SexDARs, function(stg) rownames(stg)))))
+
 names(filtered_SexDARs) <- stages
 
 sexDAR_GR_list <- lapply(filtered_SexDARs, get_GR)
@@ -143,3 +145,5 @@ peak_list <- list(
 export <- lapply(seq_along(stages), function(stg) write.table(filtered_SexDARs[stg], paste0(save_folder, "/ATAC_DAR_sex_", stages[stg], ".tsv"), quote = FALSE, sep = "\t"))
 save(filtered_SexDARs, file = snakemake@output[["sig_DARs"]])
 save(peak_list, file = snakemake@output[["sig_DARs_GR"]])
+
+rtracklayer::export.bed(merged_peak_GR, con = snakemake@output[["sig_DARs_bed"]] )
