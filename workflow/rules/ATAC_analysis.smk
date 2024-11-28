@@ -28,6 +28,8 @@ output_png = f'{config["path_to_graphs"]}{config["genome_version"]}/ATAC'
 output_pdf = f'{config["path_to_graphs"]}{config["genome_version"]}/ATAC/PDF'
 output_tables = f'{config["path_to_tables"]}{config["genome_version"]}/ATAC'
 RNA_tables = f'{config["path_to_tables"]}{config["genome_version"]}/RNA'
+RNA_processed_data = f'{config["path_to_process"]}{config["genome_version"]}/RNA'
+
 
 
 if config["genome_version"] == "mm10":
@@ -47,7 +49,8 @@ rule_ATAC_input_list = [
     f"{output_png}/ATAC_sex_DAR_histograms.png",
     f"{output_png}/ATAC_sig_sex_DARs_annotation.png",
     f"{output_png}/ATAC_sex_DAR_upset.png",
-    expand(f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png", background = TFBS_background),
+    # expand(f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png", background = TFBS_background),
+    f"{output_png}/ATAC_sex_DAR_TF_motifs_genome_bg.png",
     f"{output_png}/ATAC_sex_DAR_TF_motifs_merged.png",
     expand(f"{output_png}/ATAC_{{sex}}_DAR_stage_heatmap.png", sex=sexes),
     f"{output_png}/ATAC_common_dynamic_DARs.png",
@@ -151,20 +154,24 @@ rule ATAC_TFBS_motifs_sex_DAR:
     input:
         TF_genes=config["TF_genes"],                         # List of known mouse transcripotion factors
         sig_DARs=f"{processed_data}/ATAC_sig_SexDARs.Robj",  # R object containing the filtered DESeq2 results
-        TPM=f"{RNA_tables}/TPM.csv"                          # Gene expression matrix
+        TPM=f"{RNA_tables}/TPM.csv",                          # Gene expression matrix
+        DEG=f"{RNA_processed_data}/sig_SexDEGs.Robj" 
     output:
-        pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.pdf",  # Figure as PDF
-        png=f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png"   # Figure as PNG
+        # pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.pdf",  # Figure as PDF
+        # png=f"{output_png}/ATAC_sex_DAR_TF_motifs_{{background}}_bg.png"   # Figure as PNG
+        pdf=f"{output_pdf}/ATAC_sex_DAR_TF_motifs_genome_bg.pdf",  # Figure as PDF
+        png=f"{output_png}/ATAC_sex_DAR_TF_motifs_genome_bg.png"   # Figure as PNG
     params:
         minTPM=config["RNA_minTPM"],                        # Minimal number of TPM from which we consider a gene expressed
-        background=lambda wildcards: wildcards.background,  # Background to use to do the enrichment analysis (either "genome" or "conditions")
+        # background=lambda wildcards: wildcards.background,  # Background to use to do the enrichment analysis (either "genome" or "conditions")
+        background="genome",
         genome=config["genome_version"],                    # Version of the genome ("mm10" or "mm39")
         save_folder=f"{output_tables}"                      # Location where the result tables are saved
     threads: 48
     resources:
-        mem_mb=64000
+        mem_mb=84000
     script:
-        "../scripts/ATAC_sex_DAR_motif_enrich.R"
+        "../scripts/ATAC_sex_DAR_motif_enrich_bis.R"
 
 # Get TFBS enrichment in sex-biased OCRs from all stages together against the opposite sex as background.
 rule ATAC_TFBS_motifs_sex_DAR_merged_stages:

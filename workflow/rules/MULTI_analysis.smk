@@ -45,7 +45,8 @@ else :
 rule_MULTI_input_list = [
     f"{output_tables}/all_sig_gene2peak_linkage.csv",
     f"{output_png}/MULTI_linkage_stats.png",
-    f"{processed_data}/plot_example_2.log"
+    f"{processed_data}/plot_example_2.log",
+    f"{processed_data}/plot_example_3.log"
 #   f"{output_pdf}/MULTI_gene2peak_plots.pdf",
 #   f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png",
 #   f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png",
@@ -118,7 +119,7 @@ rule MULTI_Plot_peak_examples:
         gene_bed=f"{input_data}/gene_standard.bed",
         peaks=f"{ATAC_tables}/ATAC_norm_counts.csv",
         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-        peak_list=f"{input_data}/gTrack_DAR_link_examples.tsv",
+                peak_list=f"{input_data}/gTrack_DAR_link_examples.tsv",
         TPM=f"{RNA_tables}/TPM.csv"
     params:
         bw_folder=f"{ATAC_norm_bigwig_folder}",
@@ -132,41 +133,61 @@ rule MULTI_Plot_peak_examples:
         "../scripts/MULTI_plot_gene2peak_bis.R"
 
 
-rule MULTI_TFBS_motifs_peak_XX_genes:
+rule MULTI_Plot_PCHiC_examples:
     input:
+        genome=f"{genome}",
+        gene_bed=f"{input_data}/gene_standard.bed",
+        peaks=f"{ATAC_tables}/ATAC_norm_counts.csv",
         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-        sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-        TPM=f"{output_tables}/RNA_TPM.csv"
+        PCHiC=f"{input_data}/PCHiC_5kb_score3_merged.bedpe",
+        peak_list=f"{input_data}/gTrack_DAR_PCHiC_examples.tsv",
+        TPM=f"{RNA_tables}/TPM.csv"
     params:
-        background="conditions",
-        genome=config["genome_version"],
-        save_folder=f"{output_tables}",
-        sex="XX"
-    output:
-        pdf=f"{output_pdf}/MULTI_TFBS_motifs_peak_XX_genes.pdf",
-        png=f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png"
+        bw_folder=f"{ATAC_norm_bigwig_folder}",
+        save_folder=f"{output_pdf}"
+    output: 
+        log= f"{processed_data}/plot_example_3.log"
+    threads: 12
     resources:
-        cpus_per_task=12,
         mem_mb=64000
     script:
-        "../scripts/MULTI_linked_OCR_motif_enrichment.R"
+        "../scripts/MULTI_plot_genomic_tracks_PCHiC.R"
 
-rule MULTI_TFBS_motifs_peak_XY_genes:
-    input:
-        linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-        sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
-        TPM=f"{output_tables}/RNA_TPM.csv"
-    params:
-        background="conditions",
-        genome=config["genome_version"],
-        save_folder=f"{output_tables}",
-        sex="XY"
-    output:
-        pdf=f"{output_pdf}/MULTI_TFBS_motifs_peak_XY_genes.pdf",
-        png=f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png"
-    resources:
-        cpus_per_task=12,
-        mem_mb=64000
-    script:
-        "../scripts/MULTI_linked_OCR_motif_enrichment.R"
+# rule MULTI_TFBS_motifs_peak_XX_genes:
+#     input:
+#         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+#         sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
+#         TPM=f"{output_tables}/RNA_TPM.csv"
+#     params:
+#         background="conditions",
+#         genome=config["genome_version"],
+#         save_folder=f"{output_tables}",
+#         sex="XX"
+#     output:
+#         pdf=f"{output_pdf}/MULTI_TFBS_motifs_peak_XX_genes.pdf",
+#         png=f"{output_png}/MULTI_TFBS_motifs_peak_XX_genes.png"
+#     resources:
+#         cpus_per_task=12,
+#         mem_mb=64000
+#     script:
+#         "../scripts/MULTI_linked_OCR_motif_enrichment.R"
+
+# rule MULTI_TFBS_motifs_peak_XY_genes:
+#     input:
+#         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
+#         sex_DEGs=f"{processed_data}/RNA_sig_SexDEGs.Robj",
+#         TPM=f"{output_tables}/RNA_TPM.csv"
+#     params:
+#         background="conditions",
+#         genome=config["genome_version"],
+#         save_folder=f"{output_tables}",
+#         sex="XY"
+#     output:
+#         pdf=f"{output_pdf}/MULTI_TFBS_motifs_peak_XY_genes.pdf",
+#         png=f"{output_png}/MULTI_TFBS_motifs_peak_XY_genes.png"
+#     resources:
+#         cpus_per_task=12,
+#         mem_mb=64000
+#     script:
+#         "../scripts/MULTI_linked_OCR_motif_enrichment.R"
 

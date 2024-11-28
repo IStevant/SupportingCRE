@@ -285,7 +285,7 @@ names(means) <- conditions
 rna_means <- as.data.frame(do.call(cbind, means))
 
 # For test purposes
-rna_means <- rna_means[1:100,]
+# rna_means <- rna_means[1:100,]
 
 
 # split_RNA data into 12 tables to parallelize the work

@@ -18,7 +18,7 @@ suppressPackageStartupMessages({
 ###########################################
 
 TPM <- read.csv(file = snakemake@input[["tpm"]], row.names = 1)
-exampleGenes <- as.vector(read.csv(file = snakemake@input[["genes"]], header=FALSE)[,1])
+exampleGenes <- c("Arid3b", "Emx2", "Lhx9", "Msx1", "Isx")
 
 ###########################################
 #                                         #

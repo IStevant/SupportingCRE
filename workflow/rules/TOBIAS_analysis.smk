@@ -22,6 +22,7 @@ sexes = config["sexes"]
 stages = config["stages"]
 transgenes = ["XX_Enh8-mCherry", "XY_Sox9-IRES-GFP"]
 TFBS_background = ["genome", "conditions"]
+TFBS_to_plot = ["_ARID3BEMX2HOXsISXLHX9MSX1", "_DMRT1SOX4568910111315"]
 
 # Get file path according to the genome version
 input_data = f'{config["path_to_data"]}{config["genome_version"]}'
@@ -51,7 +52,9 @@ else :
 
 # List of output figures
 rule_TOBIAS_input_list = [
-    f"{output_png}/TOBIAS_sex_DAR_bindiff.png"
+    f"{output_png}/TOBIAS_sex_DAR_bindiff.png",
+    # "test.pdf"
+    expand(f"{output_pdf}/{{TFs}}_footprint.pdf", TFs=TFBS_to_plot)
 ]
 
 ## Uncomment if you want to run only this pipeline
@@ -175,3 +178,48 @@ rule TOBIAS_plot_sex_DAR_BINDetect:
     script:
         "../scripts/TOBIAS_sex_DAR_bindiff.R"
 
+rule TOBIAS_PlotAggregate_XX:
+    input:
+        TFBS = f"{processed_data}/BINDdetect/_ARID3BEMX2HOXsISXLHX9MSX1/beds/",
+        signal = expand(f"{processed_data}/footprint/", transgene=transgenes),
+    output:
+        output_file=f"{output_pdf}/_ARID3BEMX2HOXsISXLHX9MSX1_footprint.pdf"
+        # output_file="test.pdf"
+    params:
+        TFs = f"{processed_data}/BINDdetect/_ARID3BEMX2HOXsISXLHX9MSX1/beds/_ARID3BEMX2HOXsISXLHX9MSX1_all.bed",
+        signal = expand(f"{processed_data}/footprint/E13.5*_merged_sorted_corrected.bw", transgene=transgenes),
+    threads: 2
+    resources:
+        mem_mb=12000
+    shell:
+        "TOBIAS PlotAggregate \
+        --TFBS {params.TFs} \
+        --signals {params.signal} \
+        --output {output.output_file} \
+        --flank 75 \
+        --log-transform \
+        --signal-on-x \
+        --plot_boundaries"
+
+rule TOBIAS_PlotAggregate_XY:
+    input:
+        TFBS = f"{processed_data}/BINDdetect/_DMRT1SOX4568910111315/beds/",
+        signal = expand(f"{processed_data}/footprint/", transgene=transgenes),
+    output:
+        output_file=f"{output_pdf}/_DMRT1SOX4568910111315_footprint.pdf"
+        # output_file="test.pdf"
+    params:
+        TFs = f"{processed_data}/BINDdetect/_DMRT1SOX4568910111315/beds/_DMRT1SOX4568910111315_all.bed",
+        signal = expand(f"{processed_data}/footprint/E13.5*_merged_sorted_corrected.bw", transgene=transgenes),
+    threads: 2
+    resources:
+        mem_mb=12000
+    shell:
+        "TOBIAS PlotAggregate \
+        --TFBS {params.TFs} \
+        --signals {params.signal} \
+        --output {output.output_file} \
+        --flank 75 \
+        --log-transform \
+        --signal-on-x \
+        --plot_boundaries"

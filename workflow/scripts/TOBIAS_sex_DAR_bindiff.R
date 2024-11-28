@@ -87,7 +87,7 @@ plot <- ggplot(bindetect_FC, aes(x = FC, y = motif)) +
 save_plot(
   snakemake@output[["pdf"]],
   plot,
-  base_width = 38,
+  base_width = 30,
   base_height = 22,
   units = c("cm"),
   dpi = 300
@@ -97,7 +97,7 @@ save_plot(
 save_plot(
   snakemake@output[["png"]],
   plot,
-  base_width = 38,
+  base_width = 30,
   base_height = 22,
   units = c("cm"),
   dpi = 300

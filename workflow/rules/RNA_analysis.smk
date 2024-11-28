@@ -30,6 +30,7 @@ rule_RNA_input_list = [
     f"{output_png}/RNA_corr_pca_all_samples.png",
     f"{output_png}/RNA_corr_pca.png",
     f"{output_png}/RNA_marker_genes.png",
+    f"{output_png}/RNA_example_genes.png",
     f"{output_png}/RNA_marker_genes_enrichment.png",
     f"{output_png}/RNA_sex_DEG_histograms.png",
     f"{output_png}/RNA_sex_DEG_volcano.png",
@@ -170,6 +171,21 @@ rule RNA_Plot_marker_genes:
         mem_mb=4000
     script:
         "../scripts/RNA_plot_marker_genes.R"
+
+# Draw example gene expression over time
+rule RNA_Plot_example_genes:
+    input:
+        tpm=f"{output_tables}/TPM.csv"                                # TPM matrix without the outliers
+    output:
+        pdf=f"{output_pdf}/RNA_example_genes.pdf",
+        png=f"{output_png}/RNA_example_genes.png"
+    params:
+        marker_genes=["Arid3b"]                          # List of gonadal marker genes and their associated cell type
+    threads: 12
+    resources:
+        mem_mb=4000
+    script:
+        "../scripts/RNA_plot_example_genes.R"
 
 # Dot plot showing the expression enrichment of marker genes compared to whole gonads
 rule RNA_Plot_marker_gene_enrichment:
