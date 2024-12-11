@@ -33,6 +33,7 @@ output_tables = f'{config["path_to_tables"]}{config["genome_version"]}/TOBIAS'
 RNA_tables = f'{config["path_to_tables"]}{config["genome_version"]}/RNA'
 ATAC_tables = f'{config["path_to_tables"]}{config["genome_version"]}/ATAC'
 ATAC_processed_data = f'{config["path_to_process"]}{config["genome_version"]}/ATAC'
+MULTI_tables = f'{config["path_to_tables"]}{config["genome_version"]}/MULTI'
 
 
 if config["genome_version"] == "mm10":
@@ -52,9 +53,11 @@ else :
 
 # List of output figures
 rule_TOBIAS_input_list = [
+    f"{processed_data}/BINDdetect/bindetect_results.txt",
     f"{output_png}/TOBIAS_sex_DAR_bindiff.png",
-    # "test.pdf"
-    expand(f"{output_pdf}/{{TFs}}_footprint.pdf", TFs=TFBS_to_plot)
+    expand(f"{output_pdf}/{{TFs}}_footprint.pdf", TFs=TFBS_to_plot),
+    f"{processed_data}/plot_example_4.log",
+    f"{processed_data}/BINDdetect/XX_all_bound_TFs.bed"
 ]
 
 ## Uncomment if you want to run only this pipeline
@@ -136,9 +139,9 @@ rule TOBIAS_BINDetect:
     input:
         motifs = f"{ATAC_processed_data}/sex_merged_motifs_pfms.txt",
         signal = expand(f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw", stage=stages, transgene=transgenes),
-        genome=f"{fasta}",
+        genome = f"{fasta}",
         # peaks=f'{input_data}/ATAC_all_OCR.bed'
-        peaks=f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
+        peaks = f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
     output:
         output_file=f"{processed_data}/BINDdetect/bindetect_results.txt",
     params:
@@ -156,6 +159,33 @@ rule TOBIAS_BINDetect:
         --cores 12 \
         --cond-names {params.conditions}\
         --outdir {params.output_dir}"
+
+rule TOBIAS_merge_bed:
+    params:
+        bed_folders = f"{processed_data}/BINDdetect/_*"
+    output:
+        XX_bound = f"{processed_data}/BINDdetect/XX_bound_TFs.bed",
+        XY_bound = f"{processed_data}/BINDdetect/XY_bound_TFs.bed"
+    threads: 2
+    resources:
+        mem_mb=12000
+    shell:
+        "cat {params.bed_folders}/beds/*XX*_bound.bed | grep -E 'EMX2|GATA|FOX|RUNX1|NR5A1|DMRT1' | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq  | sed 's/_.*EMX2.*/EMX2-LHX9/g' | sed 's/_.*GATA.*/GATAs/g' | sed 's/_FOXs.*/FOXs/g' | sed 's/_.*RUNX.*/RUNX1/g' | sed 's/_NR5A1.*/NR5A1/g' | sed 's/_.*SOX.*/DMRT1-SOXs/g' > {output.XX_bound} && \
+        cat {params.bed_folders}/beds/*XY*_bound.bed | grep -E 'EMX2|GATA|FOX|RUNX1|NR5A1|DMRT1' | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq  | sed 's/_.*EMX2.*/EMX2-LHX9/g' | sed 's/_.*GATA.*/GATAs/g' | sed 's/_FOXs.*/FOXs/g' | sed 's/_.*RUNX.*/RUNX1/g' | sed 's/_NR5A1.*/NR5A1/g' | sed 's/_.*SOX.*/DMRT1-SOXs/g' > {output.XY_bound}"
+
+
+rule TOBIAS_merge_all_TF_bed:
+    params:
+        bed_folders = f"{processed_data}/BINDdetect/_*"
+    output:
+        XX_bound = f"{processed_data}/BINDdetect/XX_all_bound_TFs.bed",
+        XY_bound = f"{processed_data}/BINDdetect/XY_all_bound_TFs.bed"
+    threads: 2
+    resources:
+        mem_mb=12000
+    shell:
+        "cat {params.bed_folders}/beds/*XX*_bound.bed | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq > {output.XX_bound} && \
+        cat {params.bed_folders}/beds/*XY*_bound.bed | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq > {output.XY_bound}"
 
 
 ###########################################
@@ -223,3 +253,25 @@ rule TOBIAS_PlotAggregate_XY:
         --log-transform \
         --signal-on-x \
         --plot_boundaries"
+
+rule TOBIAS_Plot_footprints_examples:
+    input:
+        genome=f"{genome}",
+        gene_bed=f"{input_data}/gene_standard.bed",
+        peaks=f"{ATAC_tables}/ATAC_norm_counts.csv",
+        linkage=f"{MULTI_tables}/all_sig_gene2peak_linkage.csv",
+        peak_list=f"{input_data}/gTrack_footprint_examples.tsv",
+        TPM=f"{RNA_tables}/TPM.csv",
+        XX_bound = f"{processed_data}/BINDdetect/XX_bound_TFs.bed",
+        XY_bound = f"{processed_data}/BINDdetect/XY_bound_TFs.bed"
+    params:
+        bw_folder=f"{ATAC_norm_bigwig_folder}",
+        ChIP_folder=f"{input_data}/ChIP/",
+        save_folder=f"{output_pdf}"
+    output: 
+        log= f"{processed_data}/plot_example_4.log"
+    threads: 12
+    resources:
+        mem_mb=64000
+    script:
+        "../scripts/TOBIAS_plot_genomic_tracks.R"
