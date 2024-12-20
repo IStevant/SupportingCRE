@@ -46,16 +46,6 @@ conda env create -f conda_env/SupportingCRE_env.yml
 snakemake --core 1 -f install_packages
 ```
 
-### Configure the analysis parameters
-
-#### The genome version
-
-#### The path to the needed files
-
-#### The different thresholds
-
-### Run the analysis on a HPC using Slurm (recommended)
-
 #### Run the full pipeline
 
 ```bash
