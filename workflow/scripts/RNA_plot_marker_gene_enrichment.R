@@ -33,7 +33,7 @@ whole_gonad <- read.csv(file = snakemake@input[["whole_gonad"]])
 #' @return Ggplot object.
 mCherry_dotplot <- function(TPM, sex) {
   if (sex == "XX") {
-    genes <- c("Nr5a1", "Wt1", "Gata4", "Foxl2", "Fst", "Lgr5", "Runx1", "Irx3", "Wnt4", "Wnt6", "Amhr2", "Bmp2", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")
+    genes <- c("Nr5a1", "Wt1", "Gata4", "Foxl2", "Fst", "Lgr5", "Runx1", "Irx3", "Wnt6", "Amhr2", "Bmp2", "Lef1", "Sp5", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")
     title <- "Enrichment of gonadal cell marker genes in Enh8-mCherry+ cells\ncompared to whole gonads"
   } else {
     genes <- c("Nr5a1", "Wt1", "Gata4", "Sry", "Gadd45g", "Nr0b1", "Sox9", "Fgf9", "Ptgds", "Amh", "Dmrt1", "Amhr2", "Nr2f2", "Tcf21", "Pdgfra", "Wnt5a", "Arx", "Maf", "Stra8", "Mael", "Ddx4", "Dazl", "Figla")
@@ -44,11 +44,14 @@ mCherry_dotplot <- function(TPM, sex) {
   mean_expr <- lapply(stages, function(stg) {
     stage <- rep(stg, nrow(expr_sex))
     mCherry <- expr_sex[, grep("supporting", colnames(expr_sex))]
-    median_expr_mCherry <- matrixStats::rowMedians(as.matrix(mCherry[, grep(stg, colnames(mCherry))]))
+    median_expr_mCherry <- rowMeans(as.matrix(mCherry[, grep(stg, colnames(mCherry))]))
     whole <- expr_sex[, grep("whole", colnames(expr_sex))]
-    median_expr_Zhao <- matrixStats::rowMedians(as.matrix(whole[, grep(stg, colnames(whole))]))
+    median_expr_Zhao <- rowMeans(as.matrix(whole[, grep(stg, colnames(whole))]))
 
-    ratio_expr <- log10(median_expr_mCherry / median_expr_Zhao)
+    ratio_expr <- log2(median_expr_mCherry / median_expr_Zhao)
+
+    ratio_expr[ratio_expr > 1] <- 1
+    ratio_expr[ratio_expr < (-1)] <- (-1)
 
     data <- data.frame(
       stage = stage,
@@ -62,7 +65,7 @@ mCherry_dotplot <- function(TPM, sex) {
   data <- do.call(rbind, mean_expr)
   data$genes <- factor(data$genes, levels = unique(data$genes))
 
-  plot <- ggplot(data, aes(genes, stage, size = exp)) +
+  plot <- ggplot(data, aes(stage, genes, size = exp)) +
     geom_point(shape = 21, aes(fill = Enrichment), color = "#666666") +
     scale_fill_gradient2(low = "#04bbc6", mid = "#fffee8", high = "#eb2d62") +
     scale_size(range = c(0, 10)) +
@@ -74,16 +77,16 @@ mCherry_dotplot <- function(TPM, sex) {
       strip.text.x = element_text(size = 14, face = "bold"),
       plot.title = element_text(size = 14, hjust = 0.5, face = "bold"),
       axis.text = element_text(size = 14),
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, face = "italic"),
+      axis.text.y = element_text(face = "italic"),
       axis.title = element_blank(),
       legend.title = element_text(size = 11, face = "bold"),
       legend.text = element_text(size = 11, margin = margin(r = 10, unit = "pt")),
-      legend.position = "bottom"
-    ) +
-    guides(
-      size = guide_legend(title.position = "top", title.hjust = 0.5),
-      fill = guide_colourbar(title.position = "top", title.hjust = 0.5)
-    )
+      legend.position = "right"
+    ) 
+    # guides(
+    #   size = guide_legend(title.position = "top", title.hjust = 0.5),
+    #   fill = guide_colourbar(title.position = "top", title.hjust = 0.5)
+    # )
 
   return(plot)
 }
@@ -118,8 +121,8 @@ plot_mCherry_XY <- mCherry_dotplot(TPM, "XY")
 figure <- plot_grid(
   plotlist = list(plot_mCherry_XX, plot_mCherry_XY),
   labels = "AUTO",
-  ncol = 1,
-  align = "v"
+  ncol = 2,
+  align = "hv"
 )
 
 ##########################################
@@ -132,7 +135,7 @@ figure <- plot_grid(
 save_plot(
   snakemake@output[["pdf"]],
   figure,
-  base_width = 20,
+  base_width = 25,
   base_height = 22,
   units = c("cm"),
   dpi = 300
@@ -142,7 +145,7 @@ save_plot(
 save_plot(
   snakemake@output[["png"]],
   figure,
-  base_width = 20,
+  base_width = 25,
   base_height = 22,
   units = c("cm"),
   dpi = 300,

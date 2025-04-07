@@ -94,10 +94,8 @@ get_enriched_TFs <- function(DARs, TPM, minTPM, save_folder) {
   # Select the genes expressed at a specific stage for both sexes
   genes <- run_filter_low_counts(TPM, minTPM)
   genes <- rownames(genes[rowSums(genes) > 0, ])
-  write.csv(genes, "genes_above_10_TPM.csv")
   # Select only the TFs
   stg_TFs <- genes[which(genes %in% TFs)]
-  write.csv(stg_TFs, "TF_above_10_TPM.csv")
   # Get all vertebrate TF matrices
   pwms <- TFBSTools::getMatrixSet(
     JASPAR,

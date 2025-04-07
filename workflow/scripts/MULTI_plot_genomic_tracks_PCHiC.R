@@ -281,6 +281,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, interactions, plot_lis
       lwd = 0.5
     )
 
+    title <- paste0(seqnames(locus_gr), ":", start(locus_gr), "-", end(locus_gr))
+
     plot <- plotTracks(
       c(PCHiC_track, ht, interaction_track, genome_track),
       chromosome = as.character(seqnames(locus_gr)),
@@ -296,7 +298,10 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, interactions, plot_lis
       sizes = c(0.3, 0.9, rep(0.6, length(plot_list)), 0.2, 0.3, 0.2),
       cex.title = 0.9,
       cex.id = 0.5,
-      title.width = 1.4
+      title.width = 1.4,
+      main = title,
+      cex.main = 1,
+      col.main = "#333333"
     )
 
   } else {

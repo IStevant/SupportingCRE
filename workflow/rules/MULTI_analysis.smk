@@ -25,6 +25,7 @@ TFBS_background = ["genome", "conditions"]
 # Get file path according to the genome version
 input_data = f'{config["path_to_data"]}{config["genome_version"]}'
 processed_data = f'{config["path_to_process"]}{config["genome_version"]}/MULTI'
+ATAC_processed_data = f'{config["path_to_process"]}{config["genome_version"]}/ATAC'
 output_png = f'{config["path_to_graphs"]}{config["genome_version"]}/MULTI'
 output_pdf = f'{config["path_to_graphs"]}{config["genome_version"]}/MULTI/PDF'
 output_tables = f'{config["path_to_tables"]}{config["genome_version"]}/MULTI'
@@ -119,8 +120,9 @@ rule MULTI_Plot_peak_examples:
         gene_bed=f"{input_data}/gene_standard.bed",
         peaks=f"{ATAC_tables}/ATAC_norm_counts.csv",
         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
-                peak_list=f"{input_data}/gTrack_DAR_link_examples.tsv",
-        TPM=f"{RNA_tables}/TPM.csv"
+        peak_list=f"{input_data}/gTrack_DAR_link_examples.tsv",
+        TPM=f"{RNA_tables}/TPM.csv",
+        bw=f"{ATAC_processed_data}/dl_bigwig.log"
     params:
         bw_folder=f"{ATAC_norm_bigwig_folder}",
         save_folder=f"{output_pdf}"
@@ -141,7 +143,8 @@ rule MULTI_Plot_PCHiC_examples:
         linkage=f"{output_tables}/all_sig_gene2peak_linkage.csv",
         PCHiC=f"{input_data}/PCHiC_5kb_score3_merged.bedpe",
         peak_list=f"{input_data}/gTrack_DAR_PCHiC_examples.tsv",
-        TPM=f"{RNA_tables}/TPM.csv"
+        TPM=f"{RNA_tables}/TPM.csv",
+        bw=f"{ATAC_processed_data}/dl_bigwig.log"
     params:
         bw_folder=f"{ATAC_norm_bigwig_folder}",
         save_folder=f"{output_pdf}"

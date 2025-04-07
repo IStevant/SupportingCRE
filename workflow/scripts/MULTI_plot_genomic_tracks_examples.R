@@ -182,6 +182,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, locus, window) {
     lwd = 0.5
   )
 
+  title <- paste0(seqnames(locus_gr), ":", start(locus_gr), "-", end(locus_gr))
+
   plot <- plotTracks(
     c(ht, genome_track),
     chromosome = as.character(seqnames(locus_gr)),
@@ -195,12 +197,14 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, plot_list, locus, window) {
     alpha.title = 1,
     alpha.axis = 1,
     sizes = c(rep(0.4, length(plot_list)), 0.3, 0.4, 0.3),
+    cex.axis = 0.7,
     cex.title = 0.9,
     cex.id = 0.5,
-    cex.axis = 0.7,
-    title.width = 1.4
+    title.width = 1.4,
+    main = title,
+    cex.main = 1,
+    col.main = "#333333"
   )
-
 
   return(plot)
 }

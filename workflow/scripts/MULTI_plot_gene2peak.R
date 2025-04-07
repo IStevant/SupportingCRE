@@ -227,6 +227,8 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus) {
       lwd = 0.5
     )
 
+    title <- paste0(seqnames(locus_gr), ":", start(locus_gr), "-", end(locus_gr))
+    
     plot <- plotTracks(
       c(interaction_track, ht, genome_track),
       chromosome = as.character(seqnames(locus_gr)),
@@ -242,8 +244,12 @@ plot_tracks <- function(peak_gr, TxDb, gene2symbol, link, plot_list, locus) {
       sizes = c(0.3, 0.2, 0.4, rep(0.4, length(plot_list)), 0.3),
       cex.title = 0.9,
       cex.id = 0.5,
-      title.width = 1.4
+      title.width = 1.4,
+      main = title,
+      cex.main = 1,
+      col.main = "#333333"
     )
+
   } else if (nrow(gene_links) < 1) {
     ht <- HighlightTrack(
       trackList = c(peak_track, gene_track, plot_list),

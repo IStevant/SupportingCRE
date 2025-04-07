@@ -48,6 +48,7 @@ ATAC_corr_met: spearman
 ATAC_adjpval: 0.01
 ATAC_log2FC: 1
 ATAC_stage_DAR_clusters: 4
+ATAC_bigwig_url: https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE277646&format=file
 ATAC_bigwig_folder_mm10: /home/istevant/work/data/ATACseq/240521_XX-enh8_XY-sox9_sub/mapping_nf-core_atacseq_v2.1.2_GRCm38/bwa/merged_library/bigwig
 ATAC_bigwig_folder_mm39: /home/istevant/work/data/ATACseq/240521_XX-enh8_XY-sox9_sub/mapping_nf-core_atacseq_v2.1.2_GRCm39/bwa/merged_library/bigwig
 

@@ -108,7 +108,20 @@ rule ATAC_Normalize_bigwig:
     resources:
         mem_mb=16000
     script:
-        "../scripts/MULTI_norm_bigwig.R"
+        "../scripts/ATAC_norm_bigwig.R"
+
+# Download normalized Bigwig files from GEO
+rule ATAC_download_bigwig:
+    params:
+        bigwig_folder=f"{ATAC_norm_bigwig_folder}"  # Path to the normalized files
+    output:
+        output_file=f"{processed_data}/dl_bigwig.log"  # log file for snakemake
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+       "sh workflow/scripts/ATAC_dl_bigwig.sh {params.bigwig_folder} > {output.output_file}"
+
 
 # Get differentially accessible regions between XX and XY at each embryonic stage using DESeq2 Wald test
 rule ATAC_Get_sex_DARs:
@@ -429,7 +442,8 @@ rule ATAC_Plot_peak_examples:
         genome=f"{genome}",
         peak_list=f"{input_data}/gTrack_DAR_peak_examples.tsv",
         peaks=f"{output_tables}/ATAC_norm_counts.csv",
-        TPM=f"{RNA_tables}/TPM.csv"
+        TPM=f"{RNA_tables}/TPM.csv",
+        bw=f"{processed_data}/dl_bigwig.log" #Ensure that the bigwig files have been download before being plot
     params:
         bw_folder=f"{ATAC_norm_bigwig_folder}",
         save_folder=f"{output_pdf}"

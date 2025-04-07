@@ -57,7 +57,8 @@ rule_TOBIAS_input_list = [
     f"{output_png}/TOBIAS_sex_DAR_bindiff.png",
     expand(f"{output_pdf}/{{TFs}}_footprint.pdf", TFs=TFBS_to_plot),
     f"{processed_data}/plot_example_4.log",
-    f"{processed_data}/BINDdetect/XX_all_bound_TFs.bed"
+    f"{processed_data}/BINDdetect/XX_all_bound_TFs.bed",
+    f"{processed_data}/BINDdetect_WT1/XY_bound_WT1.bed"
 ]
 
 ## Uncomment if you want to run only this pipeline
@@ -81,7 +82,7 @@ rule TOBIAS_download_genome:
 rule TOBIAS_download_merged_bam:
     output: f"{processed_data}/{{stage}}_{{transgene}}_merged_sorted.bam"
     shell:
-        "cp /home/istevant/work/data/ATACseq/merged_bam/*_merged_sorted.bam {processed_data}"
+        "cp /home/istevant/work/data/ATACseq/SupportingCRE_merged_bam/*_merged_sorted.bam {processed_data}"
 
 rule TOBIAS_ATACorrect:
     input:
@@ -107,7 +108,6 @@ rule TOBIAS_ScoreBigwig:
         signal = f"{processed_data}/footprint/{{stage}}_{{transgene}}_merged_sorted_corrected.bw",
         bam=f"{processed_data}/{{stage}}_{{transgene}}_merged_sorted.bam",
         genome=f"{fasta}",
-        # peaks=f'{input_data}/ATAC_all_OCR.bed'
         peaks=f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
     output:
         output_bw=f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw"
@@ -121,26 +121,34 @@ rule TOBIAS_ScoreBigwig:
         --cores 12 \
         --output {output.output_bw}"
 
-rule TOBIAS_get_expressed_TF_matrices:
-    input:
-        TPM=f"{RNA_tables}/TPM.csv",
-        TF_genes=config["TF_genes"]
+# rule TOBIAS_get_expressed_TF_matrices:
+#     input:
+#         TPM=f"{RNA_tables}/TPM.csv",
+#         TF_genes=config["TF_genes"]
+#     output:
+#         matrices=f"{output_tables}/Merged_exp_TF_matrices_pfms.txt"
+#     params:
+#         minTPM=config["RNA_minTPM"]
+#     threads: 1
+#     resources:
+#         mem_mb=64000
+#     script:
+#         "../scripts/TOBIAS_get_expressed_TF.R"
+
+rule TOBIAS_get_WT1_matrix:
     output:
-        matrices=f"{output_tables}/Merged_exp_TF_matrices_pfms.txt"
-    params:
-        minTPM=config["RNA_minTPM"]
+        matrix=f"{output_tables}/WT1_pfm.txt"
     threads: 1
     resources:
         mem_mb=64000
     script:
-        "../scripts/TOBIAS_get_expressed_TF.R"
+        "../scripts/TOBIAS_get_WT1_matrix.R"
 
 rule TOBIAS_BINDetect:
     input:
         motifs = f"{ATAC_processed_data}/sex_merged_motifs_pfms.txt",
         signal = expand(f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw", stage=stages, transgene=transgenes),
         genome = f"{fasta}",
-        # peaks=f'{input_data}/ATAC_all_OCR.bed'
         peaks = f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
     output:
         output_file=f"{processed_data}/BINDdetect/bindetect_results.txt",
@@ -160,26 +168,74 @@ rule TOBIAS_BINDetect:
         --cond-names {params.conditions}\
         --outdir {params.output_dir}"
 
-rule TOBIAS_merge_bed:
+
+
+rule TOBIAS_BINDetect_WT1:
+    input:
+        motifs = f"{output_tables}/WT1_pfm.txt",
+        signal = expand(f"{processed_data}/footprint/{{stage}}_{{transgene}}_footprints.bw", stage=stages, transgene=transgenes),
+        genome = f"{fasta}",
+        peaks = f"{ATAC_tables}/ATAC_sig_SexDARs.bed"
+    output:
+        output_file=f"{processed_data}/BINDdetect_WT1/bindetect_results.txt",
     params:
-        bed_folders = f"{processed_data}/BINDdetect/_*"
+        output_dir=f"{processed_data}/BINDdetect_WT1",
+        conditions=expand(f"{{stage}}_{{transgene}}", stage=stages, transgene=transgenes)
+    threads: 12
+    resources:
+        mem_mb=64000
+    shell:
+        "TOBIAS BINDetect \
+        --motifs {input.motifs}\
+        --signal {input.signal}\
+        --genome {input.genome}\
+        --peaks {input.peaks}\
+        --cores 12 \
+        --cond-names {params.conditions}\
+        --outdir {params.output_dir}"
+
+
+rule TOBIAS_merge_bed:
+    input:
+        bindetect=f"{processed_data}/BINDdetect/bindetect_results.txt"
+    params:
+        bed_folders = f"{processed_data}/BINDdetect/_*",
+        wt1_bed_folders = f"{processed_data}/BINDdetect_WT1/_*"
     output:
         XX_bound = f"{processed_data}/BINDdetect/XX_bound_TFs.bed",
         XY_bound = f"{processed_data}/BINDdetect/XY_bound_TFs.bed"
-    threads: 2
+    threads: 1
     resources:
         mem_mb=12000
     shell:
-        "cat {params.bed_folders}/beds/*XX*_bound.bed | grep -E 'EMX2|GATA|FOX|RUNX1|NR5A1|DMRT1' | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq  | sed 's/_.*EMX2.*/EMX2-LHX9/g' | sed 's/_.*GATA.*/GATAs/g' | sed 's/_FOXs.*/FOXs/g' | sed 's/_.*RUNX.*/RUNX1/g' | sed 's/_NR5A1.*/NR5A1/g' | sed 's/_.*SOX.*/DMRT1-SOXs/g' > {output.XX_bound} && \
-        cat {params.bed_folders}/beds/*XY*_bound.bed | grep -E 'EMX2|GATA|FOX|RUNX1|NR5A1|DMRT1' | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq  | sed 's/_.*EMX2.*/EMX2-LHX9/g' | sed 's/_.*GATA.*/GATAs/g' | sed 's/_FOXs.*/FOXs/g' | sed 's/_.*RUNX.*/RUNX1/g' | sed 's/_NR5A1.*/NR5A1/g' | sed 's/_.*SOX.*/DMRT1-SOXs/g' > {output.XY_bound}"
+        "cat {params.bed_folders}/beds/*XX*_bound.bed {params.wt1_bed_folders}/beds/*XX*_bound.bed | grep -E 'EMX2|GATA|FOX|RUNX1|NR5A1|DMRT1|Wt1' | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$11,$6}}' | sort | uniq | sed 's/_Wt1/WT1/g' | sed 's/_.*EMX2.*\t0\t/EMX2-LHX9\t0\t/g' | sed 's/_.*GATA.*\t0\t/GATAs\t0\t/g' | sed 's/_FOXs.*\t0\t/FOXs\t0\t/g' | sed 's/_.*RUNX.*\t0\t/RUNX1\t0\t/g' | sed 's/_NR5A1.*\t0\t/NR5A1\t0\t/g' | sed 's/_.*SOX.*\t0\t/DMRT1-SOXs\t0\t/g' > {output.XX_bound} && \
+        cat {params.bed_folders}/beds/*XY*_bound.bed {params.wt1_bed_folders}/beds/*XY*_bound.bed | grep -E 'EMX2|GATA|FOX|RUNX1|NR5A1|DMRT1|Wt1' | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$11,$6}}' | sort | uniq  | sed 's/_Wt1/WT1/g' | sed 's/_.*EMX2.*\t0\t/EMX2-LHX9\t0\t/g' | sed 's/_.*GATA.*\t0\t/GATAs\t0\t/g' | sed 's/_FOXs.*\t0\t/FOXs\t0\t/g' | sed 's/_.*RUNX.*\t0\t/RUNX1\t0\t/g' | sed 's/_NR5A1.*\t0\t/NR5A1\t0\t/g' | sed 's/_.*SOX.*\t0\t/DMRT1-SOXs\t0\t/g' > {output.XY_bound}"
 
 
 rule TOBIAS_merge_all_TF_bed:
+    input:
+        bindetect=f"{processed_data}/BINDdetect/bindetect_results.txt"
     params:
         bed_folders = f"{processed_data}/BINDdetect/_*"
     output:
         XX_bound = f"{processed_data}/BINDdetect/XX_all_bound_TFs.bed",
         XY_bound = f"{processed_data}/BINDdetect/XY_all_bound_TFs.bed"
+    threads: 2
+    resources:
+        mem_mb=12000
+    shell:
+        "cat {params.bed_folders}/beds/*XX*_bound.bed | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq > {output.XX_bound} && \
+        cat {params.bed_folders}/beds/*XY*_bound.bed | awk -v FS='\t' -v OFS='\t' '{{print $1,$2,$3,$4,$6}}' | sort | uniq > {output.XY_bound}"
+
+
+rule TOBIAS_merge_bed_WT1:
+    input:
+        bindetect=f"{processed_data}/BINDdetect_WT1/bindetect_results.txt"
+    params:
+        bed_folders = f"{processed_data}/BINDdetect_WT1/_*"
+    output:
+        XX_bound = f"{processed_data}/BINDdetect_WT1/XX_bound_WT1.bed",
+        XY_bound = f"{processed_data}/BINDdetect_WT1/XY_bound_WT1.bed"
     threads: 2
     resources:
         mem_mb=12000
@@ -210,11 +266,9 @@ rule TOBIAS_plot_sex_DAR_BINDetect:
 
 rule TOBIAS_PlotAggregate_XX:
     input:
-        TFBS = f"{processed_data}/BINDdetect/_ARID3BEMX2HOXsISXLHX9MSX1/beds/",
-        signal = expand(f"{processed_data}/footprint/", transgene=transgenes),
+        bindDetect=f"{output_png}/TOBIAS_sex_DAR_bindiff.png"
     output:
         output_file=f"{output_pdf}/_ARID3BEMX2HOXsISXLHX9MSX1_footprint.pdf"
-        # output_file="test.pdf"
     params:
         TFs = f"{processed_data}/BINDdetect/_ARID3BEMX2HOXsISXLHX9MSX1/beds/_ARID3BEMX2HOXsISXLHX9MSX1_all.bed",
         signal = expand(f"{processed_data}/footprint/E13.5*_merged_sorted_corrected.bw", transgene=transgenes),
@@ -233,8 +287,9 @@ rule TOBIAS_PlotAggregate_XX:
 
 rule TOBIAS_PlotAggregate_XY:
     input:
-        TFBS = f"{processed_data}/BINDdetect/_DMRT1SOX4568910111315/beds/",
-        signal = expand(f"{processed_data}/footprint/", transgene=transgenes),
+        # TFBS = f"{processed_data}/BINDdetect/_DMRT1SOX4568910111315/beds/",
+        # signal = expand(f"{processed_data}/footprint/", transgene=transgenes),
+        bindDetect=f"{output_png}/TOBIAS_sex_DAR_bindiff.png"
     output:
         output_file=f"{output_pdf}/_DMRT1SOX4568910111315_footprint.pdf"
         # output_file="test.pdf"
